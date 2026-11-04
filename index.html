@@ -22,6 +22,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="app.js"></script>
   <script defer src="vip-client.js"></script>
+  <script defer src="story-game.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -42,8 +43,16 @@
 <nav class="video-switch" aria-label="Video sections">
       <button type="button" id="regular-videos-btn" class="video-switch-btn active">▶️ Explore Videos</button>
       <button type="button" id="vip-videos-btn" class="video-switch-btn">👑 VIP Videos</button>
+      <button type="button" id="story-tab-btn" class="video-switch-btn">🎮 Story</button>
     </nav>
     <section id="vip-hero" class="vip-hero hidden"><div class="vip-member-heading"><span id="vip-user-badge" class="vip-user-badge hidden">👑 VIP USER <span class="vip-verified-check" aria-label="Verified">✓</span></span><span id="vip-active-badge" class="vip-active-badge hidden"><span class="vip-active-dot"></span> ACTIVE</span></div><p id="vip-user-id" class="vip-user-id hidden"></p><p id="vip-hero-expiry" class="vip-hero-expiry hidden"></p><button type="button" id="vip-page-buy" class="button button-gold">★ Get VIP</button></section>
+    <section id="story-section" class="story-section hidden">
+      <div class="section-heading">
+        <div><span class="eyebrow">AI STORY GAME</span><h2>🎮 ကိုယ်တိုင်ဆော့ရတဲ့ <span class="gold-text">ဇာတ်လမ်း</span></h2></div>
+        <span id="story-quota" class="result-count"></span>
+      </div>
+      <div id="story-body"></div>
+    </section>
     <section id="library" class="library-section">
       <div class="section-heading">
         <div><span class="eyebrow">THE COLLECTION</span><h2>Explore <span class="gold-text">videos</span></h2></div>
