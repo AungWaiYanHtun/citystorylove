@@ -20,6 +20,39 @@
     )
   );
 
+  // ---- Speed: start VIP requests the moment the script loads ----
+  // Render free servers sleep when idle; the first request wakes them (can take 30-50 s).
+  // Firing it here, before Supabase/session setup, saves several seconds every open.
+  const EARLY_API = (cfg.VIP_API_URL || "").replace(/\/$/, "");
+  const EARLY_INIT_DATA = window.Telegram?.WebApp?.initData || "";
+  function fetchWithTimeout(url, options = {}, ms = 20000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(t));
+  }
+  // Retry once: the first call may time out while the server is waking up.
+  async function fetchJsonRetry(url, options) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetchWithTimeout(url, options, attempt === 0 ? 20000 : 45000);
+        const body = await r.json().catch(() => ({}));
+        return { ok: r.ok, status: r.status, body };
+      } catch (e) {
+        if (attempt === 1) throw e;
+      }
+    }
+  }
+  let earlyVipList = null, earlyVipStatus = null;
+  if (EARLY_API && EARLY_INIT_DATA) {
+    const headers = { "X-Telegram-Init-Data": EARLY_INIT_DATA };
+    earlyVipList = fetchJsonRetry(`${EARLY_API}/api/vip-videos`, { headers, cache: "no-store" });
+    earlyVipStatus = fetchJsonRetry(`${EARLY_API}/api/vip-status`, { headers, cache: "no-store" });
+    earlyVipList.catch(() => {}); earlyVipStatus.catch(() => {});
+  } else if (EARLY_API) {
+    fetch(`${EARLY_API}/health`, { cache: "no-store" }).catch(() => {});
+  }
+  const takeEarly = (which) => { const p = which === "list" ? earlyVipList : earlyVipStatus; if (which === "list") earlyVipList = null; else earlyVipStatus = null; return p; };
+
   let authMode = "signin";
   let toastTimer;
   let db = null;
@@ -46,7 +79,8 @@
   // VIP titles/thumbnails are cached only for this Telegram WebApp session.
   // Private video URLs and storage paths are never cached here.
   const VIP_CATALOG_CACHE_KEY = "videospace_vip_catalog_v1";
-  const VIP_CATALOG_CACHE_TTL_MS = 10 * 60 * 1000;
+  // Titles/thumbnails only (no video URLs). Lets the VIP tab paint instantly on the next open.
+  const VIP_CATALOG_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
   // Avoid logging configuration details in production.
 
@@ -261,7 +295,7 @@
     // Only reuse VIP catalogue metadata inside the authenticated Telegram WebApp session.
     if (!window.Telegram?.WebApp?.initData) return [];
     try {
-      const cached = JSON.parse(sessionStorage.getItem(VIP_CATALOG_CACHE_KEY) || "null");
+      const cached = JSON.parse(localStorage.getItem(VIP_CATALOG_CACHE_KEY) || "null");
       if (!cached || !Array.isArray(cached.videos) ||
           !Number.isFinite(cached.savedAt) ||
           Date.now() - cached.savedAt > VIP_CATALOG_CACHE_TTL_MS) return [];
@@ -280,7 +314,7 @@
         thumbnail_url: v.thumbnail_url, views: v.views, created_at: v.created_at,
         is_vip: true
       }));
-      sessionStorage.setItem(VIP_CATALOG_CACHE_KEY, JSON.stringify({
+      localStorage.setItem(VIP_CATALOG_CACHE_KEY, JSON.stringify({
         savedAt: Date.now(), videos: safeVideos
       }));
     } catch (error) {
@@ -346,20 +380,21 @@
         return [];
       }
       try {
-        const response = await fetch(`${api}/api/vip-videos`, {
+        const res = await (takeEarly("list") || fetchJsonRetry(`${api}/api/vip-videos`, {
           headers: { "X-Telegram-Init-Data": tg.initData },
           cache: "no-store"
-        });
-        if (!response.ok) {
-          if (response.status !== 401 && response.status !== 403) console.warn("VIP list request failed:", response.status);
-          return [];
+        }));
+        if (!res.ok) {
+          if (res.status !== 401 && res.status !== 403) console.warn("VIP list request failed:", res.status);
+          return readCachedVipVideos();
         }
-        const payload = await response.json();
+        const payload = res.body;
         const list = Array.isArray(payload) ? payload : payload.videos;
         return Array.isArray(list) ? list.map((v) => ({ ...v, is_vip: true })) : [];
       } catch (vipError) {
         console.warn("VIP list unavailable:", vipError);
-        return [];
+        // Keep showing the last known list instead of an empty page.
+        return readCachedVipVideos();
       } finally {
         vipCatalogLoading = false;
       }
@@ -367,15 +402,12 @@
     const vipStatusTask = (async () => {
       if (!tg?.initData || !api) return false;
       try {
-        const response = await fetch(`${api}/api/vip-status`, {
+        const res = await (takeEarly("status") || fetchJsonRetry(`${api}/api/vip-status`, {
           headers: { "X-Telegram-Init-Data": tg.initData },
           cache: "no-store"
-        });
-        if (response.ok) {
-          const status = await response.json();
-          return status.active === true;
-        }
-        console.warn("VIP status request failed:", response.status);
+        }));
+        if (res.ok) return res.body.active === true;
+        console.warn("VIP status request failed:", res.status);
       } catch (statusError) {
         console.warn("VIP status unavailable:", statusError);
       }
@@ -722,12 +754,17 @@
   $("regular-videos-btn")?.addEventListener("click", () => switchVideoView("regular"));
   $("vip-videos-btn")?.addEventListener("click", () => {
     switchVideoView("vip");
+    if (!latestVipVideos.length) {
+      const cachedVip = readCachedVipVideos();
+      if (cachedVip.length) { latestVipVideos = cachedVip; switchVideoView("vip"); return; }
+    }
     if (!latestVipVideos.length && !videos.some((v) => v.is_vip)) {
       const grid = $("video-grid");
       const count = $("result-count");
       const empty = $("empty-state");
       vipCatalogLoading = true;
-      if (grid) grid.innerHTML = '<div class="loading-card"><span class="spinner"></span><p>Loading VIP videos…</p></div>';
+      if (grid) grid.innerHTML = '<div class="loading-card"><span class="spinner"></span><p>Loading VIP videos…</p><p id="vip-wake-note" class="tiny-note hidden">Server is waking up, this can take up to a minute the first time.</p></div>';
+      setTimeout(() => $("vip-wake-note")?.classList.remove("hidden"), 6000);
       if (count) count.textContent = "Loading VIP videos…";
       if (empty) empty.classList.add("hidden");
       loadVideos();
