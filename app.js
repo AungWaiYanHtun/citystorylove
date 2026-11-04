@@ -656,6 +656,8 @@
     if (downloadButton) downloadButton.classList.toggle("hidden", !!v.is_vip && !isAdmin);
     vipUrlRecoveryAttempted = false;
     if (stageEl) { stageEl.classList.remove("controls-hidden", "menu-open"); }
+    // Leave fullscreen when the player closes.
+    if (stageEl?.classList.contains("pseudo-fullscreen") || document.fullscreenElement) window.__exitPlayerFullscreen?.();
     if (menuEl) menuEl.classList.add("hidden");
     const category = $("player-category");
     const title = $("player-title");
@@ -1090,14 +1092,54 @@
     stageEl.addEventListener("touchstart", showPlayerControls, { passive: true });
     seekEl?.addEventListener("input", () => { if (Number.isFinite(playerEl.duration)) playerEl.currentTime = Number(seekEl.value) / 1000 * playerEl.duration; showPlayerControls(); });
     $("player-mute")?.addEventListener("click", (e) => { playerEl.muted = !playerEl.muted; e.currentTarget.textContent = playerEl.muted ? "🔇" : "🔊"; showPlayerControls(); });
-    $("player-fullscreen")?.addEventListener("click", async () => {
+    // Fullscreen that works inside Telegram on Android/iOS.
+    // Telegram's in-app WebView usually blocks the browser Fullscreen API, so we:
+    //  1) try the real Fullscreen API,
+    //  2) else ask Telegram itself to go fullscreen (Bot API 8.0+),
+    //  3) and always fall back to a CSS fullscreen that fills the whole screen.
+    const fsButton = $("player-fullscreen");
+    const tgApp = window.Telegram?.WebApp;
+    const tgSupports = (v) => { try { return !!tgApp?.isVersionAtLeast?.(v); } catch { return false; } };
+    const nativeFsElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+    const isPlayerFullscreen = () => stageEl.classList.contains("pseudo-fullscreen") || !!nativeFsElement();
+    const updateFsButton = () => { if (fsButton) { const on = isPlayerFullscreen(); fsButton.textContent = on ? "🗗" : "⛶"; fsButton.setAttribute("aria-label", on ? "Exit fullscreen" : "Fullscreen"); } };
+    async function enterPlayerFullscreen() {
+      let native = false;
+      try {
+        if (stageEl.requestFullscreen) { await stageEl.requestFullscreen(); native = true; }
+        else if (stageEl.webkitRequestFullscreen) { stageEl.webkitRequestFullscreen(); native = true; }
+      } catch { native = false; }
+      if (!native) {
+        if (tgSupports("8.0")) { try { tgApp.requestFullscreen(); } catch {} }
+        else { try { tgApp?.expand?.(); } catch {} }
+        stageEl.classList.add("pseudo-fullscreen");
+        document.body.classList.add("player-fullscreen-open");
+      }
+      // Landscape for wide videos (ignored where not allowed).
+      try { if (playerEl.videoWidth > playerEl.videoHeight) await screen.orientation?.lock?.("landscape"); } catch {}
+      updateFsButton();
+    }
+    async function exitPlayerFullscreen() {
       try {
         if (document.fullscreenElement) await document.exitFullscreen();
-        else if (stageEl.requestFullscreen) await stageEl.requestFullscreen();
-        else if (playerEl.webkitEnterFullscreen) playerEl.webkitEnterFullscreen();
-      } catch (err) { console.warn("Fullscreen unavailable:", err); }
+        else if (document.webkitFullscreenElement) document.webkitExitFullscreen?.();
+      } catch {}
+      if (stageEl.classList.contains("pseudo-fullscreen")) {
+        stageEl.classList.remove("pseudo-fullscreen");
+        document.body.classList.remove("player-fullscreen-open");
+        if (tgSupports("8.0") && tgApp?.isFullscreen) { try { tgApp.exitFullscreen(); } catch {} }
+      }
+      try { screen.orientation?.unlock?.(); } catch {}
+      updateFsButton();
+    }
+    window.__exitPlayerFullscreen = exitPlayerFullscreen;
+    fsButton?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (isPlayerFullscreen()) await exitPlayerFullscreen(); else await enterPlayerFullscreen();
       showPlayerControls();
     });
+    document.addEventListener("fullscreenchange", updateFsButton);
+    document.addEventListener("webkitfullscreenchange", updateFsButton);
     menuButton?.addEventListener("click", (e) => {
       e.stopPropagation();
       const opening = menuEl.classList.contains("hidden");
@@ -1216,6 +1258,7 @@
           player.pause();
           closePlayerMenu();
           if (stageEl) stageEl.classList.remove("controls-hidden", "menu-open");
+          window.__exitPlayerFullscreen?.();
           player.removeAttribute("src");
           player.load();
         }

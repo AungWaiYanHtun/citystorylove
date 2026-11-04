@@ -243,3 +243,10 @@ body{
 
 .rights-confirm{display:flex;gap:.6rem;align-items:flex-start;font-size:.85rem;line-height:1.4}
 .rights-confirm input{width:auto;margin-top:.2rem;flex:none}
+
+/* Fullscreen fallback for Telegram's in-app browser */
+.video-stage.pseudo-fullscreen{position:fixed!important;inset:0!important;z-index:9999!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-height:none!important;margin:0!important;border-radius:0!important;background:#000!important;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.video-stage.pseudo-fullscreen video{width:100%!important;height:100%!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important}
+.video-stage:fullscreen video,.video-stage:-webkit-full-screen video{width:100%;height:100%;max-height:none;aspect-ratio:auto;object-fit:contain}
+body.player-fullscreen-open{overflow:hidden}
+body.player-fullscreen-open .player-close{display:none}
