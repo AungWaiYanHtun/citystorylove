@@ -37,7 +37,10 @@
   let videosLoadPromise = null;
   // Signed VIP playback URLs are kept in memory only and refreshed before expiry.
   const vipPlaybackUrlCache = new Map();
+  // Fallback only; normally the cache follows the server's expiresIn (reuse for 70% of it).
   const VIP_PLAYBACK_CACHE_MS = 90 * 1000;
+  // Prepare signed URLs for only the first few VIP cards instead of all 100.
+  const VIP_PREWARM_LIMIT = 6;
   const VIDEO_CACHE_KEY = "videospace_public_videos_v1";
   const VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
   // VIP titles/thumbnails are cached only for this Telegram WebApp session.
@@ -476,20 +479,35 @@
     return entry.url;
   }
 
-  function saveCachedVipPlaybackUrl(videoId, url) {
+  function saveCachedVipPlaybackUrl(videoId, url, expiresInSeconds) {
     if (url && /^https:\/\//i.test(url)) {
-      vipPlaybackUrlCache.set(String(videoId), {
-        url,
-        expiresAt: Date.now() + VIP_PLAYBACK_CACHE_MS
-      });
+      const ttl = Number(expiresInSeconds) > 0 ? Number(expiresInSeconds) * 1000 * 0.7 : VIP_PLAYBACK_CACHE_MS;
+      vipPlaybackUrlCache.set(String(videoId), { url, expiresAt: Date.now() + ttl });
     }
+  }
+
+  // Ask the backend for a fresh signed URL (used for playback and to recover
+  // when a signed URL expires in the middle of a long video).
+  async function fetchVipPlaybackUrl(videoId) {
+    const tg = window.Telegram?.WebApp;
+    const api = (cfg.VIP_API_URL || "").replace(/\/$/, "");
+    if (!tg?.initData || !api) return { ok: false, status: 0, result: {} };
+    const r = await fetch(`${api}/api/vip-video-url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData },
+      body: JSON.stringify({ videoId: String(videoId) }),
+      cache: "no-store"
+    });
+    const result = await r.json().catch(() => ({}));
+    if (r.ok && result.active === true) saveCachedVipPlaybackUrl(videoId, result.signedUrl || result.url || "", result.expiresIn);
+    return { ok: r.ok, status: r.status, result };
   }
 
   // Prepare short-lived signed URLs while the member is browsing the catalogue.
   // URLs stay in memory only; private storage remains private and authorization
   // is still performed by Supabase RLS or the Telegram-authenticated VIP API.
   async function warmVipPlaybackUrls(list, isActiveMember) {
-    const vipItems = (list || []).filter((item) => item && item.id && item.is_vip);
+    const vipItems = (list || []).filter((item) => item && item.id && item.is_vip).slice(0, VIP_PREWARM_LIMIT);
     if (!vipItems.length) return;
 
     if (isAdmin && currentUser && db) {
@@ -512,7 +530,7 @@
           if (!path) return;
           const { data, error } = await db.storage.from(bucket).createSignedUrl(path, 120);
           if (error) throw error;
-          saveCachedVipPlaybackUrl(item.id, data?.signedUrl || "");
+          saveCachedVipPlaybackUrl(item.id, data?.signedUrl || "", 120);
         } catch (error) {
           console.warn("VIP playback prewarm failed:", error);
         }
@@ -527,18 +545,7 @@
     await Promise.allSettled(vipItems.map(async (item) => {
       if (getCachedVipPlaybackUrl(item.id)) return;
       try {
-        const response = await fetch(`${api}/api/vip-video-url`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Telegram-Init-Data": tg.initData
-          },
-          body: JSON.stringify({ videoId: String(item.id) }),
-          cache: "no-store"
-        });
-        if (!response.ok) return;
-        const result = await response.json().catch(() => ({}));
-        if (result.active === true) saveCachedVipPlaybackUrl(item.id, result.signedUrl || result.url || "");
+        await fetchVipPlaybackUrl(item.id);
       } catch (error) {
         console.warn("VIP playback prewarm failed:", error);
       }
@@ -583,7 +590,7 @@
         const { data, error } = await db.storage.from(bucket).createSignedUrl(path, 60 * 10);
         if (error) throw error;
         playbackUrl = data?.signedUrl || "";
-        saveCachedVipPlaybackUrl(v.id, playbackUrl);
+        saveCachedVipPlaybackUrl(v.id, playbackUrl, 600);
         if (!playbackUrl || !/^https:\/\//i.test(playbackUrl)) {
           throw new Error("Supabase did not return a valid signed URL.");
         }
@@ -603,23 +610,14 @@
       }
 
       try {
-        const r = await fetch(`${api}/api/vip-video-url`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Telegram-Init-Data": tg.initData
-          },
-          body: JSON.stringify({ videoId: String(v.id) }),
-          cache: "no-store"
-        });
-        const result = await r.json().catch(() => ({}));
-        if (!r.ok || result.active === false) {
+        const { ok, status, result } = await fetchVipPlaybackUrl(v.id);
+        if (status === 401 || status === 403 || result.active === false) {
           vipMembershipActive = false;
           showModal("vip-required");
           return;
         }
+        if (!ok) throw new Error(result.error || `VIP API error (${status}).`);
         playbackUrl = result.signedUrl || result.url || "";
-        saveCachedVipPlaybackUrl(v.id, playbackUrl);
         if (!playbackUrl || !/^https:\/\//i.test(playbackUrl)) {
           throw new Error("The VIP API did not return a valid HTTPS signed URL.");
         }
@@ -653,6 +651,10 @@
 
     player.src = playbackUrl;
     if (deleteButton) deleteButton.classList.toggle("hidden", !isAdmin);
+    // Protect VIP / creator videos: no download button for VIP content.
+    const downloadButton = $("player-download");
+    if (downloadButton) downloadButton.classList.toggle("hidden", !!v.is_vip && !isAdmin);
+    vipUrlRecoveryAttempted = false;
     if (stageEl) { stageEl.classList.remove("controls-hidden", "menu-open"); }
     if (menuEl) menuEl.classList.add("hidden");
     const category = $("player-category");
@@ -916,6 +918,10 @@
         if (message) message.textContent = "Choose a video file first.";
         return;
       }
+      if (!$("video-rights")?.checked) {
+        if (message) message.textContent = "Confirm you own this video or have the creator's permission.";
+        return;
+      }
 
       if (file.size > 500 * 1024 * 1024) {
         if (message) message.textContent = "This file is over the 500 MB starter limit. Compress it first.";
@@ -1049,6 +1055,27 @@
     if (speeds) speeds.classList.add("hidden");
     showPlayerControls();
   }
+  // If a signed VIP URL expires mid-video, get a fresh one and resume at the same spot (once).
+  let vipUrlRecoveryAttempted = false;
+  playerEl?.addEventListener("error", async () => {
+    const v = activePlayerVideo;
+    if (!v || !v.is_vip || vipUrlRecoveryAttempted || isAdmin) return;
+    vipUrlRecoveryAttempted = true;
+    const resumeAt = playerEl.currentTime || 0;
+    vipPlaybackUrlCache.delete(String(v.id));
+    try {
+      const { ok, result } = await fetchVipPlaybackUrl(v.id);
+      const url = ok ? (result.signedUrl || result.url || "") : "";
+      if (!/^https:\/\//i.test(url)) throw new Error("No fresh URL");
+      playerEl.src = url;
+      playerEl.addEventListener("loadedmetadata", () => {
+        playerEl.currentTime = resumeAt;
+        playerEl.play().catch(() => {});
+      }, { once: true });
+    } catch {
+      toast("Video link expired. Please close and open the video again.");
+    }
+  });
   if (playerEl && stageEl) {
     playButton?.addEventListener("click", () => { if (playerEl.paused) playerEl.play().catch(() => {}); else playerEl.pause(); showPlayerControls(); });
     playerEl.addEventListener("click", () => { if (playerEl.paused) playerEl.play().catch(() => {}); else showPlayerControls(); });

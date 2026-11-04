@@ -240,3 +240,6 @@ body{
 @media(prefers-reduced-motion:no-preference){
   .button-gold,.video-switch-btn.active{transition:background .2s,box-shadow .2s,transform .2s}
 }
+
+.rights-confirm{display:flex;gap:.6rem;align-items:flex-start;font-size:.85rem;line-height:1.4}
+.rights-confirm input{width:auto;margin-top:.2rem;flex:none}

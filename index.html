@@ -21,7 +21,6 @@
   <script src="config.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="app.js"></script>
-  <script defer src="income-ui.js"></script>
   <script defer src="vip-client.js"></script>
 </head>
 <body>
@@ -96,7 +95,8 @@
         <label>Video title<input id="video-title" required maxlength="120" placeholder="Give your video a title"></label>
         <label>Description<textarea id="video-description" rows="3" maxlength="2000" placeholder="What is this video about?"></textarea></label>
         <label>Access<select id="video-access"><option value="false">Explore / Free</option><option value="true">VIP only</option></select></label>
-        <label>Category<select id="video-category" required><option value="TikTok Cele">TikTok Cele</option><option value="Solo Leaks">Solo Leaks</option><option value="Movie">Movie</option></select></label>
+        <label>Category<select id="video-category" required><option value="Music">Music</option><option value="Movie">Movie</option><option value="Entertainment">Entertainment</option></select></label>
+        <label class="rights-confirm"><input id="video-rights" type="checkbox" required> I own this video or have the creator's permission to publish it, and everyone shown agreed to be in it.</label>
         <label>Thumbnail image (optional)<input id="video-thumbnail" type="file" accept="image/jpeg,image/png,image/webp"></label>
         <label>Video file<input id="video-file" type="file" accept="video/mp4,video/webm,video/quicktime" required></label>
         <div class="upload-hint">Recommended: MP4 / H.264. Keep uploads within your storage provider's configured limits.</div>
