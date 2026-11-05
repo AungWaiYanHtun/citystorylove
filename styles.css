@@ -277,3 +277,43 @@ body.player-fullscreen-open .player-close{display:none}
 .story-past-item{border-top:1px solid #ffffff10;padding-top:10px;margin-top:10px;font-size:14px;line-height:1.7}
 .story-past-item em{color:var(--gold2);font-size:13px}
 .story-section .eyebrow{letter-spacing:normal}.story-section .section-heading h2{font-size:clamp(24px,6vw,36px)}
+
+/* ── Story visual stage (Fix 19) ── */
+.story-stage { position: relative; height: min(62vh, 520px); margin: 0 0 14px; border-radius: 22px; overflow: hidden; background: #0b0d12; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.stage-bg { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: cover; animation: stageDrift 26s ease-in-out infinite alternate; }
+@keyframes stageDrift { from { transform: scale(1) translate(0,0); } to { transform: scale(1.08) translate(-2%, -1.5%); } }
+.stage-shade { position: absolute; inset: auto 0 0 0; height: 30%; background: linear-gradient(to top, rgba(10,10,14,.85), transparent); pointer-events: none; }
+.stage-char { position: absolute; left: 50%; bottom: -2%; height: 92%; aspect-ratio: 520/768; transform: translateX(-50%); animation: charIn .6s ease-out both; z-index: 2; }
+.stage-char img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: bottom; animation: breathe 4.2s ease-in-out infinite; transform-origin: 50% 100%; filter: drop-shadow(0 10px 22px rgba(0,0,0,.45)); }
+.stage-char .char-blink { opacity: 0; }
+.stage-char .char-blink.on { opacity: 1; }
+.stage-char[data-expr="surprised"] .char-img { animation: hop .45s ease-out 1, breathe 4.2s ease-in-out .45s infinite; }
+.stage-char[data-expr="sad"] .char-img { animation-duration: 5.5s; }
+@keyframes breathe { 0%,100% { transform: scale(1, 1); } 50% { transform: scale(1.008, 1.016); } }
+@keyframes hop { 0% { transform: translateY(0); } 40% { transform: translateY(-4%); } 100% { transform: translateY(0); } }
+@keyframes charIn { from { opacity: 0; transform: translate(-50%, 4%); } to { opacity: 1; transform: translate(-50%, 0); } }
+.stage-name { position: absolute; left: 14px; bottom: 12px; z-index: 3; padding: 5px 14px; border-radius: 999px; background: rgba(15,15,20,.7); border: 1px solid rgba(232,196,104,.55); color: #f3d98b; font-weight: 700; letter-spacing: .04em; backdrop-filter: blur(6px); }
+.stage-fx { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+.stage-fx i { position: absolute; display: block; border-radius: 50%; animation-iteration-count: infinite; animation-timing-function: linear; }
+.fx-rain { z-index: 4; }
+.fx-rain i { width: 1.5px !important; border-radius: 1px; background: linear-gradient(to bottom, transparent, rgba(190,215,255,.75)); animation-name: rainFall; }
+@keyframes rainFall { from { transform: translate(0, -120vh) rotate(12deg); } to { transform: translate(-60px, 120vh) rotate(12deg); } }
+.fx-stars i { background: #fff; box-shadow: 0 0 6px #fff; top: calc(var(--y, 0) * 1%); animation-name: twinkle; animation-timing-function: ease-in-out; }
+.fx-stars i:nth-child(odd) { top: auto; }
+@keyframes twinkle { 0%,100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.2); } }
+.fx-fireflies i { background: #b9ffcf; box-shadow: 0 0 10px 3px rgba(150,255,190,.8); animation-name: firefly; animation-timing-function: ease-in-out; }
+@keyframes firefly { 0%,100% { opacity: 0; transform: translate(0,0); } 30% { opacity: 1; } 50% { transform: translate(18px,-26px); } 70% { opacity: .8; } }
+.fx-bokeh i { background: radial-gradient(circle, rgba(255,214,150,.45), rgba(255,190,120,0) 70%); animation-name: bokeh; animation-timing-function: ease-in-out; }
+@keyframes bokeh { 0%,100% { opacity: .2; transform: translateY(0) scale(.9); } 50% { opacity: .8; transform: translateY(-14px) scale(1.1); } }
+.fx-petals { z-index: 4; }
+.fx-petals i { border-radius: 70% 0 70% 0; background: #f9b8d0; opacity: .9; animation-name: petal; }
+@keyframes petal { from { transform: translate(0, -60vh) rotate(0deg); } to { transform: translate(-90px, 70vh) rotate(540deg); } }
+.fx-sparkle i { top: auto !important; bottom: calc(5% + var(--b, 0%)); background: #fff3c4; box-shadow: 0 0 8px #ffd77a; animation-name: twinkle; animation-timing-function: ease-in-out; }
+.fx-sparkle i:nth-child(3n) { bottom: 18%; } .fx-sparkle i:nth-child(3n+1) { bottom: 26%; } .fx-sparkle i:nth-child(3n+2) { bottom: 34%; }
+.fx-fog { z-index: 3; }
+.fx-fog i { left: -50% !important; top: auto !important; bottom: 0; width: 200% !important; height: 45% !important; border-radius: 0; background: radial-gradient(ellipse at center, rgba(170,185,220,.22), transparent 65%); animation-name: fog; animation-timing-function: ease-in-out; animation-direction: alternate; }
+@keyframes fog { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+@media (prefers-reduced-motion: reduce) { .stage-bg, .stage-fx i, .stage-char img { animation: none !important; } }
+
+/* Myanmar font fallback (Fix 19b) */
+body, #story-section { font-family: "DM Sans", "Noto Sans Myanmar", "Pyidaungsu", "Padauk", "Myanmar Text", sans-serif; }

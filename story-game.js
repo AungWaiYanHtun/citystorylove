@@ -176,6 +176,58 @@
     setup.mature = !!$("story-mature")?.checked;
   }
 
+  // ── Visual stage: animated anime background + character with expressions ──
+  const ASSET = "story-assets/";
+  const SCENES = ["cafe", "campus", "rain", "night", "beach", "room", "forest", "mansion"];
+  const GENRE_SCENE = { romance: "cafe", school: "campus", mystery: "rain", horror: "mansion", fantasy: "forest", drama: "room" };
+  const FX = { cafe: "bokeh", room: "bokeh", campus: "petals", rain: "rain", night: "stars", beach: "sparkle", forest: "fireflies", mansion: "fog" };
+  let blinkTimer = null;
+  const preloaded = new Set();
+  function preload(src) { if (preloaded.has(src)) return; preloaded.add(src); const i = new Image(); i.src = src; }
+  function fxParticles(kind) {
+    const count = { rain: 70, stars: 40, petals: 18, fireflies: 22, bokeh: 14, sparkle: 20, fog: 3 }[kind] || 0;
+    let html = "";
+    for (let i = 0; i < count; i++) {
+      const x = Math.random() * 100, y = Math.random() * 100, d = (Math.random() * 5).toFixed(2);
+      const sz = kind === "bokeh" ? 20 + Math.random() * 50 : kind === "petals" ? 8 + Math.random() * 8 : 2 + Math.random() * 4;
+      const dur = kind === "rain" ? 0.5 + Math.random() * 0.5 : kind === "fog" ? 18 + i * 6 : 4 + Math.random() * 6;
+      html += `<i style="left:${x}%;top:${y}%;width:${sz}px;height:${kind === "rain" ? 14 + Math.random() * 16 : sz}px;animation-delay:-${d}s;animation-duration:${dur}s"></i>`;
+    }
+    return html;
+  }
+  function stageHTML(turn) {
+    const scene = SCENES.includes(turn?.scene) ? turn.scene : (GENRE_SCENE[state.genre] || "cafe");
+    const who = turn?.character === "lin" || turn?.character === "kai" ? turn.character : "";
+    const expr = ["neutral", "smile", "shy", "sad", "surprised"].includes(turn?.expression) ? turn.expression : "neutral";
+    const name = who === "lin" ? "Lin" : who === "kai" ? "Kai" : "";
+    return `
+      <div class="story-stage scene-${scene}" id="story-stage">
+        <img class="stage-bg" src="${ASSET}bg_${scene}.webp" alt="">
+        <div class="stage-fx fx-${FX[scene]}">${fxParticles(FX[scene])}</div>
+        ${who ? `<div class="stage-char" data-who="${who}" data-expr="${expr}">
+          <img class="char-img" src="${ASSET}${who}_${expr}.webp" alt="${name}">
+          ${expr === "neutral" ? `<img class="char-blink" src="${ASSET}${who}_blink.webp" alt="">` : ""}
+        </div>
+        <span class="stage-name">${name}</span>` : ""}
+        <div class="stage-shade"></div>
+      </div>`;
+  }
+  function startStageLife() {
+    clearInterval(blinkTimer);
+    const blink = document.querySelector("#story-stage .char-blink");
+    if (!blink) return;
+    blinkTimer = setInterval(() => {
+      if (!document.body.contains(blink)) return clearInterval(blinkTimer);
+      blink.classList.add("on");
+      setTimeout(() => blink.classList.remove("on"), 140);
+    }, 3200 + Math.random() * 1500);
+  }
+  function preloadPartner() {
+    const who = { boy: "lin", girl: "kai", gay: "kai", lesbian: "lin", transwoman: "kai", transman: "lin" }[state?.identity];
+    if (!who) return;
+    ["neutral", "blink", "smile", "shy", "sad", "surprised"].forEach((e) => preload(`${ASSET}${who}_${e}.webp`));
+  }
+
   function renderStory(body) {
     const last = state.turns[state.turns.length - 1];
     const past = state.turns.slice(0, -1);
@@ -185,6 +237,7 @@
         <button type="button" id="story-new" class="button button-quiet story-small">${T().newStory}</button>
       </div>
       ${past.length ? `<details class="story-past"><summary>${T().past} (${past.length})</summary>${past.map((t) => `<div class="story-past-item">${t.title ? `<b>${esc(t.title)}</b>` : ""}<p>${esc(t.story)}</p>${t.picked ? `<em>➜ ${esc(t.picked)}</em>` : ""}</div>`).join("")}</details>` : ""}
+      ${stageHTML(last)}
       <article class="story-card story-current">
         ${last?.title ? `<span class="eyebrow">${esc(last.title)}</span>` : ""}
         <p class="story-text">${esc(last?.story || "")}</p>
@@ -199,6 +252,8 @@
       state = null; save(); render();
     });
     body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => choose(Number(b.dataset.choice))));
+    startStageLife();
+    preloadPartner();
   }
 
   function setLoading(on) {
@@ -246,7 +301,7 @@
     setLoading(true);
     try {
       const turn = await requestTurn(settings, [], "");
-      state = { ...settings, turns: [{ title: turn.title, story: turn.story, choices: turn.choices }] };
+      state = { ...settings, turns: [{ title: turn.title, story: turn.story, choices: turn.choices, scene: turn.scene, character: turn.character, expression: turn.expression }] };
       save(); setLoading(false); render(); refreshStatus();
     } catch (e) {
       setLoading(false); showError(e.message);
@@ -263,7 +318,7 @@
     setLoading(true);
     try {
       const turn = await requestTurn(settings, historyFor(state.turns), picked);
-      state.turns = [...draft, { title: turn.title, story: turn.story, choices: turn.choices }].slice(-30);
+      state.turns = [...draft, { title: turn.title, story: turn.story, choices: turn.choices, scene: turn.scene, character: turn.character, expression: turn.expression }].slice(-30);
       save(); setLoading(false); render(); refreshStatus();
       $("story-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (e) {
