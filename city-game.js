@@ -7,7 +7,9 @@
   const cfg = window.VIDEOSPACE_CONFIG || {};
   const API = (cfg.VIP_API_URL || "").replace(/\/$/, "");
   const tg = window.Telegram?.WebApp;
-  const KEY = "videospace_city_v1";
+  const KEY = "videospace_city_v1"; // Telegram CloudStorage key (already per Telegram account)
+  // localStorage is shared by every Telegram account on the phone, so the local copy is per user id
+  const UID = String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "guest"), LKEY = KEY + "_" + UID;
   const $ = (id) => document.getElementById(id);
   const TS = 32;              // tile size in CSS px
   const MW = 46, MH = 30;     // map size in tiles
@@ -317,21 +319,39 @@
       love: { lin: 0, kai: 0, mira: 0, yuna: 0, ray: 0 }, met: {}, talk: {}, gave: {}, dated: {}, inv: {}, done: {},
       st: { shifts: 0, barShifts: 0, gifts: 0, earned: 0, club: 0, dances: 0, dates: 0, clothes: 0 }, partner: "", clubDay: 0 };
   }
-  function loadLocal() { try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); return s && s.v === 1 ? s : null; } catch { return null; } }
+  function loadLocal() { try { const s = JSON.parse(localStorage.getItem(LKEY) || "null"); return s && s.v === 1 && (!s.uid || s.uid === UID) ? s : null; } catch { return null; } }
   let cloudTimer = 0;
   function save() {
     if (!S) return;
-    S.ts = Date.now();
+    S.ts = Date.now(); S.uid = UID;
     const json = JSON.stringify(S);
-    try { localStorage.setItem(KEY, json); } catch {}
+    try { localStorage.setItem(LKEY, json); } catch {}
     clearTimeout(cloudTimer);
     cloudTimer = setTimeout(() => { try { tg?.CloudStorage?.setItem?.(KEY, json, () => {}); } catch {} }, 1500);
+    if (!srvTimer) srvTimer = setTimeout(() => { srvTimer = 0; if (S) pushServer(JSON.stringify(S)); }, 5000);
+  }
+  // server copy (Supabase, keyed by the verified Telegram user id): survives new phones and cleared caches
+  let srvTimer = 0;
+  function pushServer(json, keep) {
+    if (!API || !tg?.initData) return;
+    try { fetch(API + "/api/save/city", { method: "POST", keepalive: !!keep, headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData }, body: json === null ? '{"data":null}' : '{"data":' + json + '}' }).catch(() => {}); } catch {}
+  }
+  function flushServer() { if (S && srvTimer) { clearTimeout(srvTimer); srvTimer = 0; pushServer(JSON.stringify(S), true); } }
+  async function loadServer() {
+    if (!API || !tg?.initData) return;
+    try {
+      const r = await fetch(API + "/api/save/city", { headers: { "X-Telegram-Init-Data": tg.initData } });
+      const d = await r.json().catch(() => ({})); const c = d && d.data;
+      if (r.ok && c && c.v === 1 && (!c.uid || c.uid === UID) && (!S || (c.ts || 0) > (S.ts || 0))) {
+        S = c; try { localStorage.setItem(LKEY, JSON.stringify(c)); } catch {} if (!G) renderStart();
+      } else if (r.ok && !c && S) pushServer(JSON.stringify(S));
+    } catch {}
   }
   function loadCloud() {
     try {
       tg?.CloudStorage?.getItem?.(KEY, (err, val) => {
         if (err || !val) return;
-        try { const c = JSON.parse(val); if (c && c.v === 1 && (!S || c.ts > S.ts)) { S = c; try { localStorage.setItem(KEY, val); } catch {} renderStart(); } } catch {}
+        try { const c = JSON.parse(val); if (c && c.v === 1 && (!S || c.ts > S.ts)) { S = c; try { localStorage.setItem(LKEY, val); localStorage.removeItem(KEY); } catch {} renderStart(); } } catch {}
       });
     } catch {}
   }
@@ -360,7 +380,8 @@
     btn.addEventListener("click", () => showTab(true));
     ["detective-tab-btn", "story-tab-btn", "regular-videos-btn", "vip-videos-btn"].forEach((id) =>
       $(id)?.addEventListener("click", () => showTab(false), true));
-    renderStart(); loadCloud(); loadVip();
+    renderStart(); loadCloud(); loadServer(); loadVip();
+    document.addEventListener("visibilitychange", () => { if (document.hidden) flushServer(); });
   }
   function showTab(on) {
     const sec = $("city-section"); if (!sec) return;
@@ -450,7 +471,7 @@
     T0.el.querySelector("[data-t=cont]").addEventListener("click", () => { if (!S.charSet) return stepChar(true); closeTitle(true); openGame(); });
     T0.el.querySelector("[data-t=new]").addEventListener("click", () => {
       if (!confirm(t.newg + "?")) return;
-      S = null; try { localStorage.removeItem(KEY); tg?.CloudStorage?.removeItem?.(KEY, () => {}); } catch {}
+      S = null; try { localStorage.removeItem(LKEY); tg?.CloudStorage?.removeItem?.(KEY, () => {}); pushServer(null); } catch {}
       setup = { name: "", look: "boy", char: 1, adult: false, lang: "en" }; stepLang();
     });
   }
@@ -601,7 +622,7 @@
   }
   function closeGame() {
     if (!G) return;
-    save(); cancelAnimationFrame(G.raf); clearInterval(G.saveTimer);
+    save(); flushServer(); cancelAnimationFrame(G.raf); clearInterval(G.saveTimer);
     removeEventListener("keydown", G.key); removeEventListener("keyup", G.key); removeEventListener("resize", G.resize);
     try { ["viewportChanged", "fullscreenChanged", "safeAreaChanged", "contentSafeAreaChanged"].forEach((ev) => tg?.offEvent?.(ev, G.resize)); tg?.BackButton?.offClick?.(G.back); tg?.BackButton?.hide?.(); } catch {}
     try { screen.orientation?.unlock?.(); } catch {}
@@ -702,7 +723,7 @@
     let mag = 1;
     if (G.joy) { dx = G.joy.x; dy = G.joy.y; mag = Math.max(0.45, G.joy.m); }
     else { if (G.held.has("l")) dx -= 1; if (G.held.has("r")) dx += 1; if (G.held.has("u")) dy -= 1; if (G.held.has("d")) dy += 1; }
-    if (dx || dy) G.side = Math.abs(dx) > Math.abs(dy) * 0.8;
+    if (dx || dy) { G.side = Math.abs(dx) > Math.abs(dy) * 0.8; if (!G.side) G.back = dy < 0; }
     if (dx || dy) {
       const len = Math.hypot(dx, dy), sp = (G.run ? 5.6 : 3.4) * mag * dt;
       const nx = S.x + (dx / len) * sp, ny = S.y + (dy / len) * sp, r = 0.28;
@@ -773,9 +794,9 @@
   const SIDEN = { 1: 3, 2: 3, 3: 2, 4: 3, 5: 2, 6: 3 };
   const SIDECYC = { 3: [1, 0, 2, 0], 2: [1, 0] };
   function sprite(ch, wt, wb, fr) {
-    const id = fr == null ? ch : ch + "_" + fr, pre = fr == null ? "" : "s";
-    const key = id + "|" + wt + "|" + wb; if (PCACHE[key]) return PCACHE[key];
-    const base = img(PL(fr == null ? "c" : "s", id)); if (!ready(base)) return null;
+    const bk = fr === "k", id = fr == null || bk ? ch : ch + "_" + fr, pre = bk ? "k" : fr == null ? "" : "s";
+    const key = pre + id + "|" + wt + "|" + wb; if (PCACHE[key]) return PCACHE[key];
+    const base = img(PL(bk ? "k" : fr == null ? "c" : "s", id)); if (!ready(base)) return null;
     const parts = [["t", wt], ["b", wb]].filter(([, v]) => v && v !== "orig" && CLOTH[v]);
     const ims = parts.map(([g]) => img(PL(pre + g, id))); if (ims.some((i) => !ready(i))) return null;
     const cv = document.createElement("canvas"); cv.width = base.naturalWidth; cv.height = base.naturalHeight;
@@ -846,7 +867,8 @@
         return;
       }
     }
-    const sp = sprite(S.char, S.wear.t, S.wear.b);
+    // walking up the screen = back view (falls back to the front sprite until it loads)
+    const sp = (G.back && sprite(S.char, S.wear.t, S.wear.b, "k")) || sprite(S.char, S.wear.t, S.wear.b);
     if (sp) {
       const h = 62, w = h * sp.width / sp.height, mv = G.walk > 0, k = h / sp.height;
       const SW = sp.width, SH = sp.height, cut = Math.round(SH * (LEGCUT[S.char] || 0.67)), lh = SH - cut;
