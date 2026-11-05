@@ -10,7 +10,7 @@
   const KEY = "videospace_city_v1";
   const $ = (id) => document.getElementById(id);
   const TS = 32;              // tile size in CSS px
-  const MW = 46, MH = 28;     // map size in tiles
+  const MW = 46, MH = 30;     // map size in tiles
   const DAY_START = 8 * 60, DAY_END = 26 * 60; // 8:00 AM .. 2:00 AM
 
   // ---------------- Text ----------------
@@ -228,6 +228,22 @@
   };
   // English is the base: any key a language lacks falls back to English.
   ["my", "ru", "es"].forEach((k) => { TXT[k] = Object.assign({}, TXT.en, TXT[k]); });
+  // Fix 24: characters, boutique and wardrobe texts.
+  const EXTRA = {
+    en: { ward: "👗 Wardrobe", tops: "👕 Tops", bottoms: "👖 Bottoms", chars: "👤 Character", orig: "Original", wear: "Wear", wearing: "✓ Wearing",
+      own: "Owned", buyWear: "Buy & wear {p}", tryHint: "Tap clothes to try them on.", bought: "🛍️ Bought! +{n}", mstyle: "Buy new clothes at the Boutique",
+      cl: { white: "White", red: "Red", pink: "Pink", sky: "Sky blue", mint: "Mint", yellow: "Yellow", purple: "Lavender", black: "Black", stripe: "Stripes", plaid: "Plaid", heart: "Hearts", gold: "Gold", denim: "Denim", khaki: "Khaki", navy: "Navy", green: "Green" } },
+    my: { ward: "👗 အဝတ်ဗီရို", tops: "👕 အင်္ကျီ", bottoms: "👖 ဘောင်းဘီ/စကတ်", chars: "👤 ဇာတ်ကောင်", orig: "မူလ", wear: "ဝတ်မယ်", wearing: "✓ ဝတ်ထားတယ်",
+      own: "ရှိပြီး", buyWear: "ဝယ်ပြီးဝတ်မယ် {p}", tryHint: "အဝတ်ကိုနှိပ်ပြီး စမ်းဝတ်ကြည့်ပါ။", bought: "🛍️ ဝယ်ပြီးပြီ! +{n}", mstyle: "Boutique မှာ အဝတ်အစားအသစ် ဝယ်ပါ",
+      cl: { white: "အဖြူ", red: "အနီ", pink: "ပန်းရောင်", sky: "မိုးပြာ", mint: "မင့်စိမ်း", yellow: "အဝါ", purple: "ခရမ်းနု", black: "အနက်", stripe: "အစင်း", plaid: "အကွက်", heart: "နှလုံးပုံ", gold: "ရွှေရောင်", denim: "ဂျင်းပြာ", khaki: "ခါကီ", navy: "နက်ပြာ", green: "အစိမ်း" } },
+    ru: { ward: "👗 Гардероб", tops: "👕 Верх", bottoms: "👖 Низ", chars: "👤 Персонаж", orig: "Оригинал", wear: "Надеть", wearing: "✓ Надето",
+      own: "Есть", buyWear: "Купить и надеть {p}", tryHint: "Нажми на одежду, чтобы примерить.", bought: "🛍️ Куплено! +{n}", mstyle: "Купи новую одежду в бутике",
+      cl: { white: "Белый", red: "Красный", pink: "Розовый", sky: "Голубой", mint: "Мятный", yellow: "Жёлтый", purple: "Лавандовый", black: "Чёрный", stripe: "Полоска", plaid: "Клетка", heart: "Сердечки", gold: "Золотой", denim: "Деним", khaki: "Хаки", navy: "Тёмно-синий", green: "Зелёный" } },
+    es: { ward: "👗 Armario", tops: "👕 Partes de arriba", bottoms: "👖 Partes de abajo", chars: "👤 Personaje", orig: "Original", wear: "Poner", wearing: "✓ Puesto",
+      own: "Tuyo", buyWear: "Comprar y poner {p}", tryHint: "Toca la ropa para probártela.", bought: "🛍️ ¡Comprado! +{n}", mstyle: "Compra ropa nueva en la boutique",
+      cl: { white: "Blanco", red: "Rojo", pink: "Rosa", sky: "Celeste", mint: "Menta", yellow: "Amarillo", purple: "Lavanda", black: "Negro", stripe: "Rayas", plaid: "Cuadros", heart: "Corazones", gold: "Dorado", denim: "Mezclilla", khaki: "Caqui", navy: "Azul marino", green: "Verde" } }
+  };
+  Object.keys(TXT).forEach((k) => { Object.assign(TXT[k], EXTRA.en, EXTRA[k] || {}); TXT[k].m = Object.assign({}, TXT[k].m, { style: TXT[k].mstyle }); });
   const LANGS = [["en", "🇬🇧 English"], ["ru", "🇷🇺 Русский"], ["es", "🇪🇸 Español"], ["my", "🇲🇲 မြန်မာ"]];
   const GAME_TITLE = "City Love";
   const TAB_TEXT = "👑 VIP Game";
@@ -251,7 +267,22 @@
     cinema:  { sign: "CINEMA",        b: [40, 14, 5, 5], roof: "#5b3f8f", wall: "#ece6f7", open: H(12), close: H(24), bg: "story-assets/bg_night.webp" },
     park:    { sign: "PARK", park: true, door: [31.5, 15.1], open: H(6), close: H(23), bg: "story-assets/bg_forest.webp" }
   };
-  const DECOR = [[1, 24, 6, 3], [12, 24, 11, 3], [27, 24, 9, 3], [40, 24, 5, 3]];
+  VENUES.boutique = { sign: "BOUTIQUE", b: [12, 24, 6, 3], roof: "#d4569b", wall: "#fde8f3", open: H(10), close: H(21), bg: "city-assets/bg_boutique.webp" };
+  const DECOR = [[1, 24, 6, 3], [19, 24, 4, 3], [27, 24, 9, 3], [40, 24, 5, 3]];
+  // Fix 24: six playable characters + clothes (recoloured on the fly from shading masks).
+  const CHARS = [1, 2, 3, 4, 5, 6];
+  const charsFor = (look) => (look === "girl" ? [4, 5, 6] : [1, 2, 3]); // boys pick boys, girls pick girls
+  const LEGCUT = { 1: 0.67, 2: 0.67, 3: 0.66, 4: 0.75, 5: 0.76, 6: 0.70 }; // where the legs start (fraction of height)
+  const PL = (k, n) => `city-assets/players/${k}${n}.webp`;
+  const CLOTH = {
+    white: { c: "#ffffff" }, red: { c: "#ff5a6e" }, pink: { c: "#ffa3c7" }, sky: { c: "#8ccfff" }, mint: { c: "#9eecc8" }, yellow: { c: "#ffe066" },
+    purple: { c: "#b9a0ff" }, black: { c: "#55556a" }, gold: { c: "#f0c96a" }, denim: { c: "#6f9ee0" }, khaki: { c: "#e2c99a" }, navy: { c: "#4d68b0" }, green: { c: "#7ccf96" },
+    stripe: { pat: "stripe", c: "#5a78c8", c2: "#ffffff" }, plaid: { pat: "plaid", c: "#e0566a", c2: "#2e3a6a" }, heart: { pat: "heart", c: "#ffc2d9", c2: "#ff4f8b" }
+  };
+  const SHOP = {
+    t: [["white", 15], ["red", 20], ["pink", 20], ["sky", 20], ["mint", 20], ["yellow", 25], ["purple", 25], ["black", 30], ["stripe", 40], ["plaid", 45], ["heart", 50], ["gold", 60]],
+    b: [["denim", 20], ["black", 20], ["khaki", 20], ["white", 25], ["navy", 25], ["pink", 25], ["red", 30], ["green", 30], ["stripe", 40], ["plaid", 45]]
+  };
   const NPCS = {
     lin:  { name: "Lin",  venue: "cafe",  from: H(9),  to: H(18),   img: (e) => `story-assets/lin_${e}.webp`, faces: true, loves: ["rose", "teddy"], likes: ["cupcake", "chocolate", "novel", "bouquet"] },
     kai:  { name: "Kai",  venue: "books", from: H(10), to: H(19),   img: (e) => `story-assets/kai_${e}.webp`, faces: true, loves: ["novel", "latte"], likes: ["chocolate", "cupcake", "watch"] },
@@ -264,6 +295,7 @@
     ["shift", 20, (s) => s.st.shifts >= 1], ["lin", 10, (s) => !!s.met.lin], ["gift", 15, (s) => s.st.gifts >= 1],
     ["earn", 30, (s) => s.st.earned >= 300], ["club", 20, (s) => s.st.club >= 1], ["mira", 20, (s) => !!s.met.mira],
     ["dance", 20, (s) => s.st.dances >= 1], ["bar", 25, (s) => s.st.barShifts >= 1],
+    ["style", 15, (s) => (s.st.clothes || 0) >= 1],
     ["love", 40, (s) => Math.max(...Object.values(s.love)) >= 50], ["date", 50, (s) => s.st.dates >= 1], ["confess", 100, (s) => !!s.partner]
   ];
   const JOBS = {
@@ -273,16 +305,17 @@
 
   // ---------------- State ----------------
   let S = loadLocal();
-  let setup = { name: "", look: "boy", adult: false, lang: (S && S.lang) || "en" };
+  let setup = { name: "", look: "boy", char: 1, adult: false, lang: (S && S.lang) || "en" };
+  function norm() { if (!S) return; S.look = S.look === "girl" ? "girl" : "boy"; if (!charsFor(S.look).includes(S.char)) S.char = charsFor(S.look)[0]; S.wear = S.wear || { t: "orig", b: "orig" }; S.closet = S.closet || {}; S.st.clothes = S.st.clothes || 0; }
   let vip = false;
   const L = () => TXT[(S && S.lang) || setup.lang] || TXT.en;
   const fmt = (s, o = {}) => String(s).replace(/\{(\w+)\}/g, (_, k) => (o[k] ?? ""));
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   function fresh() {
-    return { v: 1, ts: Date.now(), lang: setup.lang, name: setup.name.trim().slice(0, 18) || "You", look: setup.look,
+    return { v: 1, ts: Date.now(), lang: setup.lang, name: setup.name.trim().slice(0, 18) || "You", look: setup.look, char: charsFor(setup.look).includes(setup.char) ? setup.char : charsFor(setup.look)[0], wear: { t: "orig", b: "orig" }, closet: {}, charSet: 1,
       day: 1, min: DAY_START, energy: 100, money: 40, lv: 1, xp: 0, x: 4.5, y: 9.6,
       love: { lin: 0, kai: 0, mira: 0, yuna: 0, ray: 0 }, met: {}, talk: {}, gave: {}, dated: {}, inv: {}, done: {},
-      st: { shifts: 0, barShifts: 0, gifts: 0, earned: 0, club: 0, dances: 0, dates: 0 }, partner: "", clubDay: 0 };
+      st: { shifts: 0, barShifts: 0, gifts: 0, earned: 0, club: 0, dances: 0, dates: 0, clothes: 0 }, partner: "", clubDay: 0 };
   }
   function loadLocal() { try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); return s && s.v === 1 ? s : null; } catch { return null; } }
   let cloudTimer = 0;
@@ -403,22 +436,22 @@
     if (!keepOpen) { document.documentElement.classList.remove("cg-open"); try { screen.orientation?.unlock?.(); } catch {} renderStart(); }
   }
   function titleFrame(inner, step) {
-    const dots = step ? `<div class="cg-steps">${[1, 2, 3].map((n) => `<i class="${n <= step ? "on" : ""}"></i>`).join("")}</div>` : "";
+    const dots = step ? `<div class="cg-steps">${[1, 2, 3, 4].map((n) => `<i class="${n <= step ? "on" : ""}"></i>`).join("")}</div>` : "";
     T0.el.innerHTML = `<div class="cg-pbg" style="background-image:url('city-assets/bg_club.webp')"></div>
       <button type="button" class="cg-x cg-tclose" data-t="close">✕</button>
       <div class="cg-tbox"><div class="cg-logo"><span class="cg-logo-e">🏙️</span> <span class="cg-logo-t">${GAME_TITLE}</span></div>${dots}${inner}</div>`;
     T0.el.querySelector("[data-t=close]").addEventListener("click", () => closeTitle());
   }
   function stepTitle() {
-    const t = L();
+    const t = L(); norm();
     titleFrame(`<p class="cg-tsub">👤 ${esc(S.name)} · ${fmt(t.day, { d: S.day })} · 💰 $${S.money}${S.partner ? " · 💞 " + NPCS[S.partner].name : ""}</p>
       <div class="cg-tcol"><button type="button" class="button button-gold cg-big" data-t="cont">${fmt(t.cont, { d: S.day })}</button>
       <button type="button" class="button cg-new" data-t="new">${t.newg}</button></div>`);
-    T0.el.querySelector("[data-t=cont]").addEventListener("click", () => { closeTitle(true); openGame(); });
+    T0.el.querySelector("[data-t=cont]").addEventListener("click", () => { if (!S.charSet) return stepChar(true); closeTitle(true); openGame(); });
     T0.el.querySelector("[data-t=new]").addEventListener("click", () => {
       if (!confirm(t.newg + "?")) return;
       S = null; try { localStorage.removeItem(KEY); tg?.CloudStorage?.removeItem?.(KEY, () => {}); } catch {}
-      setup = { name: "", look: "boy", adult: false, lang: "en" }; stepLang();
+      setup = { name: "", look: "boy", char: 1, adult: false, lang: "en" }; stepLang();
     });
   }
   function stepLang() {
@@ -432,8 +465,27 @@
       <div class="cg-looks"><button type="button" class="cg-look${setup.look === "boy" ? " active" : ""}" data-k="boy"><span>👦</span>${t.boy.replace(/^\S+\s/, "")}</button>
       <button type="button" class="cg-look${setup.look === "girl" ? " active" : ""}" data-k="girl"><span>👧</span>${t.girl.replace(/^\S+\s/, "")}</button></div>
       <button type="button" class="cg-x cg-tback" data-t="back">${t.back}</button>`, 2);
-    T0.el.querySelectorAll(".cg-look").forEach((b) => b.addEventListener("click", () => { setup.look = b.dataset.k; stepName(); }));
+    T0.el.querySelectorAll(".cg-look").forEach((b) => b.addEventListener("click", () => {
+      if (setup.look !== b.dataset.k || !charsFor(b.dataset.k).includes(setup.char)) setup.char = charsFor(b.dataset.k)[0];
+      setup.look = b.dataset.k; stepName();
+    }));
     T0.el.querySelector("[data-t=back]").addEventListener("click", stepLang);
+  }
+  // character pick: last step of a new game, or once for an old save that never picked one
+  function stepChar(cont) {
+    const t = L(), look = cont ? S.look : setup.look, list = charsFor(look);
+    let cur = cont ? (list.includes(S.char) ? S.char : list[0]) : (list.includes(setup.char) ? setup.char : list[0]);
+    titleFrame(`<h3 class="cg-th">${t.chars}</h3>
+      <div class="cg-chars cg-chars3">${list.map((n) => `<button type="button" class="cg-charpick${cur === n ? " active" : ""}" data-k="${n}"><img src="${PL("c", n)}" alt=""></button>`).join("")}</div>
+      <div class="cg-trow">${cont ? "" : `<button type="button" class="cg-x" data-t="back">${t.back}</button>`}<button type="button" class="button button-gold" data-t="go">${t.play}</button></div>`, cont ? 0 : 4);
+    T0.el.querySelectorAll(".cg-charpick").forEach((b) => b.addEventListener("click", () => {
+      cur = +b.dataset.k; T0.el.querySelectorAll(".cg-charpick").forEach((x) => x.classList.toggle("active", x === b));
+    }));
+    const bk = T0.el.querySelector("[data-t=back]"); if (bk) bk.addEventListener("click", stepName);
+    T0.el.querySelector("[data-t=go]").addEventListener("click", () => {
+      if (cont) { S.char = cur; S.charSet = 1; save(); closeTitle(true); openGame(); return; }
+      setup.char = cur; S = fresh(); save(); closeTitle(true); setTimeout(openGame, 250);
+    });
   }
   function stepName() {
     const t = L();
@@ -441,7 +493,7 @@
       <input id="cg-name" class="cg-input cg-tinput" maxlength="18" placeholder="${esc(t.namePh)}" value="${esc(setup.name)}" autocomplete="off">
       <label class="cg-check"><input type="checkbox" id="cg-adult"${setup.adult ? " checked" : ""}> ${t.adult}</label>
       <p class="cg-err hidden" id="cg-err"></p>
-      <div class="cg-trow"><button type="button" class="cg-x" data-t="back">${t.back}</button><button type="button" class="button button-gold" data-t="go">${t.play}</button></div>`, 3);
+      <div class="cg-trow"><button type="button" class="cg-x" data-t="back">${t.back}</button><button type="button" class="button button-gold" data-t="go">${t.next || "Next →"}</button></div>`, 3);
     const nameEl = $("cg-name");
     T0.el.querySelector("[data-t=back]").addEventListener("click", () => { setup.name = nameEl.value; stepLook(); });
     const go = () => {
@@ -449,7 +501,7 @@
       const err = $("cg-err");
       if (!setup.name) { err.textContent = t.pickName; err.classList.remove("hidden"); nameEl.focus(); return; }
       if (!setup.adult) { err.textContent = t.needAdult; err.classList.remove("hidden"); return; }
-      nameEl.blur(); S = fresh(); save(); closeTitle(true); setTimeout(openGame, 250);
+      nameEl.blur(); stepChar();
     };
     T0.el.querySelector("[data-t=go]").addEventListener("click", go);
     nameEl.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
@@ -463,6 +515,7 @@
     const hRoads = [11, 21], vRoads = [9, 24, 37];
     hRoads.forEach((r) => fill(0, r - 1, MW - 1, r + 2, 2)); vRoads.forEach((c) => fill(c - 1, 0, c + 2, MH - 1, 2));
     hRoads.forEach((r) => fill(0, r, MW - 1, r + 1, 1)); vRoads.forEach((c) => fill(c, 0, c + 1, MH - 1, 1));
+    fill(0, 27, MW - 1, 28, 2); vRoads.forEach((c) => fill(c, 27, c + 1, MH - 1, 1)); // south walkway (Fix 24)
     fill(27, 14, 35, 19, 4); fill(30, 16, 32, 17, 5);
     Object.values(VENUES).forEach((v) => { if (v.b) { const [x, y, w, h] = v.b; fill(x, y, x + w - 1, y + h - 1, 3); v.door = [x + w / 2, y + h + 0.55]; } });
     DECOR.forEach(([x, y, w, h]) => fill(x, y, x + w - 1, y + h - 1, 3));
@@ -479,16 +532,17 @@
   function openGame() {
     if (G) return;
     if (!map.length) buildMap();
+    norm(); CHARS.forEach((n) => { img(PL("c", n)); img(PL("t", n)); img(PL("b", n)); });
     const t = L();
     const root = document.createElement("div");
     root.id = "cg-root";
     root.innerHTML = `
       <canvas id="cg-canvas"></canvas>
-      <div class="cg-hud"><div class="cg-av">${S.look === "girl" ? "👧" : "👦"}<span class="cg-lv" id="cg-lv"></span></div><div><div class="cg-nm" id="cg-nm"></div>
+      <div class="cg-hud"><div class="cg-av" id="cg-av" data-a="ward"><span class="cg-lv" id="cg-lv"></span></div><div><div class="cg-nm" id="cg-nm"></div>
         <div class="cg-bar"><i id="cg-en"></i></div><div class="cg-bar cg-xpbar"><i id="cg-xp"></i></div><div class="cg-sub" id="cg-sub"></div></div></div>
       <div class="cg-clock" id="cg-clock"></div>
-      <div class="cg-tr"><div class="cg-chip" id="cg-money"></div><button type="button" class="cg-chip" data-a="bag">🎒</button><button type="button" class="cg-chip" data-a="menu">☰</button><button type="button" class="cg-chip" data-a="exit">✕</button></div>
-      <div class="cg-mini"><canvas id="cg-mini" width="184" height="112"></canvas></div>
+      <div class="cg-tr"><div class="cg-chip" id="cg-money"></div><button type="button" class="cg-chip" data-a="ward">👕</button><button type="button" class="cg-chip" data-a="bag">🎒</button><button type="button" class="cg-chip" data-a="menu">☰</button><button type="button" class="cg-chip" data-a="exit">✕</button></div>
+      <div class="cg-mini"><canvas id="cg-mini" width="184" height="120"></canvas></div>
       <div class="cg-quest" id="cg-quest"></div>
       <div class="cg-hint hidden" id="cg-hint"></div>
       <div class="cg-joy" id="cg-joy"><div class="cg-ring"></div><div class="cg-knob" id="cg-knob"></div></div>
@@ -626,7 +680,7 @@
     });
     G.base = base; G.lit = lit;
     // minimap base
-    const mini = document.createElement("canvas"); mini.width = 184; mini.height = 112; const m = mini.getContext("2d"); const ms = 184 / MW;
+    const mini = document.createElement("canvas"); mini.width = 184; mini.height = Math.round(184 / MW * MH); const m = mini.getContext("2d"); const ms = 184 / MW;
     for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { m.fillStyle = ["#4f9a55", "#3a3f4b", "#bdb6a8", "#a8708a", "#e2d6c0", "#5fb7e0"][map[y][x]]; m.fillRect(x * ms, y * ms, ms + 0.5, ms + 0.5); }
     G.miniBase = mini; G.ms = ms;
   }
@@ -648,6 +702,7 @@
     let mag = 1;
     if (G.joy) { dx = G.joy.x; dy = G.joy.y; mag = Math.max(0.45, G.joy.m); }
     else { if (G.held.has("l")) dx -= 1; if (G.held.has("r")) dx += 1; if (G.held.has("u")) dy -= 1; if (G.held.has("d")) dy += 1; }
+    if (dx || dy) G.side = Math.abs(dx) > Math.abs(dy) * 0.8;
     if (dx || dy) {
       const len = Math.hypot(dx, dy), sp = (G.run ? 5.6 : 3.4) * mag * dt;
       const nx = S.x + (dx / len) * sp, ny = S.y + (dy / len) * sp, r = 0.28;
@@ -702,7 +757,115 @@
     c.fillStyle = "#fff"; c.font = "bold 11px system-ui, sans-serif"; c.textAlign = "center"; c.fillText("♥", X, Y - h - 4 + bob);
     c.fillStyle = "rgba(10,12,20,.7)"; rr(c, X - 16, Y + 5, 32, 12, 6); c.fill(); c.fillStyle = "#fff"; c.font = "bold 9px system-ui, sans-serif"; c.fillText(n.name, X, Y + 14);
   }
+  // Compose a character with recoloured top / bottom. Cached per combination.
+  const PCACHE = {};
+  const ready = (i) => i.complete && i.naturalWidth > 0;
+  function paint(ctx, key) {
+    const d = CLOTH[key]; if (!d) return "#fff"; if (!d.pat) return d.c;
+    const p = document.createElement("canvas"); p.width = p.height = 24; const q = p.getContext("2d");
+    q.fillStyle = d.c; q.fillRect(0, 0, 24, 24); q.fillStyle = d.c2;
+    if (d.pat === "stripe") q.fillRect(0, 0, 24, 8);
+    else if (d.pat === "plaid") { q.globalAlpha = 0.45; q.fillRect(0, 9, 24, 6); q.fillRect(9, 0, 6, 24); q.globalAlpha = 1; q.fillRect(0, 11, 24, 2); q.fillRect(11, 0, 2, 24); }
+    else { q.beginPath(); q.moveTo(12, 17); q.bezierCurveTo(3, 11, 7, 3, 12, 8); q.bezierCurveTo(17, 3, 21, 11, 12, 17); q.fill(); }
+    return ctx.createPattern(p, "repeat");
+  }
+  // side-view walk frames per character (s{n}_{j} sprite, st/sb masks); frame 0 = standing
+  const SIDEN = { 1: 3, 2: 3, 3: 2, 4: 3, 5: 2, 6: 3 };
+  const SIDECYC = { 3: [1, 0, 2, 0], 2: [1, 0] };
+  function sprite(ch, wt, wb, fr) {
+    const id = fr == null ? ch : ch + "_" + fr, pre = fr == null ? "" : "s";
+    const key = id + "|" + wt + "|" + wb; if (PCACHE[key]) return PCACHE[key];
+    const base = img(PL(fr == null ? "c" : "s", id)); if (!ready(base)) return null;
+    const parts = [["t", wt], ["b", wb]].filter(([, v]) => v && v !== "orig" && CLOTH[v]);
+    const ims = parts.map(([g]) => img(PL(pre + g, id))); if (ims.some((i) => !ready(i))) return null;
+    const cv = document.createElement("canvas"); cv.width = base.naturalWidth; cv.height = base.naturalHeight;
+    const c = cv.getContext("2d"); c.drawImage(base, 0, 0);
+    parts.forEach(([, v], j) => {
+      const L2 = document.createElement("canvas"); L2.width = cv.width; L2.height = cv.height; const l = L2.getContext("2d");
+      l.drawImage(ims[j], 0, 0); l.globalCompositeOperation = "multiply"; l.fillStyle = paint(l, v); l.fillRect(0, 0, L2.width, L2.height);
+      l.globalCompositeOperation = "destination-in"; l.drawImage(ims[j], 0, 0); c.drawImage(L2, 0, 0);
+    });
+    return (PCACHE[key] = cv);
+  }
+  function swatch(key) {
+    const d = CLOTH[key]; if (!d) return "background:linear-gradient(135deg,#ffcf6b,#ff7aa8)";
+    if (d.pat === "stripe") return `background:repeating-linear-gradient(180deg,${d.c2} 0 4px,${d.c} 4px 11px)`;
+    if (d.pat === "plaid") return `background:linear-gradient(90deg,transparent 40%,${d.c2}88 40% 60%,transparent 60%),linear-gradient(0deg,transparent 40%,${d.c2}88 40% 60%,transparent 60%),${d.c}`;
+    if (d.pat === "heart") return `background:radial-gradient(circle at 30% 35%,${d.c2} 0 3px,transparent 3.5px),radial-gradient(circle at 70% 70%,${d.c2} 0 3px,transparent 3.5px),${d.c}`;
+    return `background:${d.c}`;
+  }
+  // Wardrobe (home / menu) and Boutique (shop) share one panel.
+  function renderStyle(mode) {
+    const t = L(), shop = mode === "shop";
+    G.wmode = mode; if (!G.wtab || (shop && G.wtab === "char")) G.wtab = shop ? "t" : "char";
+    G.try = G.try || {};
+    const tabs = (shop ? ["t", "b"] : ["char", "t", "b"]).map((k) => `<button type="button" class="story-chip${G.wtab === k ? " active" : ""}" data-a="wtab" data-k="${k}">${k === "char" ? t.chars : k === "t" ? t.tops : t.bottoms}</button>`).join("");
+    let cells = "", buy = "";
+    if (G.wtab === "char") {
+      cells = charsFor(S.look).map((n) => `<button type="button" class="cg-wcell cg-wchar${S.char === n ? " active" : ""}" data-a="wchar" data-k="${n}"><img src="${PL("c", n)}" alt=""></button>`).join("");
+    } else {
+      const g = G.wtab, cur = S.wear[g], tried = shop ? G.try[g] : null;
+      const list = shop ? SHOP[g] : [["orig", 0], ...SHOP[g].filter(([k]) => S.closet[g + ":" + k])];
+      cells = list.map(([k, p]) => {
+        const owned = k === "orig" || !!S.closet[g + ":" + k], on = cur === k, sel = tried === k;
+        const tag = on ? t.wearing : owned ? t.own : "$" + p;
+        return `<button type="button" class="cg-wcell${on ? " active" : ""}${sel ? " sel" : ""}" data-a="wpick" data-k="${g}:${k}"><i class="cg-sw" style="${swatch(k)}"></i><span>${esc(k === "orig" ? t.orig : t.cl[k])}</span><small>${tag}</small></button>`;
+      }).join("");
+      if (shop && tried && !S.closet[g + ":" + tried]) { const p = SHOP[g].find(([k]) => k === tried)[1]; buy = `<button type="button" class="button button-gold cg-wbuy" data-a="cbuy" data-k="${g}:${tried}">${fmt(t.buyWear, { p: "$" + p })}</button>`; }
+      else if (shop) buy = `<p class="cg-small">${t.tryHint}</p>`;
+    }
+    const title = shop ? "🛍️ BOUTIQUE" : t.ward;
+    const sub = shop ? fmt(t.hours, { a: clock(VENUES.boutique.open), b: clock(VENUES.boutique.close) }) + ` · 💰 $${S.money}` : `💰 $${S.money}`;
+    openPanel(`<div class="cg-ph"><div><h3>${title}</h3><small>${sub}</small></div><button type="button" class="cg-x" data-a="wclose">${t.close}</button></div>
+      <div class="cg-ward"><div class="cg-wprev"><canvas id="cg-wcv" width="240" height="360"></canvas></div>
+      <div class="cg-wright"><div class="cg-wtabs">${tabs}</div><div class="cg-wgrid${G.wtab === "char" ? " cg-wgrid3" : ""}">${cells}</div>${buy}</div></div>`, shop ? VENUES.boutique.bg : "story-assets/bg_room.webp");
+    if (shop) G.venue = "boutique";
+    drawPrev();
+  }
+  function drawPrev(tries = 0) {
+    const cv = $("cg-wcv"); if (!cv || !G) return;
+    const tr = G.wmode === "shop" ? G.try : {};
+    const sp = sprite(S.char, tr.t || S.wear.t, tr.b || S.wear.b);
+    if (!sp) { if (tries < 30) setTimeout(() => drawPrev(tries + 1), 150); return; }
+    const c = cv.getContext("2d"); c.clearRect(0, 0, cv.width, cv.height);
+    const h = cv.height * 0.96, w = h * sp.width / sp.height; c.imageSmoothingQuality = "high";
+    c.fillStyle = "rgba(0,0,0,.25)"; c.beginPath(); c.ellipse(cv.width / 2, cv.height - 10, 60, 10, 0, 0, 7); c.fill();
+    c.drawImage(sp, (cv.width - w) / 2, cv.height - h - 6, w, h);
+  }
   function drawPlayer(c, X, Y) {
+    if (G.side && SIDEN[S.char]) {
+      const cyc = SIDECYC[SIDEN[S.char]], mv = G.walk > 0;
+      const fr = mv ? cyc[Math.floor(G.walk / 1.4) % cyc.length] : 0;
+      const ss = sprite(S.char, S.wear.t, S.wear.b, fr);
+      if (ss) {
+        const h = 62, w = h * ss.width / ss.height, bob = mv && fr === 0 ? 1.5 : 0;
+        c.fillStyle = "rgba(0,0,0,.32)"; c.beginPath(); c.ellipse(X, Y + 2, fr ? 14 : 11, 4.5, 0, 0, 7); c.fill();
+        c.save(); c.translate(X, Y + 3 - bob); c.scale(G.face < 0 ? -1 : 1, 1); c.imageSmoothingQuality = "high"; c.drawImage(ss, -w / 2, -h, w, h); c.restore();
+        c.fillStyle = "rgba(10,12,20,.7)"; c.font = "bold 10px system-ui, sans-serif"; const tw3 = Math.max(28, c.measureText(S.name).width + 10);
+        rr(c, X - tw3 / 2, Y + 5, tw3, 13, 6); c.fill(); c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText(S.name, X, Y + 15);
+        return;
+      }
+    }
+    const sp = sprite(S.char, S.wear.t, S.wear.b);
+    if (sp) {
+      const h = 62, w = h * sp.width / sp.height, mv = G.walk > 0, k = h / sp.height;
+      const SW = sp.width, SH = sp.height, cut = Math.round(SH * (LEGCUT[S.char] || 0.67)), lh = SH - cut;
+      const ph = G.walk, sn = mv ? Math.sin(ph) : 0, amp = G.run ? 0.36 : 0.28;
+      const liftL = Math.max(0, sn), liftR = Math.max(0, -sn);
+      // shadow squashes as the feet move
+      c.fillStyle = "rgba(0,0,0,.32)"; c.beginPath(); c.ellipse(X, Y + 2, 12 - Math.abs(sn) * 1.5, 4.5, 0, 0, 7); c.fill();
+      c.save(); c.translate(X, Y + 3); c.scale(G.face < 0 ? -1 : 1, 1); c.imageSmoothingQuality = "high";
+      const hipY = -h + cut * k, sway = mv ? Math.sin(ph) * 0.045 : 0, bob = mv ? Math.abs(Math.cos(ph)) * 1.6 : 0;
+      // legs: the lifted leg gets shorter (knee bends) and swings slightly forward
+      const leg = (sx, dx, lift) => { const dh = lh * k * (1 - amp * lift); c.drawImage(sp, sx, cut, SW / 2, lh, dx + lift * (sx ? 1.4 : -1.4), hipY - bob * 0.3, w / 2, dh + bob * 0.3); };
+      leg(0, -w / 2, liftL); leg(SW / 2, 0, liftR);
+      // upper body: small bob + sway around the hips
+      c.save(); c.translate(0, hipY); c.rotate(sway); c.drawImage(sp, 0, 0, SW, cut + 3, -w / 2, -cut * k - bob, w, (cut + 3) * k); c.restore();
+      c.restore();
+      c.fillStyle = "rgba(10,12,20,.7)"; c.font = "bold 10px system-ui, sans-serif"; const tw2 = Math.max(28, c.measureText(S.name).width + 10);
+      rr(c, X - tw2 / 2, Y + 5, tw2, 13, 6); c.fill(); c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText(S.name, X, Y + 15);
+      return;
+    }
     const step = G.walk ? Math.sin(G.walk) * 3 : 0, girl = S.look === "girl";
     c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(X, Y + 2, 10, 4, 0, 0, 7); c.fill();
     c.fillStyle = "#2b2f45"; c.fillRect(X - 7, Y - 10 + Math.max(0, step), 6, 11); c.fillRect(X + 1, Y - 10 + Math.max(0, -step), 6, 11);
@@ -721,6 +884,7 @@
     $("cg-nm").textContent = `${S.name}${vip ? " 👑" : ""}`;
     $("cg-en").style.width = Math.max(0, S.energy) + "%";
     const lv = S.lv || 1; $("cg-lv").textContent = "Lv " + lv;
+    const av = $("cg-av"); if (av && av.dataset.c !== String(S.char)) { av.dataset.c = S.char; av.style.backgroundImage = `url('${PL("c", S.char)}')`; }
     $("cg-xp").style.width = Math.min(100, ((S.xp || 0) / needXP(lv)) * 100) + "%";
     const best = Object.entries(S.love).sort((a, b) => b[1] - a[1])[0];
     $("cg-sub").textContent = S.partner ? `💞 ${NPCS[S.partner].name}` : best[1] > 0 ? `♥ ${NPCS[best[0]].name} ${best[1]}%` : `⚡ ${t.energy} ${Math.round(S.energy)}%`;
@@ -763,6 +927,7 @@
       if (!vip) { if (S.money < 20) return toast(`${t.noMoney} (${fmt(t.entry, { p: 20 })})`); S.money -= 20; toast(fmt(t.entry, { p: 20 })); } else toast(t.entryVip);
       S.clubDay = S.day; S.st.club += 1; checkMissions();
     }
+    if (id === "boutique") { G.try = {}; return renderStyle("shop"); }
     renderVenue(id);
   }
   function renderVenue(id) {
@@ -776,7 +941,7 @@
     if (id === "cafe") acts += `<button type="button" class="cg-act" data-a="coffee"><span>${t.coffee}</span><b>$6</b><small>⚡ +15</small></button>`;
     if (id === "park") acts += `<button type="button" class="cg-act cg-hl" data-a="rest"><span>${t.rest}</span><small>⚡ +20 · 1h</small></button>`;
     if (id === "cinema") acts += `<button type="button" class="cg-act cg-hl" data-a="movie"><span>${t.movie}</span><b>$15</b><small>⚡ +10 · 2h</small></button>`;
-    if (id === "home") acts += `<button type="button" class="cg-act cg-hl" data-a="sleep"><span>${t.sleep}</span><small>⚡ 100%</small></button>`;
+    if (id === "home") acts += `<button type="button" class="cg-act cg-hl" data-a="sleep"><span>${t.sleep}</span><small>⚡ 100%</small></button><button type="button" class="cg-act" data-a="ward"><span>${t.ward}</span><small>${t.chars} · ${t.tops}</small></button>`;
     const ppl = id === "home" ? Object.keys(NPCS).filter((k) => S.met[k]) : peopleAt(id);
     const cards = ppl.map((k) => personCard(k)).join("") || `<p class="cg-none">${t.nobody}</p>`;
     openPanel(`<div class="cg-ph"><div><h3>${esc(v.sign)}</h3><small>${hours}</small></div><button type="button" class="cg-x" data-a="close">${t.close}</button></div>
@@ -808,6 +973,21 @@
     const el = e.target.closest("[data-a]"); if (!el || !G) return;
     const a = el.dataset.a, k = el.dataset.k, t = L();
     if (a === "close") return closePanel();
+    if (a === "ward") { G.wtab = "char"; G.wfrom = G.venue === "home" && $("cg-layer").querySelector(".cg-acts") ? "home" : ""; return renderStyle("home"); }
+    if (a === "wclose") { G.try = {}; const from = G.wfrom; G.wfrom = ""; return from === "home" ? renderVenue("home") : closePanel(); }
+    if (a === "wtab") { G.wtab = k; return renderStyle(G.wmode); }
+    if (a === "wchar") { if (!charsFor(S.look).includes(+k)) return; S.char = +k; S.charSet = 1; save(); paintHud(); return renderStyle(G.wmode); }
+    if (a === "wpick") {
+      const [g, v] = k.split(":");
+      if (v === "orig" || S.closet[k]) { S.wear[g] = v; if (G.try) delete G.try[g]; save(); return renderStyle(G.wmode); }
+      G.try[g] = v; return renderStyle(G.wmode);
+    }
+    if (a === "cbuy") {
+      const [g, v] = k.split(":"), item = SHOP[g].find(([x]) => x === v); if (!item || S.closet[k]) return;
+      if (S.money < item[1]) return toast(t.noMoney);
+      S.money -= item[1]; S.closet[k] = 1; S.wear[g] = v; delete G.try[g]; S.st.clothes = (S.st.clothes || 0) + 1;
+      addXP(8); checkMissions(); toast(fmt(t.bought, { n: (g === "t" ? "👕 " : "👖 ") + t.cl[v] })); return renderStyle("shop");
+    }
     if (a === "exit") return closeGame();
     if (a === "vback") return renderVenue(G.venue);
     if (a === "bag") return renderBag();
@@ -884,7 +1064,7 @@
     const rows = MISSIONS.map(([id, r]) => `<div class="cg-mis${S.done[id] ? " done" : ""}"><span>${S.done[id] ? "✅" : "⬜"} ${esc(t.m[id])}</span><b>+$${r}</b></div>`).join("");
     const love = Object.keys(NPCS).filter((k) => S.met[k]).map((k) => `<div class="cg-mis"><span>${NPCS[k].name}${S.partner === k ? " 💞" : ""}</span><b>♥ ${S.love[k]}%</b></div>`).join("");
     openPanel(`<div class="cg-ph"><div><h3>📜 ${t.missions}</h3><small>⭐ Lv ${S.lv || 1} (${S.xp || 0}/${needXP(S.lv || 1)} XP) · ${fmt(t.day, { d: S.day })} · 💰 $${S.money}</small></div><button type="button" class="cg-x" data-a="close">${t.close}</button></div>
-      <div class="cg-cols"><div class="cg-list">${rows}</div><div class="cg-list">${love}<div class="cg-mlang">${LANGS.map(([k, l]) => `<button type="button" class="story-chip${S.lang === k ? " active" : ""}" data-a="lang" data-k="${k}">${l}</button>`).join("")}</div><button type="button" class="cg-act" data-a="exit"><span>💾 ${t.exit}</span></button></div></div>`, "story-assets/bg_night.webp");
+      <div class="cg-cols"><div class="cg-list">${rows}</div><div class="cg-list">${love}<div class="cg-mlang">${LANGS.map(([k, l]) => `<button type="button" class="story-chip${S.lang === k ? " active" : ""}" data-a="lang" data-k="${k}">${l}</button>`).join("")}</div><button type="button" class="cg-act" data-a="ward"><span>${t.ward}</span></button><button type="button" class="cg-act" data-a="exit"><span>💾 ${t.exit}</span></button></div></div>`, "story-assets/bg_night.webp");
   }
 
   // ---------------- Job mini-game ----------------
