@@ -65,13 +65,13 @@
     identities: { boy: "👦 Chico", girl: "👧 Chica", gay: "🏳️‍🌈 Gay", lesbian: "🏳️‍🌈 Lesbiana", transwoman: "🏳️‍⚧️ Mujer trans", transman: "🏳️‍⚧️ Hombre trans" },
     genres: { romance: "💕 Romance", school: "🎓 Universidad", mystery: "🕵️ Misterio", horror: "👻 Terror", fantasy: "🐉 Fantasía", drama: "🎭 Drama" }
   };
-  const LANGS = [["my", "🇲🇲 မြန်မာ"], ["en", "🇬🇧 English"], ["ru", "🇷🇺 Русский"], ["es", "🇪🇸 Español"]];
+  const LANGS = [["en", "🇬🇧 English"], ["ru", "🇷🇺 Русский"], ["es", "🇪🇸 Español"], ["my", "🇲🇲 မြန်မာ"]];
   const IDENTITY_KEYS = ["boy", "girl", "gay", "lesbian", "transwoman", "transman"];
   const GENRE_KEYS = ["romance", "school", "mystery", "horror", "fantasy", "drama"];
-  const T = () => TEXT[state ? state.lang : setup.lang] || TEXT.my;
+  const T = () => TEXT[state ? state.lang : setup.lang] || TEXT.en;
 
   let state = load() || null;
-  let setup = { identity: "", genre: "romance", name: "", mature: false, lang: "my" };
+  let setup = { identity: "", genre: "romance", name: "", mature: false, lang: "en" };
   let lastQuota = null;
   let busy = false;
 

@@ -317,3 +317,28 @@ body.player-fullscreen-open .player-close{display:none}
 
 /* Myanmar font fallback (Fix 19b) */
 body, #story-section { font-family: "DM Sans", "Noto Sans Myanmar", "Pyidaungsu", "Padauk", "Myanmar Text", sans-serif; }
+
+/* ── AI Detective game (Fix 20) ── */
+.det-intro{font-size:14px;line-height:1.8;color:var(--text);margin:0 0 12px}
+.det-suspects{display:flex;gap:8px;margin:0 0 6px}
+.det-sus{flex:1;border:1px solid var(--line);border-radius:14px;background:#15120c;overflow:hidden;text-align:center;padding:0 0 8px;color:var(--text);font:inherit}
+.det-sus .ph{height:118px;position:relative;overflow:hidden;background:#241e12 url(detective-assets/bg_party.webp) center/cover}
+.det-sus .ph img{position:absolute;left:50%;top:4px;height:200px;transform:translateX(-50%)}
+.det-sus b{display:block;margin-top:6px;font-size:14px}.det-sus span{display:block;font-size:11.5px;color:#ff9fc4;padding:0 4px;line-height:1.4}
+.det-sus.crush{border-color:#ff6fa8;box-shadow:0 0 12px rgba(255,111,168,.35)}
+.det-sus.pick{cursor:pointer}.det-sus.pick:active{transform:scale(.97)}
+.det-meters{display:flex;gap:8px;margin:0 0 12px}
+.det-m{flex:1;border:1px solid var(--line);border-radius:12px;background:#12100c;padding:9px 10px;font-size:12.5px}
+.det-bar{height:7px;border-radius:4px;background:#2b2418;margin-top:6px;overflow:hidden}.det-bar i{display:block;height:100%;transition:width .5s}
+.det-clue{margin:-4px 0 14px;background:#2b2210;border:1px dashed #ffcf6b;border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.7;color:#ffe3a3}
+.det-choice{display:flex;justify-content:space-between;gap:10px;align-items:center}.det-choice span{flex:none;font-size:15px}
+.det-accuse{display:block;width:100%;margin-top:12px;padding:13px;border-radius:14px;border:1px solid #ff5f6d;background:#2a1018;color:#ffb3ba;font:inherit;font-size:14px;cursor:pointer}
+.det-accuse:disabled{opacity:.5;border-color:#6d3a40}
+.det-picker{margin-top:12px;border:1px solid #ff5f6d;border-radius:16px;padding:12px;background:#1c0d12}
+.det-picker h3{margin:0 0 10px;color:#ffb3ba;font-size:15px}
+.det-verdict{margin:6px 0 10px;padding:11px 12px;border-radius:12px;font-weight:700;font-size:15px}
+.det-verdict.ok{background:#11301c;border:1px solid #47c47a;color:#a9f0c4}.det-verdict.bad{background:#341317;border:1px solid #e0505c;color:#ffb3ba}
+.det-hook{font-style:italic;color:#e6d2a0;line-height:1.7}.det-score{color:var(--gold2);font-size:13px}
+.det-last{color:#ffb3ba;font-size:14px}
+.det-notebook ol{margin:10px 0 0;padding-left:20px;line-height:1.8;font-size:14px}
+#detective-section{font-family:"DM Sans","Noto Sans Myanmar","Pyidaungsu","Padauk","Myanmar Text",sans-serif}
