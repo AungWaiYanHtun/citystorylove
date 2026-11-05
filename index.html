@@ -24,6 +24,7 @@
   <script defer src="vip-client.js"></script>
   <script defer src="story-game.js"></script>
   <script defer src="detective-game.js"></script>
+  <script defer src="city-game.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -43,7 +44,6 @@
   <main>
 <nav class="video-switch" aria-label="Video sections">
       <button type="button" id="regular-videos-btn" class="video-switch-btn active">▶️ Explore Videos</button>
-      <button type="button" id="vip-videos-btn" class="video-switch-btn">👑 VIP Videos</button>
       <button type="button" id="story-tab-btn" class="video-switch-btn">🎮 Story</button>
     </nav>
     <section id="vip-hero" class="vip-hero hidden"><div class="vip-member-heading"><span id="vip-user-badge" class="vip-user-badge hidden">👑 VIP USER <span class="vip-verified-check" aria-label="Verified">✓</span></span><span id="vip-active-badge" class="vip-active-badge hidden"><span class="vip-active-dot"></span> ACTIVE</span></div><p id="vip-user-id" class="vip-user-id hidden"></p><p id="vip-hero-expiry" class="vip-hero-expiry hidden"></p><button type="button" id="vip-page-buy" class="button button-gold">★ Get VIP</button></section>
@@ -104,7 +104,6 @@
       <form id="upload-form">
         <label>Video title<input id="video-title" required maxlength="120" placeholder="Give your video a title"></label>
         <label>Description<textarea id="video-description" rows="3" maxlength="2000" placeholder="What is this video about?"></textarea></label>
-        <label>Access<select id="video-access"><option value="false">Explore / Free</option><option value="true">VIP only</option></select></label>
         <label>Category<select id="video-category" required><option value="Music">Music</option><option value="Movie">Movie</option><option value="Entertainment">Entertainment</option></select></label>
         <label class="rights-confirm"><input id="video-rights" type="checkbox" required> I own this video or have the creator's permission to publish it, and everyone shown agreed to be in it.</label>
         <label>Thumbnail image (optional)<input id="video-thumbnail" type="file" accept="image/jpeg,image/png,image/webp"></label>
@@ -141,19 +140,6 @@
         </div>
       </div>
       <div class="player-info"><span id="player-category" class="eyebrow"></span><h2 id="player-title"></h2><p id="player-description"></p><span id="player-views" class="muted"></span></div>
-    </section>
-  </div>
-  <div id="vip-required-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="vip-required-title" aria-describedby="vip-required-message">
-    <div class="modal-backdrop" data-close="vip-required"></div>
-    <section class="modal-panel vip-required-panel">
-      <button class="modal-close" data-close="vip-required" aria-label="Close">×</button>
-      <span class="eyebrow">VIP ACCESS</span>
-      <h2 id="vip-required-title">👑 Get <span class="gold-text">VIP</span></h2>
-      <p id="vip-required-message" class="muted">This video is for VIP members only.</p>
-      <div class="vip-required-actions">
-        <button type="button" class="button button-quiet" data-close="vip-required">Cancel</button>
-        <button type="button" id="vip-required-get" class="button button-gold">👑 Get VIP</button>
-      </div>
     </section>
   </div>
   <div id="delete-confirm-dialog" class="delete-confirm-overlay hidden" role="presentation">

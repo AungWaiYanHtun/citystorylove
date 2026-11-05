@@ -9,5 +9,5 @@ window.VIDEOSPACE_CONFIG = {
   VIDEO_BUCKET: "videos",
   THUMBNAIL_BUCKET: "thumbnails",
   VIP_API_URL: "https://videospace-backend.onrender.com",
-  TELEGRAM_BOT_USERNAME: "CityStoryLoveGame"
+  TELEGRAM_BOT_USERNAME: "Fetish_OnlyFan_bot"
 };

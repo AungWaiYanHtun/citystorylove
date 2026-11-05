@@ -42,16 +42,15 @@
       }
     }
   }
-  let earlyVipList = null, earlyVipStatus = null;
+  let earlyVipStatus = null;
   if (EARLY_API && EARLY_INIT_DATA) {
     const headers = { "X-Telegram-Init-Data": EARLY_INIT_DATA };
-    earlyVipList = fetchJsonRetry(`${EARLY_API}/api/vip-videos`, { headers, cache: "no-store" });
     earlyVipStatus = fetchJsonRetry(`${EARLY_API}/api/vip-status`, { headers, cache: "no-store" });
-    earlyVipList.catch(() => {}); earlyVipStatus.catch(() => {});
+    earlyVipStatus.catch(() => {});
   } else if (EARLY_API) {
     fetch(`${EARLY_API}/health`, { cache: "no-store" }).catch(() => {});
   }
-  const takeEarly = (which) => { const p = which === "list" ? earlyVipList : earlyVipStatus; if (which === "list") earlyVipList = null; else earlyVipStatus = null; return p; };
+  const takeEarlyStatus = () => { const p = earlyVipStatus; earlyVipStatus = null; return p; };
 
   let authMode = "signin";
   let toastTimer;
@@ -65,23 +64,9 @@
   let activeCategory = "All";
   let activeVideoView = "regular";
   let vipMembershipActive = false;
-  let latestVipVideos = [];
-  let vipCatalogLoading = false;
   let videosLoadPromise = null;
-  // Signed VIP playback URLs are kept in memory only and refreshed before expiry.
-  const vipPlaybackUrlCache = new Map();
-  // Fallback only; normally the cache follows the server's expiresIn (reuse for 70% of it).
-  const VIP_PLAYBACK_CACHE_MS = 90 * 1000;
-  // Prepare signed URLs for only the first few VIP cards instead of all 100.
-  const VIP_PREWARM_LIMIT = 6;
   const VIDEO_CACHE_KEY = "videospace_public_videos_v1";
   const VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-  // VIP titles/thumbnails are cached only for this Telegram WebApp session.
-  // Private video URLs and storage paths are never cached here.
-  const VIP_CATALOG_CACHE_KEY = "videospace_vip_catalog_v1";
-  // Titles/thumbnails only (no video URLs). Lets the VIP tab paint instantly on the next open.
-  const VIP_CATALOG_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-
   // Avoid logging configuration details in production.
 
   const escapeHTML = (value = "") =>
@@ -117,7 +102,7 @@
   };
 
   function syncModalAdIsolation() {
-    const modalIds = ["auth-modal", "upload-modal", "player-modal", "vip-required-modal"];
+    const modalIds = ["auth-modal", "upload-modal", "player-modal"];
     const modalOpen = modalIds.some((id) => {
       const el = $(id);
       return el && !el.classList.contains("hidden");
@@ -180,15 +165,8 @@
     if (!grid || !search) return;
 
     const q = search.value.trim().toLowerCase();
-    if (activeVideoView === "vip" && vipCatalogLoading &&
-        !videos.some((v) => v.is_vip) && !latestVipVideos.length) {
-      grid.innerHTML = '<div class="loading-card"><span class="spinner"></span><p>Loading VIP videos…</p></div>';
-      if (count) count.textContent = "Loading VIP videos…";
-      if (empty) empty.classList.add("hidden");
-      return;
-    }
     const filtered = videos.filter((v) =>
-      (activeVideoView === "vip" ? !!v.is_vip : !v.is_vip) &&
+      !v.is_vip &&
       (activeCategory === "All" ||
         (v.category || "Entertainment") === activeCategory) &&
       `${v.title || ""} ${v.description || ""} ${v.category || ""}`
@@ -204,23 +182,20 @@
       const thumbnail = v.thumbnail_url
         ? `<img src="${escapeHTML(v.thumbnail_url)}" alt="" loading="${index < 4 ? "eager" : "lazy"}" fetchpriority="${index < 2 ? "high" : "auto"}" decoding="async" onerror="this.remove()">`
         : "";
-      const lockedVip = !!v.is_vip && !isAdmin && !vipMembershipActive;
       return `
-        <article class="video-card${lockedVip ? " vip-locked" : ""}" tabindex="0" role="button"
+        <article class="video-card" tabindex="0" role="button"
           data-video-id="${escapeHTML(v.id)}"
-          aria-label="${lockedVip ? "VIP locked: " : "Play "}${escapeHTML(v.title || "video")}">
+          aria-label="Play ${escapeHTML(v.title || "video")}">
           <div class="thumbnail">
             ${thumbnail}
             <span class="thumbnail-placeholder">F<span style="color:#e1c17d">✦</span></span>
-            ${lockedVip ? '<span class="vip-lock-badge" aria-label="VIP locked">🔒</span>' : '<span class="play-badge">▶</span>'}
+            <span class="play-badge">▶</span>
           </div>
           <div class="card-content">
-            <span class="card-category">${v.is_vip ? (lockedVip ? "🔒 VIP · " : "👑 VIP · ") : ""}${escapeHTML(v.category || "Entertainment")}</span>
+            <span class="card-category">${escapeHTML(v.category || "Entertainment")}</span>
             <h3 class="card-title">${escapeHTML(v.title || "Untitled video")}</h3>
-            ${lockedVip
-              ? `<p class="card-description">VIP members only</p><button class="vip-unlock-button" type="button" data-vip-unlock>👑 Unlock VIP</button>`
-              : `<p class="card-description">${escapeHTML(v.description || "Ready when you are. Press play to watch.")}</p>
-                 <div class="card-meta"><span>▶ ${Number(v.views || 0).toLocaleString()} views</span><span>${niceDate(v.created_at)}</span></div>`}
+            <p class="card-description">${escapeHTML(v.description || "Ready when you are. Press play to watch.")}</p>
+            <div class="card-meta"><span>▶ ${Number(v.views || 0).toLocaleString()} views</span><span>${niceDate(v.created_at)}</span></div>
           </div>
         </article>`;
     }).join("");
@@ -291,40 +266,8 @@
     }
   }
 
-  function readCachedVipVideos() {
-    // Only reuse VIP catalogue metadata inside the authenticated Telegram WebApp session.
-    if (!window.Telegram?.WebApp?.initData) return [];
-    try {
-      const cached = JSON.parse(localStorage.getItem(VIP_CATALOG_CACHE_KEY) || "null");
-      if (!cached || !Array.isArray(cached.videos) ||
-          !Number.isFinite(cached.savedAt) ||
-          Date.now() - cached.savedAt > VIP_CATALOG_CACHE_TTL_MS) return [];
-      return cached.videos.filter((v) => v && v.id).map((v) => ({ ...v, is_vip: true }));
-    } catch {
-      return [];
-    }
-  }
-
-  function cacheVipVideos(list) {
-    if (!window.Telegram?.WebApp?.initData) return;
-    try {
-      // Store display-only metadata, never playback URLs or storage paths.
-      const safeVideos = list.slice(0, 100).map((v) => ({
-        id: v.id, title: v.title, description: v.description, category: v.category,
-        thumbnail_url: v.thumbnail_url, views: v.views, created_at: v.created_at,
-        is_vip: true
-      }));
-      localStorage.setItem(VIP_CATALOG_CACHE_KEY, JSON.stringify({
-        savedAt: Date.now(), videos: safeVideos
-      }));
-    } catch (error) {
-      console.warn("VIP catalogue cache unavailable:", error);
-    }
-  }
-
   function loadVideos() {
-    // Reuse the in-flight catalogue request. This prevents tapping VIP while
-    // the first page load is still running from starting a duplicate request.
+    // Reuse the in-flight catalogue request to avoid duplicate loads.
     if (videosLoadPromise) return videosLoadPromise;
     videosLoadPromise = loadVideosInternal().finally(() => {
       videosLoadPromise = null;
@@ -334,11 +277,8 @@
 
   async function loadVideosInternal() {
     // Paint cached catalogue immediately, then refresh in the background.
-    // VIP metadata is session-only; public videos use the existing public cache.
     const cachedFreeVideos = readCachedFreeVideos();
-    const cachedVipVideos = readCachedVipVideos();
-    latestVipVideos = cachedVipVideos;
-    const cachedVideos = [...cachedFreeVideos, ...cachedVipVideos];
+    const cachedVideos = cachedFreeVideos;
     if (cachedVideos.length) {
       videos = cachedVideos;
       categories = ["All", ...new Set(videos.map((v) => v.category || "Entertainment"))];
@@ -367,42 +307,14 @@
     }
     setNotice("");
 
-    // Start the authenticated VIP requests immediately, in parallel with the
-    // slower public Supabase query. This avoids making VIP users wait for the
-    // Explore catalogue request before VIP metadata even begins loading.
+    // VIP membership (games perks) is still checked; the VIP video library was removed (Fix 22).
     const tg = window.Telegram?.WebApp;
     const api = (cfg.VIP_API_URL || "").replace(/\/$/, "");
     vipMembershipActive = false;
-    vipCatalogLoading = true;
-    const vipListTask = (async () => {
-      if (!tg?.initData || !api) {
-        vipCatalogLoading = false;
-        return [];
-      }
-      try {
-        const res = await (takeEarly("list") || fetchJsonRetry(`${api}/api/vip-videos`, {
-          headers: { "X-Telegram-Init-Data": tg.initData },
-          cache: "no-store"
-        }));
-        if (!res.ok) {
-          if (res.status !== 401 && res.status !== 403) console.warn("VIP list request failed:", res.status);
-          return readCachedVipVideos();
-        }
-        const payload = res.body;
-        const list = Array.isArray(payload) ? payload : payload.videos;
-        return Array.isArray(list) ? list.map((v) => ({ ...v, is_vip: true })) : [];
-      } catch (vipError) {
-        console.warn("VIP list unavailable:", vipError);
-        // Keep showing the last known list instead of an empty page.
-        return readCachedVipVideos();
-      } finally {
-        vipCatalogLoading = false;
-      }
-    })();
     const vipStatusTask = (async () => {
       if (!tg?.initData || !api) return false;
       try {
-        const res = await (takeEarly("status") || fetchJsonRetry(`${api}/api/vip-status`, {
+        const res = await (takeEarlyStatus() || fetchJsonRetry(`${api}/api/vip-status`, {
           headers: { "X-Telegram-Init-Data": tg.initData },
           cache: "no-store"
         }));
@@ -414,30 +326,9 @@
       return false;
     })();
 
-    // Warm signed playback URLs as soon as both the VIP catalogue and membership
-    // check are ready, independently of the slower public/free catalogue query.
-    Promise.all([vipListTask, vipStatusTask]).then(([items, active]) => {
-      warmVipPlaybackUrls(items, active);
-    });
-
-    // As soon as VIP metadata arrives, paint the VIP tab without waiting for the
-    // public/free catalogue query to finish. Keep the authenticated session cache.
-    vipListTask.then((earlyVipVideos) => {
-      latestVipVideos = earlyVipVideos;
-      cacheVipVideos(earlyVipVideos);
-      if (isAdmin && currentUser) warmVipPlaybackUrls(earlyVipVideos, false);
-      if (activeVideoView !== "vip" || !earlyVipVideos.length) return;
-      const freeSnapshot = videos.filter((v) => !v.is_vip);
-      videos = [...(freeSnapshot.length ? freeSnapshot : readCachedFreeVideos()), ...earlyVipVideos];
-      categories = ["All", ...new Set(videos.map((v) => v.category || "Entertainment"))];
-      renderCategories();
-      renderVideos();
-    });
-
     try {
       // The browser's public Supabase query intentionally returns Free videos only
-      // under RLS. VIP metadata is fetched separately from the authenticated backend
-      // and is never requested from the public website without Telegram initData.
+      // under RLS.
       const { data, error } = await db.from("videos")
         .select("id,title,description,category,video_path,thumbnail_url,views,created_at,is_vip")
         .eq("published", true)
@@ -448,33 +339,8 @@
       if (error) throw error;
       const freeVideos = (data || []).map((v) => ({ ...v, is_vip: false }));
       cacheFreeVideos(freeVideos);
-      let vipVideos = [];
-      [vipVideos, vipMembershipActive] = await Promise.all([vipListTask, vipStatusTask]);
-      cacheVipVideos(vipVideos);
-      // Do not await URL preparation: catalogue rendering remains responsive.
-      warmVipPlaybackUrls(vipVideos, vipMembershipActive);
-
-      // In the signed-in admin dashboard/preview, allow admins to see VIP
-      // metadata directly when Telegram WebApp authentication is unavailable.
-      // RLS must grant SELECT only to admins; private video playback still uses
-      // the authenticated VIP backend and is not made public by this query.
-      if (currentUser && vipVideos.length === 0) {
-        const { data: adminVipData, error: adminVipError } = await db.from("videos")
-          .select("id,title,description,category,video_path,thumbnail_url,views,created_at,is_vip,storage_bucket")
-          .eq("published", true)
-          .eq("is_vip", true)
-          .order("created_at", { ascending: false })
-          .limit(100);
-
-        if (adminVipError) {
-          console.warn("Admin VIP list query failed:", adminVipError);
-        } else {
-          vipVideos = (adminVipData || []).map((v) => ({ ...v, is_vip: true }));
-        }
-      }
-      videos = [...freeVideos, ...vipVideos]
-        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-        .slice(0, 100);
+      vipMembershipActive = await vipStatusTask;
+      videos = freeVideos.slice(0, 100);
       categories = ["All", ...new Set(
         videos.map((v) => v.category || "Entertainment")
       )];
@@ -502,88 +368,6 @@
     }
   }
 
-  function getCachedVipPlaybackUrl(videoId) {
-    const entry = vipPlaybackUrlCache.get(String(videoId));
-    if (!entry || entry.expiresAt <= Date.now()) {
-      vipPlaybackUrlCache.delete(String(videoId));
-      return "";
-    }
-    return entry.url;
-  }
-
-  function saveCachedVipPlaybackUrl(videoId, url, expiresInSeconds) {
-    if (url && /^https:\/\//i.test(url)) {
-      const ttl = Number(expiresInSeconds) > 0 ? Number(expiresInSeconds) * 1000 * 0.7 : VIP_PLAYBACK_CACHE_MS;
-      vipPlaybackUrlCache.set(String(videoId), { url, expiresAt: Date.now() + ttl });
-    }
-  }
-
-  // Ask the backend for a fresh signed URL (used for playback and to recover
-  // when a signed URL expires in the middle of a long video).
-  async function fetchVipPlaybackUrl(videoId) {
-    const tg = window.Telegram?.WebApp;
-    const api = (cfg.VIP_API_URL || "").replace(/\/$/, "");
-    if (!tg?.initData || !api) return { ok: false, status: 0, result: {} };
-    const r = await fetch(`${api}/api/vip-video-url`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData },
-      body: JSON.stringify({ videoId: String(videoId) }),
-      cache: "no-store"
-    });
-    const result = await r.json().catch(() => ({}));
-    if (r.ok && result.active === true) saveCachedVipPlaybackUrl(videoId, result.signedUrl || result.url || "", result.expiresIn);
-    return { ok: r.ok, status: r.status, result };
-  }
-
-  // Prepare short-lived signed URLs while the member is browsing the catalogue.
-  // URLs stay in memory only; private storage remains private and authorization
-  // is still performed by Supabase RLS or the Telegram-authenticated VIP API.
-  async function warmVipPlaybackUrls(list, isActiveMember) {
-    const vipItems = (list || []).filter((item) => item && item.id && item.is_vip).slice(0, VIP_PREWARM_LIMIT);
-    if (!vipItems.length) return;
-
-    if (isAdmin && currentUser && db) {
-      await Promise.allSettled(vipItems.map(async (item) => {
-        if (getCachedVipPlaybackUrl(item.id)) return;
-        try {
-          let bucket = item.storage_bucket || cfg.VIP_VIDEO_BUCKET || "vip-videos";
-          let path = item.video_path || "";
-          if (!path) {
-            const { data, error } = await db.from("videos")
-              .select("video_path,storage_bucket")
-              .eq("id", item.id)
-              .eq("published", true)
-              .eq("is_vip", true)
-              .maybeSingle();
-            if (error) throw error;
-            path = data?.video_path || "";
-            bucket = data?.storage_bucket || bucket;
-          }
-          if (!path) return;
-          const { data, error } = await db.storage.from(bucket).createSignedUrl(path, 120);
-          if (error) throw error;
-          saveCachedVipPlaybackUrl(item.id, data?.signedUrl || "", 120);
-        } catch (error) {
-          console.warn("VIP playback prewarm failed:", error);
-        }
-      }));
-      return;
-    }
-
-    if (!isActiveMember) return;
-    const tg = window.Telegram?.WebApp;
-    const api = (cfg.VIP_API_URL || "").replace(/\/$/, "");
-    if (!tg?.initData || !api) return;
-    await Promise.allSettled(vipItems.map(async (item) => {
-      if (getCachedVipPlaybackUrl(item.id)) return;
-      try {
-        await fetchVipPlaybackUrl(item.id);
-      } catch (error) {
-        console.warn("VIP playback prewarm failed:", error);
-      }
-    }));
-  }
-
   async function openVideo(id) {
     const v = videos.find((item) => String(item.id) === String(id));
     if (!v) return;
@@ -594,73 +378,7 @@
 
     let playbackUrl = "";
 
-    if (v.is_vip && (playbackUrl = getCachedVipPlaybackUrl(v.id))) {
-      // Use a still-valid, in-memory signed URL prepared while browsing.
-      vipMembershipActive = true;
-    } else if (v.is_vip && isAdmin && currentUser && db) {
-      // Admins signed in through Supabase may preview private VIP objects directly.
-      // Storage remains private; RLS must allow only admins to read vip-videos.
-      let bucket = v.storage_bucket || cfg.VIP_VIDEO_BUCKET || "vip-videos";
-      let path = v.video_path;
-      try {
-        // The backend VIP catalogue intentionally omits private storage paths.
-        // Admins may look up the path through Supabase only when their RLS permits it.
-        if (!path) {
-          const { data: storageRecord, error: recordError } = await db.from("videos")
-            .select("video_path,storage_bucket")
-            .eq("id", v.id)
-            .eq("published", true)
-            .eq("is_vip", true)
-            .maybeSingle();
-          if (recordError) throw recordError;
-          path = storageRecord?.video_path || "";
-          bucket = storageRecord?.storage_bucket || bucket;
-        }
-        if (!path) {
-          throw new Error("VIP storage path is missing or not visible to this admin account.");
-        }
-        const { data, error } = await db.storage.from(bucket).createSignedUrl(path, 60 * 10);
-        if (error) throw error;
-        playbackUrl = data?.signedUrl || "";
-        saveCachedVipPlaybackUrl(v.id, playbackUrl, 600);
-        if (!playbackUrl || !/^https:\/\//i.test(playbackUrl)) {
-          throw new Error("Supabase did not return a valid signed URL.");
-        }
-        vipMembershipActive = true;
-      } catch (e) {
-        console.error("Admin VIP playback failed:", e);
-        toast("Admin preview failed. Check the private VIP bucket SELECT policy.");
-        return;
-      }
-    } else if (v.is_vip) {
-      // Non-admin VIP playback still requires server-verified Telegram membership.
-      const tg = window.Telegram?.WebApp;
-      const api = (cfg.VIP_API_URL || "").replace(/\/$/, "");
-      if (!tg?.initData || !api) {
-        toast("VIP videos can only be opened through the authenticated Telegram Mini App.");
-        return;
-      }
-
-      try {
-        const { ok, status, result } = await fetchVipPlaybackUrl(v.id);
-        if (status === 401 || status === 403 || result.active === false) {
-          vipMembershipActive = false;
-          showModal("vip-required");
-          return;
-        }
-        if (!ok) throw new Error(result.error || `VIP API error (${status}).`);
-        playbackUrl = result.signedUrl || result.url || "";
-        if (!playbackUrl || !/^https:\/\//i.test(playbackUrl)) {
-          throw new Error("The VIP API did not return a valid HTTPS signed URL.");
-        }
-        vipMembershipActive = true;
-        renderVideos();
-      } catch (e) {
-        console.error("VIP playback authorization failed:", e);
-        toast("VIP video could not be authorized. Please try again.");
-        return;
-      }
-    } else {
+    {
       // Derive Free URLs from storage paths; never fetch a raw video_url column.
       const path = v.video_path;
       if (path && db) {
@@ -683,10 +401,8 @@
 
     player.src = playbackUrl;
     if (deleteButton) deleteButton.classList.toggle("hidden", !isAdmin);
-    // Protect VIP / creator videos: no download button for VIP content.
     const downloadButton = $("player-download");
-    if (downloadButton) downloadButton.classList.toggle("hidden", !!v.is_vip && !isAdmin);
-    vipUrlRecoveryAttempted = false;
+    if (downloadButton) downloadButton.classList.remove("hidden");
     if (stageEl) { stageEl.classList.remove("controls-hidden", "menu-open"); }
     // Leave fullscreen when the player closes.
     if (stageEl?.classList.contains("pseudo-fullscreen") || document.fullscreenElement) window.__exitPlayerFullscreen?.();
@@ -732,44 +448,17 @@
     {id:"demo-6",title:"A Little More Laughter",description:"A light-hearted pick to brighten up your day.",category:"Comedy",views:3914,created_at:"2026-09-02"}
   ];
 
-  function switchVideoView(view) {
-    activeVideoView = view === "vip" ? "vip" : "regular";
+  function switchVideoView() {
+    activeVideoView = "regular";
     activeCategory = "All";
-    // If VIP metadata was prefetched before the user tapped the tab, show it now
-    // instead of waiting for the separate Explore query to finish.
-    if (activeVideoView === "vip" && latestVipVideos.length) {
-      const freeSnapshot = videos.filter((v) => !v.is_vip);
-      videos = [...(freeSnapshot.length ? freeSnapshot : readCachedFreeVideos()), ...latestVipVideos];
-      categories = ["All", ...new Set(videos.map((v) => v.category || "Entertainment"))];
-    }
-    const regular = $("regular-videos-btn"), vip = $("vip-videos-btn"), hero = $("vip-hero");
-    if (regular) regular.classList.toggle("active", activeVideoView === "regular");
-    if (vip) vip.classList.toggle("active", activeVideoView === "vip");
-    if (hero) hero.classList.toggle("hidden", activeVideoView !== "vip");
+    $("regular-videos-btn")?.classList.add("active");
+    $("vip-hero")?.classList.add("hidden");
     const heading = document.querySelector(".section-heading h2");
-    if (heading) heading.innerHTML = activeVideoView === "vip" ? '👑 VIP <span class="gold-text">Videos</span>' : 'Explore <span class="gold-text">Videos</span>';
+    if (heading) heading.innerHTML = 'Explore <span class="gold-text">Videos</span>';
     renderCategories();
     renderVideos();
   }
-  $("regular-videos-btn")?.addEventListener("click", () => switchVideoView("regular"));
-  $("vip-videos-btn")?.addEventListener("click", () => {
-    switchVideoView("vip");
-    if (!latestVipVideos.length) {
-      const cachedVip = readCachedVipVideos();
-      if (cachedVip.length) { latestVipVideos = cachedVip; switchVideoView("vip"); return; }
-    }
-    if (!latestVipVideos.length && !videos.some((v) => v.is_vip)) {
-      const grid = $("video-grid");
-      const count = $("result-count");
-      const empty = $("empty-state");
-      vipCatalogLoading = true;
-      if (grid) grid.innerHTML = '<div class="loading-card"><span class="spinner"></span><p>Loading VIP videos…</p><p id="vip-wake-note" class="tiny-note hidden">Server is waking up, this can take up to a minute the first time.</p></div>';
-      setTimeout(() => $("vip-wake-note")?.classList.remove("hidden"), 6000);
-      if (count) count.textContent = "Loading VIP videos…";
-      if (empty) empty.classList.add("hidden");
-      loadVideos();
-    }
-  });
+  $("regular-videos-btn")?.addEventListener("click", () => switchVideoView());
   $("vip-page-buy")?.addEventListener("click", () => {
     const buy = $("vip-buy");
     if (buy) buy.click();
@@ -790,15 +479,6 @@
   const grid = $("video-grid");
   if (grid) {
     grid.addEventListener("click", (e) => {
-      const unlock = e.target.closest("[data-vip-unlock]");
-      if (unlock) {
-        e.preventDefault();
-        e.stopPropagation();
-        const buy = $("vip-buy");
-        if (buy) buy.click();
-        else document.dispatchEvent(new CustomEvent("videospace:open-vip-plans"));
-        return;
-      }
       const card = e.target.closest("[data-video-id]");
       if (card) openVideo(card.dataset.videoId);
     });
@@ -984,10 +664,7 @@
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const videoPath = `${currentUser.id}/${crypto.randomUUID()}-${safeName}`;
 
-        const isVipUpload = $("video-access")?.value === "true";
-        const videoBucket = isVipUpload
-          ? (cfg.VIP_VIDEO_BUCKET || "vip-videos")
-          : (cfg.VIDEO_BUCKET || "videos");
+        const videoBucket = cfg.VIDEO_BUCKET || "videos";
 
         let result = await db.storage
           .from(videoBucket)
@@ -998,10 +675,7 @@
         if (result.error) throw result.error;
         bar.style.width = "60%";
 
-        // VIP objects belong in a private bucket; only the server may sign URLs.
-        const videoPublicUrl = isVipUpload
-          ? null
-          : (db.storage.from(videoBucket).getPublicUrl(videoPath).data?.publicUrl || null);
+        const videoPublicUrl = db.storage.from(videoBucket).getPublicUrl(videoPath).data?.publicUrl || null;
 
         let thumbnailUrl = null;
         let thumbPath = null;
@@ -1036,7 +710,7 @@
           thumbnail_url: thumbnailUrl,
           thumbnail_path: thumbPath,
           published: true,
-          is_vip: isVipUpload,
+          is_vip: false,
           storage_bucket: videoBucket,
           uploaded_by: currentUser.id
         };
@@ -1094,27 +768,6 @@
     if (speeds) speeds.classList.add("hidden");
     showPlayerControls();
   }
-  // If a signed VIP URL expires mid-video, get a fresh one and resume at the same spot (once).
-  let vipUrlRecoveryAttempted = false;
-  playerEl?.addEventListener("error", async () => {
-    const v = activePlayerVideo;
-    if (!v || !v.is_vip || vipUrlRecoveryAttempted || isAdmin) return;
-    vipUrlRecoveryAttempted = true;
-    const resumeAt = playerEl.currentTime || 0;
-    vipPlaybackUrlCache.delete(String(v.id));
-    try {
-      const { ok, result } = await fetchVipPlaybackUrl(v.id);
-      const url = ok ? (result.signedUrl || result.url || "") : "";
-      if (!/^https:\/\//i.test(url)) throw new Error("No fresh URL");
-      playerEl.src = url;
-      playerEl.addEventListener("loadedmetadata", () => {
-        playerEl.currentTime = resumeAt;
-        playerEl.play().catch(() => {});
-      }, { once: true });
-    } catch {
-      toast("Video link expired. Please close and open the video again.");
-    }
-  });
   if (playerEl && stageEl) {
     playButton?.addEventListener("click", () => { if (playerEl.paused) playerEl.play().catch(() => {}); else playerEl.pause(); showPlayerControls(); });
     playerEl.addEventListener("click", () => { if (playerEl.paused) playerEl.play().catch(() => {}); else showPlayerControls(); });
@@ -1225,39 +878,6 @@
       if (!(await confirmDelete(v.title || "this video"))) return;
       deleteButton.disabled = true;
       try {
-        if (v.is_vip) {
-          // VIP deletion must go through the trusted backend, which independently
-          // verifies Telegram initData and ADMIN_TELEGRAM_IDS before deleting.
-          const tg = window.Telegram?.WebApp;
-          const api = (cfg.VIP_API_URL || "").replace(/\/$/, "");
-          if (!tg?.initData) {
-            throw new Error("Open this page from the official Telegram bot before deleting VIP videos.");
-          }
-          if (!api) {
-            throw new Error("VIP API URL is not configured.");
-          }
-          const response = await fetch(`${api}/api/admin/delete-vip-video`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Telegram-Init-Data": tg.initData
-            },
-            body: JSON.stringify({ videoId: String(v.id) }),
-            cache: "no-store"
-          });
-          const result = await response.json().catch(() => ({}));
-          if (!response.ok) {
-            throw new Error(result.error || `VIP delete request failed (${response.status}).`);
-          }
-          playerEl.pause();
-          playerEl.removeAttribute("src");
-          playerEl.load();
-          hideModal("player");
-          toast("VIP video deleted successfully.");
-          await loadVideos();
-          return;
-        }
-
         const bucket = cfg.VIDEO_BUCKET || "videos";
         const { error } = await db.from("videos").delete().eq("id", v.id);
         if (error) throw error;
@@ -1274,16 +894,6 @@
       } finally { deleteButton.disabled = false; }
     });
     document.addEventListener("click", (e) => { if (menuEl && !menuEl.classList.contains("hidden") && !menuEl.contains(e.target) && e.target !== menuButton) closePlayerMenu(); });
-  }
-
-  const vipRequiredGetButton = $("vip-required-get");
-  if (vipRequiredGetButton) {
-    vipRequiredGetButton.addEventListener("click", () => {
-      hideModal("vip-required");
-      const buy = $("vip-buy");
-      if (buy) buy.click();
-      else document.dispatchEvent(new CustomEvent("videospace:open-vip-plans"));
-    });
   }
 
   document.querySelectorAll("[data-close]").forEach((el) => {
@@ -1306,7 +916,7 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    ["auth", "upload", "player", "vip-required"].forEach(hideModal);
+    ["auth", "upload", "player"].forEach(hideModal);
     const player = $("video-player");
     if (player) player.pause();
   });
