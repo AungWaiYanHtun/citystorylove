@@ -28,7 +28,7 @@
       gifted: "You already gave a gift today.", noItems: "Your bag is empty. Buy gifts at the shops.",
       dateNeed: "Reach ❤ 40 to ask for a date.", dateDone: "You already had a date today.", dateWhere: "Where do you want to go?",
       dateClosed: "closed now", free: "Free", couple: "💞 {n} is now your partner!", partner: "💞 Partner",
-      bag: "Bag", missions: "Missions", reward: "Reward", missionDone: "Mission complete! +${r}", allDone: "All missions complete! Keep enjoying city life 💞",
+      lvUp: "⭐ Level up! Lv {l} · +${m}", bag: "Bag", missions: "Missions", reward: "Reward", missionDone: "Mission complete! +${r}", allDone: "All missions complete! Keep enjoying city life 💞",
       shiftTitle: "Bakery orders", barTitle: "Mocktail orders", shiftHelp: "Tap what the customer wants!", time: "Time", earned: "Earned",
       start: "Start", shiftEnd: "Shift over! You earned ${m}.", shiftHours: "Shifts can start {a} – {b}.", vipx2: "👑 VIP x2",
       danceHelp: "Tap DANCE when the marker is in the pink zone!", danceBtn: "💃 DANCE", perfect: "Perfect!", good: "Good", miss: "Miss",
@@ -81,7 +81,7 @@
       gifted: "ဒီနေ့ လက်ဆောင်ပေးပြီးပြီ။", noItems: "အိတ်ထဲ ဘာမှမရှိဘူး။ ဆိုင်တွေမှာ လက်ဆောင်ဝယ်ပါ။",
       dateNeed: "ချိန်းတွေ့ဖို့ ❤ 40 လိုတယ်။", dateDone: "ဒီနေ့ ချိန်းတွေ့ပြီးပြီ။", dateWhere: "ဘယ်ကိုသွားမလဲ",
       dateClosed: "အခုပိတ်ထား", free: "အခမဲ့", couple: "💞 {n} က အခု မင်းရဲ့ ချစ်သူ!", partner: "💞 ချစ်သူ",
-      bag: "အိတ်", missions: "Mission များ", reward: "ဆုငွေ", missionDone: "Mission ပြီးပြီ! +${r}", allDone: "Mission အားလုံးပြီးပြီ! မြို့ထဲ ဆက်ပျော်ပါ 💞",
+      lvUp: "⭐ Level တက်ပြီ! Lv {l} · +${m}", bag: "အိတ်", missions: "Mission များ", reward: "ဆုငွေ", missionDone: "Mission ပြီးပြီ! +${r}", allDone: "Mission အားလုံးပြီးပြီ! မြို့ထဲ ဆက်ပျော်ပါ 💞",
       shiftTitle: "မုန့်ဆိုင် အော်ဒါများ", barTitle: "Mocktail အော်ဒါများ", shiftHelp: "ဧည့်သည်လိုချင်တာတွေကို နှိပ်ပါ!", time: "အချိန်", earned: "ရငွေ",
       start: "စမယ်", shiftEnd: "အလုပ်ချိန်ပြီးပြီ! ${m} ရတယ်။", shiftHours: "အလုပ်ဆင်းချိန် {a} – {b} ပဲ စလို့ရတယ်။", vipx2: "👑 VIP x2",
       danceHelp: "အမှတ်အသားက ပန်းရောင်ဇုန်ထဲရောက်ရင် DANCE နှိပ်ပါ!", danceBtn: "💃 DANCE", perfect: "အရမ်းကောင်း!", good: "ကောင်းတယ်", miss: "လွဲသွားပြီ",
@@ -133,7 +133,7 @@
       gifted: "Сегодня ты уже дарил(а) подарок.", noItems: "Сумка пуста. Купи подарки в магазинах.",
       dateNeed: "Для свидания нужно ❤ 40.", dateDone: "Сегодня свидание уже было.", dateWhere: "Куда пойдём?",
       dateClosed: "сейчас закрыто", free: "Бесплатно", couple: "💞 {n} теперь твоя пара!", partner: "💞 Пара",
-      bag: "Сумка", missions: "Миссии", reward: "Награда", missionDone: "Миссия выполнена! +${r}", allDone: "Все миссии выполнены! Наслаждайся городом 💞",
+      lvUp: "⭐ Новый уровень! Lv {l} · +${m}", bag: "Сумка", missions: "Миссии", reward: "Награда", missionDone: "Миссия выполнена! +${r}", allDone: "Все миссии выполнены! Наслаждайся городом 💞",
       shiftTitle: "Заказы пекарни", barTitle: "Заказы моктейлей", shiftHelp: "Нажимай то, что хочет клиент!", time: "Время", earned: "Заработано",
       start: "Старт", shiftEnd: "Смена окончена! Ты заработал(а) ${m}.", shiftHours: "Смену можно начать {a} – {b}.", vipx2: "👑 VIP x2",
       danceHelp: "Жми DANCE, когда метка в розовой зоне!", danceBtn: "💃 DANCE", perfect: "Идеально!", good: "Хорошо", miss: "Мимо",
@@ -185,7 +185,7 @@
       gifted: "Ya diste un regalo hoy.", noItems: "Tu bolsa está vacía. Compra regalos en las tiendas.",
       dateNeed: "Necesitas ❤ 40 para pedir una cita.", dateDone: "Ya tuviste una cita hoy.", dateWhere: "¿Adónde quieres ir?",
       dateClosed: "cerrado ahora", free: "Gratis", couple: "💞 ¡{n} ahora es tu pareja!", partner: "💞 Pareja",
-      bag: "Bolsa", missions: "Misiones", reward: "Premio", missionDone: "¡Misión cumplida! +${r}", allDone: "¡Todas las misiones cumplidas! Disfruta la ciudad 💞",
+      lvUp: "⭐ ¡Subiste de nivel! Lv {l} · +${m}", bag: "Bolsa", missions: "Misiones", reward: "Premio", missionDone: "¡Misión cumplida! +${r}", allDone: "¡Todas las misiones cumplidas! Disfruta la ciudad 💞",
       shiftTitle: "Pedidos de panadería", barTitle: "Pedidos de mocktails", shiftHelp: "¡Toca lo que pide el cliente!", time: "Tiempo", earned: "Ganado",
       start: "Empezar", shiftEnd: "¡Turno terminado! Ganaste ${m}.", shiftHours: "Los turnos empiezan {a} – {b}.", vipx2: "👑 VIP x2",
       danceHelp: "¡Toca DANCE cuando la marca esté en la zona rosa!", danceBtn: "💃 DANCE", perfect: "¡Perfecto!", good: "Bien", miss: "Fallo",
@@ -280,7 +280,7 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   function fresh() {
     return { v: 1, ts: Date.now(), lang: setup.lang, name: setup.name.trim().slice(0, 18) || "You", look: setup.look,
-      day: 1, min: DAY_START, energy: 100, money: 40, x: 4.5, y: 9.6,
+      day: 1, min: DAY_START, energy: 100, money: 40, lv: 1, xp: 0, x: 4.5, y: 9.6,
       love: { lin: 0, kai: 0, mira: 0, yuna: 0, ray: 0 }, met: {}, talk: {}, gave: {}, dated: {}, inv: {}, done: {},
       st: { shifts: 0, barShifts: 0, gifts: 0, earned: 0, club: 0, dances: 0, dates: 0 }, partner: "", clubDay: 0 };
   }
@@ -357,6 +357,27 @@
   }
 
   // ---------------- Landscape setup: language -> character -> name ----------------
+  // Telegram Bot API 8.0+: real fullscreen (hides the white Telegram header).
+  let fsByGame = false, fsTimer = 0;
+  function enterFs() {
+    clearTimeout(fsTimer);
+    try { tg?.expand?.(); if (tg?.isVersionAtLeast?.("8.0") && !tg.isFullscreen) { tg.requestFullscreen(); fsByGame = true; } } catch {}
+  }
+  function exitFsLater() {
+    clearTimeout(fsTimer);
+    fsTimer = setTimeout(() => { if (G || T0 || !fsByGame) return; fsByGame = false; try { if (tg?.isFullscreen) tg.exitFullscreen(); } catch {} }, 400);
+  }
+  function resetJoy() {
+    if (!G) return; G.joy = null; G.joyId = null;
+    const k = $("cg-knob"); if (k) k.style.transform = ""; $("cg-joy")?.classList.remove("on");
+  }
+  function addXP(n) {
+    S.xp = (S.xp || 0) + n; S.lv = S.lv || 1;
+    let up = 0;
+    while (S.xp >= needXP(S.lv)) { S.xp -= needXP(S.lv); S.lv += 1; up = S.lv; S.money += S.lv * 10; }
+    if (up) setTimeout(() => toast(fmt(L().lvUp, { l: up, m: up * 10 })), 900);
+  }
+  const needXP = (lv) => 60 + lv * 40;
   function fitLandscape(el) {
     const w = window.innerWidth, h = window.innerHeight, portrait = h > w;
     el.style.width = (portrait ? h : w) + "px"; el.style.height = (portrait ? w : h) + "px";
@@ -368,6 +389,7 @@
     const el = document.createElement("div"); el.id = "cg-title"; el.className = "cg-title";
     document.body.appendChild(el); document.documentElement.classList.add("cg-open");
     T0 = { el, resize: () => fitLandscape(el), back: () => closeTitle() };
+    enterFs();
     fitLandscape(el); addEventListener("resize", T0.resize);
     try { tg?.onEvent?.("viewportChanged", T0.resize); tg?.BackButton?.onClick?.(T0.back); tg?.BackButton?.show?.(); tg?.disableVerticalSwipes?.(); } catch {}
     try { screen.orientation?.lock?.("landscape").catch(() => {}); } catch {}
@@ -377,7 +399,7 @@
     if (!T0) return;
     removeEventListener("resize", T0.resize);
     try { tg?.offEvent?.("viewportChanged", T0.resize); tg?.BackButton?.offClick?.(T0.back); if (!keepOpen) tg?.BackButton?.hide?.(); } catch {}
-    T0.el.remove(); T0 = null;
+    T0.el.remove(); T0 = null; exitFsLater();
     if (!keepOpen) { document.documentElement.classList.remove("cg-open"); try { screen.orientation?.unlock?.(); } catch {} renderStart(); }
   }
   function titleFrame(inner, step) {
@@ -462,16 +484,14 @@
     root.id = "cg-root";
     root.innerHTML = `
       <canvas id="cg-canvas"></canvas>
-      <div class="cg-hud"><div class="cg-av">${S.look === "girl" ? "👧" : "👦"}</div><div><div class="cg-nm" id="cg-nm"></div>
-        <div class="cg-bar"><i id="cg-en"></i></div><div class="cg-sub" id="cg-sub"></div></div></div>
+      <div class="cg-hud"><div class="cg-av">${S.look === "girl" ? "👧" : "👦"}<span class="cg-lv" id="cg-lv"></span></div><div><div class="cg-nm" id="cg-nm"></div>
+        <div class="cg-bar"><i id="cg-en"></i></div><div class="cg-bar cg-xpbar"><i id="cg-xp"></i></div><div class="cg-sub" id="cg-sub"></div></div></div>
       <div class="cg-clock" id="cg-clock"></div>
       <div class="cg-tr"><div class="cg-chip" id="cg-money"></div><button type="button" class="cg-chip" data-a="bag">🎒</button><button type="button" class="cg-chip" data-a="menu">☰</button><button type="button" class="cg-chip" data-a="exit">✕</button></div>
       <div class="cg-mini"><canvas id="cg-mini" width="184" height="112"></canvas></div>
       <div class="cg-quest" id="cg-quest"></div>
       <div class="cg-hint hidden" id="cg-hint"></div>
-      <div class="cg-dpad"><div class="cg-ring"></div>
-        <button type="button" class="cg-k cg-u" data-d="u">▲</button><button type="button" class="cg-k cg-d" data-d="d">▼</button>
-        <button type="button" class="cg-k cg-l" data-d="l">◀</button><button type="button" class="cg-k cg-r" data-d="r">▶</button></div>
+      <div class="cg-joy" id="cg-joy"><div class="cg-ring"></div><div class="cg-knob" id="cg-knob"></div></div>
       <div class="cg-btns"><button type="button" class="cg-b cg-bA" id="cg-A">A<small>OK</small></button><button type="button" class="cg-b cg-bB" id="cg-B">B<small>Run</small></button></div>
       <div class="cg-toast hidden" id="cg-toast"></div>
       <div id="cg-layer"></div>`;
@@ -480,15 +500,33 @@
     G = { root, cv: $("cg-canvas"), held: new Set(), run: false, raf: 0, last: performance.now(), paused: false, near: null, face: 1, walk: 0, hudT: 0,
       cars: [{ x: 2, y: 11.2, v: 2.2, c: "#e05555" }, { x: 30, y: 21.2, v: 2.6, c: "#4aa3e0" }, { x: 40, y: 12.2, v: -2.0, c: "#f0c040" }, { x: 12, y: 22.2, v: -2.4, c: "#5fd08a" }] };
     try { tg?.disableVerticalSwipes?.(); } catch {}
+    enterFs();
     try { screen.orientation?.lock?.("landscape").catch(() => {}); } catch {}
     G.back = () => closeOrBack(); try { tg?.BackButton?.onClick?.(G.back); tg?.BackButton?.show?.(); } catch {}
     // input
-    root.querySelectorAll("[data-d]").forEach((b) => {
-      const d = b.dataset.d;
-      const on = (e) => { e.preventDefault(); G.held.add(d); b.classList.add("on"); };
-      const off = (e) => { e.preventDefault(); G.held.delete(d); b.classList.remove("on"); };
-      b.addEventListener("pointerdown", on); b.addEventListener("pointerup", off); b.addEventListener("pointercancel", off); b.addEventListener("pointerleave", off);
+    // Swipe joystick: drag anywhere on the pad; works in portrait (rotated) too.
+    const joy = $("cg-joy");
+    const joyMove = (e) => {
+      if (!G?.joyId || e.pointerId !== G.joyId.id) return;
+      e.preventDefault();
+      const sx = e.clientX - G.joyId.cx, sy = e.clientY - G.joyId.cy;
+      let lx = G.portrait ? sy : sx, ly = G.portrait ? -sx : sy; // screen -> game coordinates
+      const R = 46, len = Math.hypot(lx, ly);
+      if (len > R) { lx = lx / len * R; ly = ly / len * R; }
+      $("cg-knob").style.transform = `translate(${lx}px,${ly}px)`;
+      const m = Math.min(1, len / R);
+      G.joy = m < 0.18 ? null : { x: lx / R, y: ly / R, m };
+    };
+    const joyEnd = (e) => { if (!G?.joyId || e.pointerId !== G.joyId.id) return; resetJoy(); };
+    joy.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      const r = joy.getBoundingClientRect();
+      G.joyId = { id: e.pointerId, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+      try { joy.setPointerCapture(e.pointerId); } catch {}
+      joy.classList.add("on"); joyMove(e);
     });
+    joy.addEventListener("pointermove", joyMove);
+    joy.addEventListener("pointerup", joyEnd); joy.addEventListener("pointercancel", joyEnd);
     $("cg-A").addEventListener("pointerdown", (e) => { e.preventDefault(); pressA(); });
     $("cg-B").addEventListener("pointerdown", (e) => { e.preventDefault(); G.run = !G.run; $("cg-B").classList.toggle("on", G.run); });
     root.addEventListener("click", onClick);
@@ -499,7 +537,8 @@
       if (e.type === "keydown" && (e.code === "ShiftLeft" || e.code === "ShiftRight")) G.run = !G.run;
     };
     addEventListener("keydown", G.key); addEventListener("keyup", G.key);
-    G.resize = () => layout(); addEventListener("resize", G.resize); try { tg?.onEvent?.("viewportChanged", G.resize); } catch {}
+    G.resize = () => layout(); addEventListener("resize", G.resize);
+    try { ["viewportChanged", "fullscreenChanged", "safeAreaChanged", "contentSafeAreaChanged"].forEach((ev) => tg?.onEvent?.(ev, G.resize)); } catch {}
     layout(); buildLayers(); paintHud(true);
     G.raf = requestAnimationFrame(loop);
     G.saveTimer = setInterval(save, 10000);
@@ -510,9 +549,9 @@
     if (!G) return;
     save(); cancelAnimationFrame(G.raf); clearInterval(G.saveTimer);
     removeEventListener("keydown", G.key); removeEventListener("keyup", G.key); removeEventListener("resize", G.resize);
-    try { tg?.offEvent?.("viewportChanged", G.resize); tg?.BackButton?.offClick?.(G.back); tg?.BackButton?.hide?.(); } catch {}
+    try { ["viewportChanged", "fullscreenChanged", "safeAreaChanged", "contentSafeAreaChanged"].forEach((ev) => tg?.offEvent?.(ev, G.resize)); tg?.BackButton?.offClick?.(G.back); tg?.BackButton?.hide?.(); } catch {}
     try { screen.orientation?.unlock?.(); } catch {}
-    G.root.remove(); document.documentElement.classList.remove("cg-open"); G = null; renderStart();
+    G.root.remove(); document.documentElement.classList.remove("cg-open"); G = null; renderStart(); exitFsLater();
   }
   function closeOrBack() { if ($("cg-layer")?.firstChild) closePanel(); else closeGame(); }
   function layout() {
@@ -520,6 +559,12 @@
     const W = portrait ? h : w, Hh = portrait ? w : h;
     const r = G.root.style; r.width = W + "px"; r.height = Hh + "px";
     r.transform = portrait ? `translateX(${w}px) rotate(90deg)` : "none";
+    G.portrait = portrait;
+    // Telegram fullscreen: keep buttons clear of the status bar and Telegram's own top buttons.
+    const sa = tg?.safeAreaInset || {}, ca = tg?.contentSafeAreaInset || {};
+    const sT = (sa.top || 0) + (ca.top || 0), sB = (sa.bottom || 0) + (ca.bottom || 0), sL = (sa.left || 0) + (ca.left || 0), sR = (sa.right || 0) + (ca.right || 0);
+    const [gl, gt, gr, gb] = portrait ? [sT, sR, sB, sL] : [sL, sT, sR, sB];
+    r.setProperty("--sl", gl + "px"); r.setProperty("--st", gt + "px"); r.setProperty("--sr", gr + "px"); r.setProperty("--sb", gb + "px");
     G.W = W; G.H = Hh; G.dpr = Math.min(2, window.devicePixelRatio || 1);
     G.cv.width = Math.round(W * G.dpr); G.cv.height = Math.round(Hh * G.dpr);
     G.cv.style.width = W + "px"; G.cv.style.height = Hh + "px";
@@ -600,13 +645,15 @@
   }
   function update(dt) {
     let dx = 0, dy = 0;
-    if (G.held.has("l")) dx -= 1; if (G.held.has("r")) dx += 1; if (G.held.has("u")) dy -= 1; if (G.held.has("d")) dy += 1;
+    let mag = 1;
+    if (G.joy) { dx = G.joy.x; dy = G.joy.y; mag = Math.max(0.45, G.joy.m); }
+    else { if (G.held.has("l")) dx -= 1; if (G.held.has("r")) dx += 1; if (G.held.has("u")) dy -= 1; if (G.held.has("d")) dy += 1; }
     if (dx || dy) {
-      const len = Math.hypot(dx, dy), sp = (G.run ? 5.6 : 3.4) * dt;
+      const len = Math.hypot(dx, dy), sp = (G.run ? 5.6 : 3.4) * mag * dt;
       const nx = S.x + (dx / len) * sp, ny = S.y + (dy / len) * sp, r = 0.28;
       const ok = (x, y) => !blocked(x - r, y) && !blocked(x + r, y) && !blocked(x - r, y - 0.2) && !blocked(x + r, y - 0.2);
       if (ok(nx, S.y)) S.x = nx; if (ok(S.x, ny)) S.y = ny;
-      if (dx) G.face = dx; G.walk += dt * (G.run ? 14 : 9);
+      if (Math.abs(dx) > 0.2) G.face = Math.sign(dx); G.walk += dt * (G.run ? 14 : 9);
     } else G.walk = 0;
     for (const car of G.cars) { car.x += car.v * dt; if (car.x > MW + 2) car.x = -3; if (car.x < -3) car.x = MW + 2; }
     S.min += dt; // 1 game minute per real second
@@ -673,6 +720,8 @@
     if (!G) return; const t = L();
     $("cg-nm").textContent = `${S.name}${vip ? " 👑" : ""}`;
     $("cg-en").style.width = Math.max(0, S.energy) + "%";
+    const lv = S.lv || 1; $("cg-lv").textContent = "Lv " + lv;
+    $("cg-xp").style.width = Math.min(100, ((S.xp || 0) / needXP(lv)) * 100) + "%";
     const best = Object.entries(S.love).sort((a, b) => b[1] - a[1])[0];
     $("cg-sub").textContent = S.partner ? `💞 ${NPCS[S.partner].name}` : best[1] > 0 ? `♥ ${NPCS[best[0]].name} ${best[1]}%` : `⚡ ${t.energy} ${Math.round(S.energy)}%`;
     $("cg-clock").innerHTML = `${fmt(t.day, { d: S.day })} · <b>${clock(S.min)}</b>`;
@@ -692,13 +741,13 @@
   }
   function passOut() { closePanel(true); S.energy = 70; newDay(L().passout); }
   function checkMissions() {
-    for (const [id, r, ok] of MISSIONS) if (!S.done[id] && ok(S)) { S.done[id] = 1; S.money += r; setTimeout(() => toast(`🏆 ${fmt(L().missionDone, { r })} · ${L().m[id]}`), 300); }
+    for (const [id, r, ok] of MISSIONS) if (!S.done[id] && ok(S)) { S.done[id] = 1; S.money += r; addXP(20); setTimeout(() => toast(`🏆 ${fmt(L().missionDone, { r })} · ${L().m[id]}`), 300); }
     save(); paintHud();
   }
 
   // ---------------- Panels ----------------
   function openPanel(html, bg, cls = "") {
-    G.paused = true; G.held.clear(); G.root.querySelectorAll(".cg-k.on").forEach((b) => b.classList.remove("on"));
+    G.paused = true; G.held.clear(); resetJoy();
     $("cg-layer").innerHTML = `<div class="cg-panel ${cls}"><div class="cg-pbg" style="background-image:url('${bg}')"></div><div class="cg-pbox">${html}</div></div>`;
   }
   function closePanel(silent) { const l = $("cg-layer"); if (l) l.innerHTML = ""; if (G) { G.paused = false; G.last = performance.now(); if (G.job) { clearInterval(G.job.timer); G.job = null; } if (G.dance) { cancelAnimationFrame(G.dance.raf); G.dance = null; } } if (!silent) paintHud(); }
@@ -768,7 +817,7 @@
     if (a === "npc") return renderNpc(k);
     if (a === "talk") {
       if (S.talk[k] === S.day) return toast(t.talked);
-      S.talk[k] = S.day; addLove(k, 3); spend(15); checkMissions();
+      S.talk[k] = S.day; addLove(k, 3); spend(15); addXP(10); checkMissions();
       return renderNpc(k, t.lines[k][tier(k)][1], "smile");
     }
     if (a === "giftlist") {
@@ -784,7 +833,7 @@
       const base = p <= 20 ? 4 : p <= 60 ? 7 : 12;
       const loved = n.loves.includes(i), liked = n.likes.includes(i);
       const v = Math.round(base * (loved ? 2 : liked ? 1.3 : 0.5));
-      S.inv[i] -= 1; S.gave[k] = S.day; S.st.gifts += 1; addLove(k, v); spend(10); checkMissions();
+      S.inv[i] -= 1; S.gave[k] = S.day; S.st.gifts += 1; addLove(k, v); spend(10); addXP(8); checkMissions();
       toast(`${ITEMS[i].e} → ${n.name}  ❤ +${v}`);
       return renderNpc(k, loved ? t.loved : liked ? t.liked : t.meh, loved ? "surprised" : liked ? "smile" : "neutral");
     }
@@ -803,11 +852,11 @@
       if (!isOpen(VENUES[d])) return toast(fmt(t.closed, { p: VENUES[d].sign, t: clock(VENUES[d].open) }));
       if (S.money < o.cost) return toast(t.noMoney);
       if (S.energy < 15) return toast(t.noEnergy);
-      S.money -= o.cost; S.dated[k] = S.day; S.st.dates += 1; addLove(k, o.love); spend(120, 15); checkMissions();
+      S.money -= o.cost; S.dated[k] = S.day; S.st.dates += 1; addLove(k, o.love); spend(120, 15); addXP(25); checkMissions();
       return scene(k, VENUES[d].bg, fmt(t.dates[d], { n: NPCS[k].name }) + `\n\n❤ +${o.love}`, "smile");
     }
     if (a === "confess") {
-      S.partner = k; checkMissions();
+      S.partner = k; addXP(60); checkMissions();
       return scene(k, VENUES[G.venue].bg, fmt(t.confessText, { n: NPCS[k].name }) + `\n\n${fmt(t.couple, { n: NPCS[k].name })}`, "shy", true);
     }
     if (a === "scene-ok") return renderVenue(G.venue);
@@ -834,7 +883,7 @@
     const t = L();
     const rows = MISSIONS.map(([id, r]) => `<div class="cg-mis${S.done[id] ? " done" : ""}"><span>${S.done[id] ? "✅" : "⬜"} ${esc(t.m[id])}</span><b>+$${r}</b></div>`).join("");
     const love = Object.keys(NPCS).filter((k) => S.met[k]).map((k) => `<div class="cg-mis"><span>${NPCS[k].name}${S.partner === k ? " 💞" : ""}</span><b>♥ ${S.love[k]}%</b></div>`).join("");
-    openPanel(`<div class="cg-ph"><div><h3>📜 ${t.missions}</h3><small>${fmt(t.day, { d: S.day })} · 💰 $${S.money}</small></div><button type="button" class="cg-x" data-a="close">${t.close}</button></div>
+    openPanel(`<div class="cg-ph"><div><h3>📜 ${t.missions}</h3><small>⭐ Lv ${S.lv || 1} (${S.xp || 0}/${needXP(S.lv || 1)} XP) · ${fmt(t.day, { d: S.day })} · 💰 $${S.money}</small></div><button type="button" class="cg-x" data-a="close">${t.close}</button></div>
       <div class="cg-cols"><div class="cg-list">${rows}</div><div class="cg-list">${love}<div class="cg-mlang">${LANGS.map(([k, l]) => `<button type="button" class="story-chip${S.lang === k ? " active" : ""}" data-a="lang" data-k="${k}">${l}</button>`).join("")}</div><button type="button" class="cg-act" data-a="exit"><span>💾 ${t.exit}</span></button></div></div>`, "story-assets/bg_night.webp");
   }
 
@@ -878,7 +927,7 @@
   function endJob() {
     const J = G.job, j = JOBS[J.kind], t = L(); clearInterval(J.timer); G.job = null;
     const pay = J.pay * (vip ? 2 : 1);
-    S.money += pay; S.st.earned += pay; S.st[j.stat] += 1; spend(180, 25); checkMissions();
+    S.money += pay; S.st.earned += pay; S.st[j.stat] += 1; spend(180, 25); addXP(30); checkMissions();
     $("cg-order").innerHTML = `<div class="cg-result">🎉 ${fmt(t.shiftEnd, { m: pay })}${vip ? " " + t.vipx2 : ""}<br><button type="button" class="button button-gold" data-a="vback">${t.ok}</button></div>`;
   }
 
@@ -908,7 +957,7 @@
     const s = Math.round(D.score); S.st.dances += 1; spend(60, 15);
     let msg = fmt(t.danceEnd, { s });
     for (const k of ["yuna", "ray"]) if (present(k) && s > 0) { const v = s * 2; addLove(k, v); msg += "<br>" + fmt(t.noticed, { n: NPCS[k].name, v }); }
-    checkMissions(); G.dance = null;
+    addXP(5 + s * 3); checkMissions(); G.dance = null;
     setTimeout(() => { const el = $("cg-layer").querySelector(".cg-dance"); if (el) el.innerHTML = `<div class="cg-result">🎶 ${msg}<br><button type="button" class="button button-gold" data-a="vback">${t.ok}</button></div>`; }, 400);
   }
 
