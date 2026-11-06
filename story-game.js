@@ -443,7 +443,7 @@
     try { tg?.HapticFeedback?.selectionChanged?.(); } catch {}
     $("vn-choices").innerHTML = "";
     speaker("me", state.name);
-    typeText(picked, () => { $("vn-next").classList.add("hidden"); $("vn-extra").innerHTML = `<span class="spinner"></span> ${esc(T().writing)}`; });
+    typeText(picked, () => { $("vn-next").classList.add("hidden"); $("vn-extra").innerHTML = `<span class="vn-dots3"><i></i><i></i><i></i></span>`; });
     const err = await choose(i);
     if (!vn) return;
     if (vn.typing) finishType();
@@ -476,7 +476,7 @@
     busy = on;
     document.querySelectorAll("#story-section button, #vns button").forEach((b) => { b.disabled = on; });
     const err = $("story-error");
-    if (err) err.innerHTML = on ? `<span class="spinner"></span> ${T().writing}` : "";
+    if (err) err.innerHTML = on ? `<span class="vn-dots3"><i></i><i></i><i></i></span>` : "";
   }
   function showError(code) {
     const err = $("story-error");

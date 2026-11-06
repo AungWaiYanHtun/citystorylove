@@ -260,7 +260,7 @@
   function setLoading(on) {
     busy = on;
     document.querySelectorAll("#detective-section button").forEach((b) => { b.disabled = on || (b.id === "det-accuse" && (state?.asks || 0) < MIN_ASKS); });
-    const err = $("det-error"); if (err) err.innerHTML = on ? `<span class="spinner"></span> ${T().writing}` : "";
+    const err = $("det-error"); if (err) err.innerHTML = on ? `<span class="vn-dots3"><i></i><i></i><i></i></span>` : "";
   }
   function showError(code) {
     const err = $("det-error"); if (!err) return;
