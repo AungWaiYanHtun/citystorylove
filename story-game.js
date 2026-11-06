@@ -4,11 +4,12 @@
   const cfg = window.VIDEOSPACE_CONFIG || {};
   const API = (cfg.VIP_API_URL || "").replace(/\/$/, "");
   const tg = window.Telegram?.WebApp;
-  const SAVE_KEY = "videospace_story_v1";
+  const SAVE_KEY = "videospace_story_v1_" + String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "guest"); // per Telegram account
   const $ = (id) => document.getElementById(id);
 
   const TEXT = {
     my: {
+      avatar: "ကိုယ့် Avatar", cont: "▶ ဆက်ဆော့မယ်", pickSay: "ဘာပြန်ပြောမလဲ? ရွေးပါ 👆", retry: "↻ ထပ်စမ်းမယ်", log: "ယခင်စကားများ", ch: "အပိုင်း",
       heading: '🎮 ကိုယ်တိုင်ဆော့ရတဲ့ <span class="gold-text">ဇာတ်လမ်း</span>',
       who: "သင် ဘယ်သူလဲ?", genre: "ဇာတ်လမ်းအမျိုးအစား", name: "ဇာတ်ကောင်နာမည်", namePh: "ဥပမာ - မောင်မောင်",
       lang: "ဘာသာစကား",
@@ -23,6 +24,7 @@
       genres: { romance: "💕 အချစ်", school: "🎓 တက္ကသိုလ်", mystery: "🕵️ လျှို့ဝှက်", horror: "👻 သရဲ", fantasy: "🐉 Fantasy", drama: "🎭 ဘဝဒရာမာ" }
     },
     en: {
+      avatar: "Your avatar", cont: "▶ Continue", pickSay: "What will you say? Pick one 👆", retry: "↻ Try again", log: "History", ch: "Ch.",
       heading: '🎮 Play Your Own <span class="gold-text">Story</span>',
       who: "Who are you?", genre: "Story type", name: "Character name", namePh: "e.g. Alex",
       lang: "Language",
@@ -38,7 +40,8 @@
     }
   };
   TEXT.ru = {
-    heading: '🎮 Сыграй свою <span class="gold-text">историю</span>',
+    avatar: "Ваш аватар", cont: "▶ Продолжить", pickSay: "Что ответите? Выберите 👆", retry: "↻ Ещё раз", log: "История", ch: "Гл.",
+      heading: '🎮 Сыграй свою <span class="gold-text">историю</span>',
     who: "Кто вы?", genre: "Жанр истории", name: "Имя персонажа", namePh: "например, Саша",
     lang: "Язык",
     mature: "💋 Романтические сцены (поцелуи, объятия). Подтверждаю, что мне есть 18 лет.",
@@ -52,7 +55,8 @@
     genres: { romance: "💕 Романтика", school: "🎓 Студенчество", mystery: "🕵️ Детектив", horror: "👻 Ужасы", fantasy: "🐉 Фэнтези", drama: "🎭 Драма" }
   };
   TEXT.es = {
-    heading: '🎮 Juega tu propia <span class="gold-text">historia</span>',
+    avatar: "Tu avatar", cont: "▶ Continuar", pickSay: "¿Qué dirás? Elige 👆", retry: "↻ Reintentar", log: "Historial", ch: "Cap.",
+      heading: '🎮 Juega tu propia <span class="gold-text">historia</span>',
     who: "¿Quién eres?", genre: "Tipo de historia", name: "Nombre del personaje", namePh: "p. ej. Alex",
     lang: "Idioma",
     mature: "💋 Incluir escenas románticas (besos, abrazos). Confirmo que tengo 18 años o más.",
@@ -71,7 +75,9 @@
   const T = () => TEXT[state ? state.lang : setup.lang] || TEXT.en;
 
   let state = load() || null;
-  let setup = { identity: "", genre: "romance", name: "", mature: false, lang: "en" };
+  let setup = { identity: "", genre: "romance", name: "", mature: false, lang: "en", avatar: 0 };
+  const AV_FOR = { boy: 1, gay: 1, transman: 2, girl: 4, lesbian: 4, transwoman: 5 };
+  const ASSET = "story-assets/";
   let lastQuota = null;
   let busy = false;
 
@@ -159,6 +165,8 @@
         <div class="story-chips" id="story-genres">
           ${GENRE_KEYS.map((k) => `<button type="button" class="story-chip${setup.genre === k ? " active" : ""}" data-genre="${k}">${T().genres[k]}</button>`).join("")}
         </div>
+        <h3>${T().avatar}</h3>
+        <div class="vn-avs">${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" class="vn-av${(setup.avatar || AV_FOR[setup.identity] || 1) === n ? " on" : ""}" data-av="${n}"><img src="${ASSET}av${n}.webp" alt=""></button>`).join("")}</div>
         <label class="story-label">${T().name}
           <input id="story-name" maxlength="30" placeholder="${esc(T().namePh)}" value="${esc(setup.name)}">
         </label>
@@ -168,6 +176,7 @@
       </div>`;
     body.querySelectorAll("[data-identity]").forEach((b) => b.addEventListener("click", () => { setup.identity = b.dataset.identity; readInputs(); render(); }));
     body.querySelectorAll("[data-genre]").forEach((b) => b.addEventListener("click", () => { setup.genre = b.dataset.genre; readInputs(); render(); }));
+    body.querySelectorAll("[data-av]").forEach((b) => b.addEventListener("click", () => { setup.avatar = Number(b.dataset.av); readInputs(); render(); }));
     body.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { setup.lang = b.dataset.lang; readInputs(); render(); }));
     $("story-start")?.addEventListener("click", startStory);
   }
@@ -177,7 +186,6 @@
   }
 
   // ── Visual stage: animated anime background + character with expressions ──
-  const ASSET = "story-assets/";
   const SCENES = ["cafe", "campus", "rain", "night", "beach", "room", "forest", "mansion"];
   const GENRE_SCENE = { romance: "cafe", school: "campus", mystery: "rain", horror: "mansion", fantasy: "forest", drama: "room" };
   const FX = { cafe: "bokeh", room: "bokeh", campus: "petals", rain: "rain", night: "stars", beach: "sparkle", forest: "fireflies", mansion: "fog" };
@@ -228,32 +236,197 @@
     ["neutral", "blink", "smile", "shy", "sad", "surprised"].forEach((e) => preload(`${ASSET}${who}_${e}.webp`));
   }
 
+  // ── Fix 33: portrait visual-novel player ──
   function renderStory(body) {
     const last = state.turns[state.turns.length - 1];
-    const past = state.turns.slice(0, -1);
+    const av = state.avatar || AV_FOR[state.identity] || 1;
     body.innerHTML = `
       <div class="story-toolbar">
-        <span class="story-who">${esc(state.name)} · ${esc(T().identities[state.identity] || "")}</span>
+        <span class="story-who"><img class="vn-mini" src="${ASSET}av${av}.webp" alt=""> ${esc(state.name)} · ${T().ch} ${state.turns.length}</span>
         <button type="button" id="story-new" class="button button-quiet story-small">${T().newStory}</button>
       </div>
-      ${past.length ? `<details class="story-past"><summary>${T().past} (${past.length})</summary>${past.map((t) => `<div class="story-past-item">${t.title ? `<b>${esc(t.title)}</b>` : ""}<p>${esc(t.story)}</p>${t.picked ? `<em>➜ ${esc(t.picked)}</em>` : ""}</div>`).join("")}</details>` : ""}
       ${stageHTML(last)}
       <article class="story-card story-current">
         ${last?.title ? `<span class="eyebrow">${esc(last.title)}</span>` : ""}
-        <p class="story-text">${esc(last?.story || "")}</p>
-        <div class="story-choices">
-          ${(last?.choices || []).map((c, i) => `<button type="button" class="story-choice" data-choice="${i}">${["A", "B", "C"][i]}. ${esc(c)}</button>`).join("")}
-        </div>
+        <button type="button" id="story-cont" class="button button-gold full-width">${T().cont}</button>
         <p id="story-error" class="story-error"></p>
       </article>`;
     $("story-new")?.addEventListener("click", () => {
       if (!confirm(T().confirmNew)) return;
-      setup = { identity: state.identity, genre: state.genre, name: state.name, mature: state.mature, lang: state.lang };
+      setup = { identity: state.identity, genre: state.genre, name: state.name, mature: state.mature, lang: state.lang, avatar: state.avatar || 0 };
       state = null; save(); render();
     });
-    body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => choose(Number(b.dataset.choice))));
+    $("story-cont")?.addEventListener("click", openVN);
     startStageLife();
     preloadPartner();
+  }
+
+  // Split the AI's story into short pages for the dialogue box.
+  function pagesOf(text) {
+    const parts = String(text || "").replace(/\r/g, "").split(/\n+|(?<=[.!?။…”"」])\s+/).map((x) => x.trim()).filter(Boolean);
+    const out = []; let cur = "";
+    parts.forEach((p) => {
+      if (cur && (cur + " " + p).length > 150) { out.push(cur); cur = p; } else cur = cur ? cur + " " + p : p;
+    });
+    if (cur) out.push(cur);
+    return out.length ? out : [""];
+  }
+  const QUOTE = /["“”「」«»]/;
+  let vn = null, typeTimer = null, autoTimer = null;
+
+  function openVN() {
+    if (!state) return;
+    closeVN(true);
+    const el = document.createElement("div");
+    el.id = "vn"; el.className = "vn";
+    el.innerHTML = `
+      <img class="vn-bg" alt=""><div class="vn-fx"></div>
+      <img class="vn-partner" alt="">
+      <img class="vn-me" alt="">
+      <div class="vn-hud"><span class="vn-pill" id="vn-scene"></span><span class="vn-pill" id="vn-ch"></span><span class="vn-pill vn-q" id="vn-quota"></span><button type="button" class="vn-x" id="vn-x">✕</button></div>
+      <div class="vn-choices" id="vn-choices"></div>
+      <div class="vn-box" id="vn-box">
+        <div class="vn-name hidden" id="vn-name"><img id="vn-name-av" alt=""><span id="vn-name-t"></span></div>
+        <div class="vn-tools"><button type="button" data-t="log">📜</button><button type="button" data-t="skip">⏩</button><button type="button" data-t="auto">▶</button></div>
+        <div class="vn-txt" id="vn-txt"></div>
+        <div class="vn-extra" id="vn-extra"></div>
+        <span class="vn-next" id="vn-next">▼</span>
+      </div>
+      <div class="vn-log hidden" id="vn-log"></div>`;
+    document.body.appendChild(el);
+    document.documentElement.classList.add("vn-open");
+    $("vn-x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
+    el.addEventListener("click", onTap);
+    el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
+    $("vn-log").addEventListener("click", (e) => { e.stopPropagation(); $("vn-log").classList.add("hidden"); });
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch {}
+    vn = { auto: false };
+    loadTurn(state.turns[state.turns.length - 1]);
+  }
+  function closeVN(silent) {
+    clearInterval(typeTimer); clearTimeout(autoTimer);
+    $("vn")?.remove(); document.documentElement.classList.remove("vn-open");
+    vn = null;
+    if (!silent) render();
+  }
+  function setScene(turn) {
+    const scene = SCENES.includes(turn?.scene) ? turn.scene : (GENRE_SCENE[state.genre] || "cafe");
+    const bg = document.querySelector("#vn .vn-bg");
+    if (bg && !bg.src.endsWith(`bg_${scene}.webp`)) bg.src = `${ASSET}bg_${scene}.webp`;
+    const fx = document.querySelector("#vn .vn-fx");
+    if (fx && fx.dataset.k !== FX[scene]) { fx.dataset.k = FX[scene]; fx.className = `vn-fx stage-fx fx-${FX[scene]}`; fx.innerHTML = fxParticles(FX[scene]); }
+    const who = turn?.character === "lin" || turn?.character === "kai" ? turn.character : "";
+    const expr = ["neutral", "smile", "shy", "sad", "surprised"].includes(turn?.expression) ? turn.expression : "neutral";
+    const pt = document.querySelector("#vn .vn-partner");
+    if (pt) { pt.classList.toggle("hidden", !who); if (who) pt.src = `${ASSET}${who}_${expr}.webp`; }
+    vn.partner = who === "lin" ? "Lin" : who === "kai" ? "Kai" : "";
+    $("vn-scene").textContent = "📍 " + scene.charAt(0).toUpperCase() + scene.slice(1);
+    $("vn-ch").textContent = `📖 ${T().ch} ${state.turns.length}`;
+    $("vn-quota").textContent = lastQuota ? (lastQuota.vip ? "👑 VIP" : `⚡ ${lastQuota.remaining}/${lastQuota.limit}`) : "";
+  }
+  function loadTurn(turn) {
+    if (!vn) return;
+    setScene(turn);
+    vn.turn = turn;
+    vn.pages = pagesOf((turn?.title ? "" : "") + (turn?.story || ""));
+    vn.i = 0;
+    showPage();
+  }
+  function speaker(mode, name) {
+    const n = $("vn-name"), av = $("vn-name-av");
+    if (!n) return;
+    n.classList.toggle("hidden", !name);
+    n.classList.toggle("me", mode === "me");
+    $("vn-name-t").textContent = name || "";
+    av.classList.toggle("hidden", mode !== "me");
+    if (mode === "me") av.src = `${ASSET}av${state.avatar || AV_FOR[state.identity] || 1}.webp`;
+  }
+  function meVisible(on) {
+    const me = document.querySelector("#vn .vn-me");
+    if (!me) return;
+    if (on) me.src = `${ASSET}p${state.avatar || AV_FOR[state.identity] || 1}.webp`;
+    me.classList.toggle("on", on);
+    document.getElementById("vn")?.classList.toggle("dim", on);
+  }
+  function typeText(txt, done) {
+    clearInterval(typeTimer);
+    const box = $("vn-txt"); if (!box) return;
+    const chars = Array.from(txt); let k = 0;
+    vn.typing = true; vn.full = txt; vn.onDone = done;
+    box.textContent = ""; $("vn-next").classList.add("hidden");
+    typeTimer = setInterval(() => {
+      k += 2; box.textContent = chars.slice(0, k).join("");
+      if (k >= chars.length) finishType();
+    }, 28);
+  }
+  function finishType() {
+    clearInterval(typeTimer);
+    if (!vn) return;
+    $("vn-txt").textContent = vn.full; vn.typing = false;
+    $("vn-next").classList.remove("hidden");
+    const d = vn.onDone; vn.onDone = null; d && d();
+  }
+  function showPage() {
+    vn.mode = "read";
+    meVisible(false); $("vn-choices").innerHTML = ""; $("vn-extra").innerHTML = "";
+    const page = vn.pages[vn.i] || "";
+    const talk = vn.partner && QUOTE.test(page);
+    speaker("partner", talk ? vn.partner : "");
+    $("vn-txt").classList.toggle("narr", !talk);
+    typeText(page, () => { if (vn?.auto) autoTimer = setTimeout(() => advance(), 1600); });
+  }
+  function advance() {
+    clearTimeout(autoTimer);
+    if (!vn || vn.mode !== "read") return;
+    if (vn.typing) return finishType();
+    if (vn.i < vn.pages.length - 1) { vn.i++; showPage(); return; }
+    showChoices();
+  }
+  function showChoices() {
+    vn.mode = "choice";
+    const t = T();
+    meVisible(true);
+    speaker("me", state.name);
+    $("vn-txt").classList.remove("narr");
+    $("vn-txt").textContent = t.pickSay; $("vn-next").classList.add("hidden");
+    const ch = vn.turn?.choices || [];
+    $("vn-choices").innerHTML = ch.map((c, i) => `<button type="button" data-c="${i}"><b>${"ABC"[i]}</b>${esc(c)}</button>`).join("");
+    $("vn-choices").querySelectorAll("[data-c]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); vnPick(Number(b.dataset.c)); }));
+  }
+  async function vnPick(i) {
+    const picked = vn?.turn?.choices?.[i];
+    if (!picked || vn.mode !== "choice") return;
+    vn.mode = "say";
+    try { tg?.HapticFeedback?.selectionChanged?.(); } catch {}
+    $("vn-choices").innerHTML = "";
+    speaker("me", state.name);
+    typeText(picked, () => { $("vn-next").classList.add("hidden"); $("vn-extra").innerHTML = `<span class="spinner"></span> ${esc(T().writing)}`; });
+    const err = await choose(i);
+    if (!vn) return;
+    if (vn.typing) finishType();
+    if (err) {
+      vn.mode = "err";
+      $("vn-extra").innerHTML = `<span class="vn-err">${esc(T()[err] || T().FAILED)}</span>` +
+        (err === "LIMIT" ? `<button type="button" class="vn-btn gold" id="vn-vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" id="vn-retry">${T().retry}</button>`);
+      $("vn-vip")?.addEventListener("click", (e) => { e.stopPropagation(); closeVN(); $("vip-page-buy")?.click(); });
+      $("vn-retry")?.addEventListener("click", (e) => { e.stopPropagation(); showChoices(); });
+      return;
+    }
+    loadTurn(state.turns[state.turns.length - 1]);
+  }
+  function tool(t, btn) {
+    if (!vn) return;
+    if (t === "skip") { if (vn.mode === "read") { finishType(); vn.i = vn.pages.length - 1; showPage(); finishType(); } return; }
+    if (t === "auto") { vn.auto = !vn.auto; btn.classList.toggle("on", vn.auto); if (vn.auto && vn.mode === "read" && !vn.typing) advance(); return; }
+    if (t === "log") {
+      const lg = $("vn-log");
+      lg.innerHTML = `<h3>📜 ${esc(T().log)}</h3>` + state.turns.map((x) => `<div class="vn-log-i">${x.title ? `<b>${esc(x.title)}</b>` : ""}<p>${esc(x.story)}</p>${x.picked ? `<em>➜ ${esc(state.name)}: ${esc(x.picked)}</em>` : ""}</div>`).join("");
+      lg.classList.remove("hidden"); lg.scrollTop = lg.scrollHeight;
+    }
+  }
+  function onTap(e) {
+    if (!vn || e.target.closest(".vn-choices,.vn-hud,.vn-tools,.vn-btn")) return;
+    if (vn.mode === "read") advance();
   }
 
   function setLoading(on) {
@@ -298,21 +471,23 @@
     readInputs();
     if (!setup.identity) { const err = $("story-error"); if (err) err.textContent = T().pickWho; return; }
     const settings = { identity: setup.identity, genre: setup.genre, name: setup.name || "Player", mature: setup.mature, lang: setup.lang };
+    const avatar = setup.avatar || AV_FOR[setup.identity] || 1;
     setLoading(true);
     try {
       const turn = await requestTurn(settings, [], "");
-      state = { ...settings, turns: [{ title: turn.title, story: turn.story, choices: turn.choices, scene: turn.scene, character: turn.character, expression: turn.expression }] };
-      save(); setLoading(false); render(); refreshStatus();
+      state = { ...settings, avatar, turns: [{ title: turn.title, story: turn.story, choices: turn.choices, scene: turn.scene, character: turn.character, expression: turn.expression }] };
+      save(); setLoading(false); render(); refreshStatus(); openVN();
     } catch (e) {
       setLoading(false); showError(e.message);
     }
   }
 
+  // Returns null on success, or an error code (LIMIT, BUSY, ...).
   async function choose(index) {
-    if (busy || !state) return;
+    if (busy || !state) return "BUSY";
     const last = state.turns[state.turns.length - 1];
     const picked = last?.choices?.[index];
-    if (!picked) return;
+    if (!picked) return "FAILED";
     const settings = { identity: state.identity, genre: state.genre, name: state.name, mature: state.mature, lang: state.lang };
     const draft = state.turns.map((t, i) => (i === state.turns.length - 1 ? { ...t, picked } : t));
     setLoading(true);
@@ -320,9 +495,10 @@
       const turn = await requestTurn(settings, historyFor(state.turns), picked);
       state.turns = [...draft, { title: turn.title, story: turn.story, choices: turn.choices, scene: turn.scene, character: turn.character, expression: turn.expression }].slice(-30);
       save(); setLoading(false); render(); refreshStatus();
-      $("story-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return null;
     } catch (e) {
       setLoading(false); showError(e.message);
+      return e.message || "FAILED";
     }
   }
 })();
