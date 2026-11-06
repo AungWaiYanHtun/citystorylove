@@ -422,7 +422,10 @@
     if (!ov) {
       ov = document.createElement("div"); ov.id = "palace-ov";
       ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:#1a0f0a";
-      ov.innerHTML = '<iframe src="hanok3d/index.html" style="border:0;width:100%;height:100%" allow="fullscreen"></iframe>';
+      const sa = (tg && tg.safeAreaInset) || {}, ca = (tg && tg.contentSafeAreaInset) || {};
+      const st = (sa.top || 0) + (ca.top || 0), sl = (sa.left || 0) + (ca.left || 0), sr = (sa.right || 0) + (ca.right || 0);
+      const qs = st ? `?st=${st}&sl=${sl}&sr=${sr}` : "";
+      ov.innerHTML = '<iframe src="hanok3d/index.html' + qs + '" style="border:0;width:100%;height:100%" allow="fullscreen"></iframe>';
       document.body.appendChild(ov);
       addEventListener("message", (e) => { if (e.data === "palace-close") { $("palace-ov")?.remove(); } });
     }
