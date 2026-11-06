@@ -502,3 +502,7 @@ html.cg-open,html.cg-open body{overflow:hidden!important;overscroll-behavior:non
 .cg-wbuy{align-self:flex-start;padding:10px 18px}
 .cg-wgrid6{grid-template-columns:repeat(6,1fr);max-height:none}.cg-wgrid6 .cg-wchar{height:min(150px,40vh)}
 .cg-chars3{grid-template-columns:repeat(3,minmax(0,150px));justify-content:center}.cg-chars3 .cg-charpick{height:170px}.cg-wgrid3{grid-template-columns:repeat(3,1fr);max-height:none}.cg-wgrid3 .cg-wchar{height:min(170px,42vh)}
+
+/* Fix 32: Story Games hub */
+.hub-back{display:inline-flex;align-items:center;margin:0 0 12px;padding:8px 14px;border-radius:12px;border:1px solid rgba(255,207,107,.45);background:rgba(255,255,255,.06);color:#ffe08a;font-weight:800;font-size:14px;cursor:pointer}
+.games-section .cg-card-img img{height:145px}
