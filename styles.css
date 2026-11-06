@@ -502,3 +502,59 @@ html.cg-open,html.cg-open body{overflow:hidden!important;overscroll-behavior:non
 .cg-wbuy{align-self:flex-start;padding:10px 18px}
 .cg-wgrid6{grid-template-columns:repeat(6,1fr);max-height:none}.cg-wgrid6 .cg-wchar{height:min(150px,40vh)}
 .cg-chars3{grid-template-columns:repeat(3,minmax(0,150px));justify-content:center}.cg-chars3 .cg-charpick{height:170px}.cg-wgrid3{grid-template-columns:repeat(3,1fr);max-height:none}.cg-wgrid3 .cg-wchar{height:min(170px,42vh)}
+
+/* Fix 32: Story Games hub */
+.hub-back{display:inline-flex;align-items:center;margin:0 0 12px;padding:8px 14px;border-radius:12px;border:1px solid rgba(255,207,107,.45);background:rgba(255,255,255,.06);color:#ffe08a;font-weight:800;font-size:14px;cursor:pointer}
+.games-section .cg-card-img img{height:145px}
+
+/* ===== Fix 33: Love Story portrait visual novel ===== */
+html.vn-open,html.vn-open body{overflow:hidden}
+.vn-avs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:6px}
+.vn-av{padding:0;border-radius:14px;border:3px solid transparent;background:#ffe3ef;overflow:hidden;cursor:pointer;aspect-ratio:1}
+.vn-av img{width:100%;height:100%;object-fit:cover;display:block}
+.vn-av.on{border-color:#ff4f9a;box-shadow:0 0 0 3px rgba(255,79,154,.35)}
+.vn-mini{width:26px;height:26px;border-radius:50%;vertical-align:middle;object-fit:cover;border:2px solid #ff7eb3;background:#ffe3ef}
+.vn{position:fixed;inset:0;z-index:10050;height:100vh;height:100dvh;overflow:hidden;background:#120812;color:#fff;font-family:"DM Sans","Noto Sans Myanmar","Pyidaungsu","Padauk","Myanmar Text",sans-serif;-webkit-user-select:none;user-select:none;--vt:calc(var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px) + env(safe-area-inset-top,0px));--vb:calc(var(--tg-safe-area-inset-bottom,0px) + env(safe-area-inset-bottom,0px))}
+.vn-bg{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;animation:stageDrift 26s ease-in-out infinite alternate}
+.vn:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(20,8,20,.6));pointer-events:none;z-index:1}
+.vn-fx{z-index:1}
+.vn-partner{position:absolute;left:2%;width:96%;bottom:calc(150px + var(--vb));height:62%;object-fit:contain;object-position:center bottom;transform-origin:50% 100%;z-index:2;filter:drop-shadow(0 8px 18px rgba(0,0,0,.5));transition:filter .3s,left .35s;animation:breathe 4.2s ease-in-out infinite}
+.vn.dim .vn-partner{filter:brightness(.62) drop-shadow(0 8px 18px rgba(0,0,0,.5));left:16%}
+.vn-me{position:absolute;left:-6%;bottom:calc(140px + var(--vb));height:48%;z-index:3;opacity:0;transform:translateX(-30%);transition:.35s ease-out;filter:drop-shadow(0 8px 18px rgba(0,0,0,.6));pointer-events:none}
+.vn-me.on{opacity:1;transform:none}
+.vn-hud{position:absolute;top:calc(10px + var(--vt));left:10px;right:10px;display:flex;gap:6px;align-items:center;z-index:7}
+.vn-pill{background:linear-gradient(90deg,#7a1240,#c2185b);border:1px solid rgba(255,255,255,.35);border-radius:13px;padding:5px 10px;font-size:12px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.4);white-space:nowrap}
+.vn-pill:empty{display:none}
+.vn-q{margin-left:auto}
+.vn-x{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.45);color:#fff;font-size:16px;font-weight:900;margin-left:auto}
+.vn-q+.vn-x{margin-left:0}
+.vn-box{position:absolute;left:10px;right:10px;bottom:calc(14px + var(--vb));z-index:6;background:rgba(40,16,30,.9);border:2px solid #ff7eb3;border-radius:18px;padding:28px 16px 18px;min-height:128px;max-height:40%;overflow:auto;box-shadow:0 0 0 4px rgba(255,126,179,.18),0 10px 30px rgba(0,0,0,.5)}
+.vn-name{position:absolute;top:-17px;left:14px;display:flex;align-items:center;gap:7px;background:#fff;color:#c2185b;border:2px solid #ff7eb3;border-radius:12px;padding:3px 12px;font-weight:900;font-size:15px}
+.vn-name.me{padding-left:3px}
+.vn-name img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #ff7eb3;background:#ffe3ef}
+.vn-name.hidden,.vn-name img.hidden{display:none}
+.vn-box{overflow:visible}
+.vn-tools{position:absolute;right:12px;top:-18px;display:flex;gap:5px}
+.vn-tools button{width:32px;height:32px;border-radius:9px;background:#fff;border:2px solid #ff7eb3;color:#c2185b;font-size:13px;padding:0}
+.vn-tools button.on{background:#ff7eb3;color:#fff}
+.vn-txt{font-size:16px;line-height:1.6;min-height:52px;white-space:pre-wrap}
+.vn-txt.narr{font-style:italic;color:#ffe9f2}
+.vn-extra{margin-top:8px;font-size:13px;color:#ffb3d1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vn-extra:empty{display:none}
+.vn-err{color:#ffd0d0}
+.vn-btn{border:2px solid #ff7eb3;background:#fff;color:#c2185b;border-radius:12px;padding:7px 12px;font-weight:800}
+.vn-btn.gold{background:linear-gradient(135deg,#ffe08a,#f0b93a);color:#1b1406;border-color:#f0b93a}
+.vn-next{position:absolute;right:16px;bottom:8px;color:#ff9cc6;font-size:13px;animation:hop 1s infinite}
+.vn-next.hidden{display:none}
+.vn-choices{position:absolute;left:14px;right:14px;bottom:calc(166px + var(--vb));z-index:6;display:flex;flex-direction:column;gap:9px}
+.vn-choices button{text-align:left;background:rgba(255,255,255,.96);color:#5b0f33;border:2px solid #ff7eb3;border-radius:16px;padding:12px 14px;font-size:15px;font-weight:700;line-height:1.4;box-shadow:0 6px 16px rgba(0,0,0,.35);animation:vnIn .35s ease-out both;font-family:inherit}
+@keyframes vnIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.vn-choices button:nth-child(2){animation-delay:.07s}.vn-choices button:nth-child(3){animation-delay:.14s}
+.vn-choices button:active{background:linear-gradient(90deg,#ff7eb3,#ffb3d1);color:#fff}
+.vn-choices b{color:#e91e63;margin-right:7px}
+.vn-log{position:absolute;inset:0;z-index:20;background:rgba(18,6,14,.94);padding:calc(18px + var(--vt)) 16px calc(18px + var(--vb));overflow:auto}
+.vn-log.hidden{display:none}
+.vn-log h3{margin:0 0 12px;color:#ffb3d1}
+.vn-log-i{margin-bottom:14px;font-size:14px;line-height:1.55}
+.vn-log-i p{margin:4px 0}.vn-log-i em{color:#ff9cc6}
+.vn .hidden{display:none}
