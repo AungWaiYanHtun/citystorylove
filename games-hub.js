@@ -85,5 +85,11 @@
     $("games-tab-btn")?.classList.add("active");
   }
 
+  // Fix 41: every "Get VIP" button (VIP tab + games) clicks #vip-page-buy. It had no listener → open the plans.
+  function wireVip() {
+    const b = $("vip-page-buy");
+    if (b && !b.dataset.wired) { b.dataset.wired = "1"; b.addEventListener("click", () => document.dispatchEvent(new CustomEvent("videospace:open-vip-plans"))); }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wireVip); else wireVip();
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
 })();

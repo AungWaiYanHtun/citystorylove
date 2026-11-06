@@ -472,3 +472,6 @@ html.vn-open,html.vn-open body{overflow:hidden}
 /* Fix 38: Adsgram */
 .vn-ad{border:0;background:linear-gradient(135deg,#ffe08a,#f0b93a)!important;color:#1b1406!important;font-weight:800;cursor:pointer}
 .toast{z-index:20000}
+
+/* Fix 41: VIP plans must open above the full-screen games */
+.vip-plans-overlay{z-index:20001!important}
