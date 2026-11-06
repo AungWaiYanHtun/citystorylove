@@ -1,15 +1,15 @@
 /*
   Adsgram ads (Fix 38).
-  - Interstitial "Between turns" (int-58331): free players only, at most once every 10 minutes,
-    and only after every 3rd story turn. The game always works without watching it.
+  - Interstitial "Between turns" (int-58331): free players only, at most once every 15 minutes,
+    and only after every 6th story turn. The game always works without watching it.
   - Reward "Bonus" (58330): the player CHOOSES to watch an ad and gets +5 free turns.
     The backend (/api/ads/reward) limits how many bonuses one player gets per day.
 */
 (function () {
   const REWARD_BLOCK = "58330";
   const INTER_BLOCK = "int-58331";
-  const INTER_GAP_MS = 10 * 60 * 1000;
-  const INTER_EVERY = 3;
+  const INTER_GAP_MS = 15 * 60 * 1000;
+  const INTER_EVERY = 6;
   const TS_KEY = "csl_ad_int_ts";
 
   const L = {
