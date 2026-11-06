@@ -152,8 +152,8 @@
   async function refreshStatus() {
     try {
       const { ok, data } = await api("/api/detective/status");
-      quota = ok ? data : null; paintQuota();
-    } catch { quota = null; paintQuota(); }
+      quota = ok ? data : null; paintQuota(); paintAd();
+    } catch { quota = null; paintQuota(); paintAd(); }
   }
   function paintQuota() {
     const el = $("det-quota"); if (!el) return;
@@ -285,7 +285,7 @@
     el.id = "dvn"; el.className = "vn dvn";
     el.innerHTML = `<img class="vn-bg" data-r="bg" alt=""><div class="vn-fx" data-r="fx"></div>
       <img class="vn-partner" data-r="partner" alt=""><img class="vn-me" data-r="me" alt="">
-      <div class="vn-hud"><span class="vn-pill" data-r="clues"></span><span class="vn-pill" data-r="love"></span><span class="vn-pill" data-r="asks"></span><span class="vn-pill vn-q" data-r="quota"></span><button type="button" class="vn-x" data-r="x">✕</button></div>
+      <div class="vn-hud"><span class="vn-pill" data-r="clues"></span><span class="vn-pill" data-r="love"></span><span class="vn-pill" data-r="asks"></span><span class="vn-pill vn-q" data-r="quota"></span><button type="button" class="vn-pill vn-ad hidden" data-r="ad"></button><button type="button" class="vn-x" data-r="x">✕</button></div>
       <div class="vn-choices" data-r="choices"></div>
       <div class="vn-box" data-r="box">
         <div class="vn-name hidden" data-r="name"><img data-r="nav" alt=""><span data-r="nt"></span></div>
@@ -296,6 +296,7 @@
     document.body.appendChild(el);
     document.documentElement.classList.add("vn-open");
     R("x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
+    R("ad").addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.reward("detective", state?.lang); });
     el.addEventListener("click", onTap);
     el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
     R("log").addEventListener("click", (e) => { e.stopPropagation(); R("log").classList.add("hidden"); });
@@ -316,7 +317,22 @@
     R("love").textContent = `💘 ${NAMES[state.crush]} ${state.love}%`;
     R("asks").textContent = state.ended ? `📖 ${t.chapter(state.chapter)}` : `❓ ${state.asks || 0}/${MAX_ASKS}`;
     R("quota").textContent = quota ? (quota.vip ? "👑 VIP" : `⚡ ${quota.remaining}/${quota.limit}`) : "";
+    paintAd();
   }
+  // Fix 38: Adsgram reward button (free players only)
+  function paintAd() {
+    if (!vn) return;
+    const b = R("ad"); if (!b) return;
+    const on = !!(window.CSLAds && quota && quota.enabled && !quota.vip);
+    b.classList.toggle("hidden", !on);
+    if (on) b.textContent = window.CSLAds.label(state?.lang, true);
+  }
+  let lastRetry = null;
+  document.addEventListener("csl-ad-reward", async (e) => {
+    if (e.detail?.game !== "detective") return;
+    await refreshStatus();
+    if (vn && vn.mode === "err" && lastRetry) lastRetry();
+  });
   function setScene(turn) {
     const scene = SCENES.includes(turn?.scene) ? turn.scene : "party";
     const bg = R("bg"); if (bg && !bg.src.endsWith(BG(scene))) bg.src = BG(scene);
@@ -423,8 +439,10 @@
     if (vn.typing) finishType();
     vn.mode = "err";
     R("extra").innerHTML = `<span class="vn-err">${esc(T()[err] || T().FAILED)}</span>` +
-      (err === "LIMIT" ? `<button type="button" class="vn-btn gold" data-r="vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" data-r="retry">${X().retry}</button>`);
+      (err === "LIMIT" ? (window.CSLAds ? `<button type="button" class="vn-btn" data-r="adr">${window.CSLAds.label(state?.lang)}</button>` : "") + `<button type="button" class="vn-btn gold" data-r="vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" data-r="retry">${X().retry}</button>`);
+    lastRetry = retry;
     R("vip")?.addEventListener("click", (e) => { e.stopPropagation(); closeVN(); $("vip-page-buy")?.click(); });
+    R("adr")?.addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.reward("detective", state?.lang); });
     R("retry")?.addEventListener("click", (e) => { e.stopPropagation(); retry(); });
   }
   async function vnAsk(i) {
@@ -434,6 +452,8 @@
     const err = await ask(i);
     if (!vn) return;
     if (err) return failed(err, showChoices);
+    await window.CSLAds?.afterTurn(!!quota?.vip);
+    if (!vn) return;
     loadTurn(state.turns[state.turns.length - 1]);
   }
   async function vnAccuse(s) {

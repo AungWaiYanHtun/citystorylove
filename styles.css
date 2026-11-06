@@ -468,3 +468,7 @@ html.vn-open,html.vn-open body{overflow:hidden}
 .dvn-clue{background:rgba(240,185,58,.18);border:1px dashed #f0b93a;color:#ffe08a;border-radius:10px;padding:6px 10px;font-weight:700}
 .dvn-notes{padding-left:20px;line-height:1.6;font-size:14px}
 .dvn .vn-me{bottom:calc(150px + var(--vb))}
+
+/* Fix 38: Adsgram */
+.vn-ad{border:0;background:linear-gradient(135deg,#ffe08a,#f0b93a)!important;color:#1b1406!important;font-weight:800;cursor:pointer}
+.toast{z-index:20000}

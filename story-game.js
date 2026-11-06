@@ -128,7 +128,7 @@
       const { ok, data } = await api("/api/story/status");
       if (!ok) { lastQuota = null; el.textContent = ""; return; }
       lastQuota = data;
-      paintQuota();
+      paintQuota(); paintAd();
     } catch { el.textContent = ""; }
   }
 
@@ -326,7 +326,7 @@
       <img class="vn-bg" alt=""><div class="vn-fx"></div>
       <img class="vn-partner" alt="">
       <img class="vn-me" alt="">
-      <div class="vn-hud"><span class="vn-pill" id="vn-scene"></span><span class="vn-pill" id="vn-ch"></span><span class="vn-pill vn-q" id="vn-quota"></span><button type="button" class="vn-x" id="vn-x">✕</button></div>
+      <div class="vn-hud"><span class="vn-pill" id="vn-scene"></span><span class="vn-pill" id="vn-ch"></span><span class="vn-pill vn-q" id="vn-quota"></span><button type="button" class="vn-pill vn-ad hidden" id="vn-ad"></button><button type="button" class="vn-x" id="vn-x">✕</button></div>
       <div class="vn-choices" id="vn-choices"></div>
       <div class="vn-box" id="vn-box">
         <div class="vn-name hidden" id="vn-name"><img id="vn-name-av" alt=""><span id="vn-name-t"></span></div>
@@ -339,6 +339,7 @@
     document.body.appendChild(el);
     document.documentElement.classList.add("vn-open");
     $("vn-x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
+    $("vn-ad").addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.reward("story", state?.lang); });
     el.addEventListener("click", onTap);
     el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
     $("vn-log").addEventListener("click", (e) => { e.stopPropagation(); $("vn-log").classList.add("hidden"); });
@@ -366,7 +367,20 @@
     $("vn-scene").textContent = "📍 " + scene.charAt(0).toUpperCase() + scene.slice(1);
     $("vn-ch").textContent = `📖 ${T().ch} ${state.turns.length}`;
     $("vn-quota").textContent = lastQuota ? (lastQuota.vip ? "👑 VIP" : `⚡ ${lastQuota.remaining}/${lastQuota.limit}`) : "";
+    paintAd();
   }
+  // Fix 38: Adsgram reward button (free players only)
+  function paintAd() {
+    const b = $("vn-ad"); if (!b) return;
+    const on = !!(window.CSLAds && lastQuota && lastQuota.enabled && !lastQuota.vip);
+    b.classList.toggle("hidden", !on);
+    if (on) b.textContent = window.CSLAds.label(state?.lang, true);
+  }
+  document.addEventListener("csl-ad-reward", async (e) => {
+    if (e.detail?.game !== "story") return;
+    await refreshStatus();
+    if (vn && vn.mode === "err") showChoices();
+  });
   function loadTurn(turn) {
     if (!vn) return;
     setScene(turn);
@@ -450,11 +464,14 @@
     if (err) {
       vn.mode = "err";
       $("vn-extra").innerHTML = `<span class="vn-err">${esc(T()[err] || T().FAILED)}</span>` +
-        (err === "LIMIT" ? `<button type="button" class="vn-btn gold" id="vn-vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" id="vn-retry">${T().retry}</button>`);
+        (err === "LIMIT" ? (window.CSLAds ? `<button type="button" class="vn-btn" id="vn-adr">${window.CSLAds.label(state?.lang)}</button>` : "") + `<button type="button" class="vn-btn gold" id="vn-vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" id="vn-retry">${T().retry}</button>`);
       $("vn-vip")?.addEventListener("click", (e) => { e.stopPropagation(); closeVN(); $("vip-page-buy")?.click(); });
+      $("vn-adr")?.addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.reward("story", state?.lang); });
       $("vn-retry")?.addEventListener("click", (e) => { e.stopPropagation(); showChoices(); });
       return;
     }
+    await window.CSLAds?.afterTurn(!!lastQuota?.vip);
+    if (!vn) return;
     loadTurn(state.turns[state.turns.length - 1]);
   }
   function tool(t, btn) {
