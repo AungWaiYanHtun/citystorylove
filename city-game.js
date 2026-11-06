@@ -1,4 +1,4 @@
-/* VideoSpace "City Story Love" (Fix 21). A 2D city game that takes the VIP Videos tab place.
+/* CityStoryLove "City Story Love" (Fix 21). A 2D city game in the VIP Game tab.
    Walk with the on-screen D-pad, work at the bakery / bar for money, buy gifts, complete missions
    and fall in love. Runs fully in the browser; progress is saved locally and in Telegram CloudStorage.
    Adults only. Romance stays at hugs and a kiss, then fades to black. */
@@ -365,20 +365,19 @@
 
   // ---------------- Page tab + start screen ----------------
   function mount() {
-    const nav = document.querySelector(".video-switch");
+    const nav = document.querySelector(".game-tabs");
     if (!nav || $("city-tab-btn")) return;
-    const vipBtn = $("vip-videos-btn");
     const btn = document.createElement("button");
-    btn.type = "button"; btn.id = "city-tab-btn"; btn.className = "video-switch-btn";
+    btn.type = "button"; btn.id = "city-tab-btn"; btn.className = "game-tabs-btn";
     btn.textContent = TAB_TEXT;
-    if (vipBtn) { nav.insertBefore(btn, vipBtn); vipBtn.classList.add("hidden"); } else nav.appendChild(btn);
+    nav.appendChild(btn);
     const sec = document.createElement("section");
     sec.id = "city-section"; sec.className = "story-section city-section hidden";
     sec.innerHTML = `<div class="section-heading"><div><span class="eyebrow"></span><h2></h2></div></div><div id="city-start"></div>`;
-    const anchor = $("story-section") || $("library");
+    const anchor = $("story-section");
     anchor?.parentNode?.insertBefore(sec, anchor);
     btn.addEventListener("click", () => showTab(true));
-    ["detective-tab-btn", "story-tab-btn", "regular-videos-btn", "vip-videos-btn"].forEach((id) =>
+    ["detective-tab-btn", "story-tab-btn"].forEach((id) =>
       $(id)?.addEventListener("click", () => showTab(false), true));
     renderStart(); loadCloud(); loadServer(); loadVip();
     document.addEventListener("visibilitychange", () => { if (document.hidden) flushServer(); });
@@ -388,9 +387,9 @@
     sec.classList.toggle("hidden", !on);
     $("city-tab-btn")?.classList.toggle("active", on);
     if (!on) return;
-    ["library", "story-section", "detective-section"].forEach((id) => $(id)?.classList.add("hidden"));
+    ["story-section", "detective-section"].forEach((id) => $(id)?.classList.add("hidden"));
     $("vip-hero")?.classList.remove("hidden"); // keep "Get VIP" reachable: VIP doubles job pay in the city
-    ["regular-videos-btn", "vip-videos-btn", "story-tab-btn", "detective-tab-btn"].forEach((id) => $(id)?.classList.remove("active"));
+    ["story-tab-btn", "detective-tab-btn"].forEach((id) => $(id)?.classList.remove("active"));
     renderStart();
   }
   // The tab is a small game library ("VIP Game"); City Love is its first card.

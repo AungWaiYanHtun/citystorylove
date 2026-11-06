@@ -1,11 +1,11 @@
-/* VideoSpace AI Detective game (Fix 20). Replaces the Explore Videos tab.
-   Talks only to the VideoSpace backend; the AI keys and the case culprit stay on the server. */
+/* CityStoryLove AI Detective game (Fix 20). Story Games.
+   Talks only to the game backend; the AI keys and the case culprit stay on the server. */
 (() => {
   "use strict";
   const cfg = window.VIDEOSPACE_CONFIG || {};
   const API = (cfg.VIP_API_URL || "").replace(/\/$/, "");
   const tg = window.Telegram?.WebApp;
-  const SAVE_KEY = "videospace_detective_v1";
+  const SAVE_KEY = "videospace_detective_v1_" + String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "guest"); // per Telegram account
   const $ = (id) => document.getElementById(id);
   const MIN_ASKS = 4;   // questions before an accusation is allowed
   const MAX_ASKS = 14;  // after this only the accusation is left
@@ -112,24 +112,22 @@
   function save() { try { state ? localStorage.setItem(SAVE_KEY, JSON.stringify(state)) : localStorage.removeItem(SAVE_KEY); } catch {} }
   function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
-  // ---------- Tab wiring: the detective tab takes the Explore Videos place ----------
+  // ---------- Tab wiring: the detective tab ----------
   function mount() {
-    const nav = document.querySelector(".video-switch");
-    const explore = $("regular-videos-btn");
+    const nav = document.querySelector(".game-tabs");
     if (!nav || $("detective-tab-btn")) return;
     const btn = document.createElement("button");
-    btn.type = "button"; btn.id = "detective-tab-btn"; btn.className = "video-switch-btn";
+    btn.type = "button"; btn.id = "detective-tab-btn"; btn.className = "game-tabs-btn";
     btn.textContent = T().tab;
     nav.insertBefore(btn, nav.firstChild);
-    if (explore) explore.classList.add("hidden");
     const section = document.createElement("section");
     section.id = "detective-section"; section.className = "story-section detective-section hidden";
     section.innerHTML = `<div class="section-heading"><div><span class="eyebrow">AI DETECTIVE GAME</span><h2></h2></div><span id="det-quota" class="result-count"></span></div><div id="det-body"></div>`;
-    const anchor = $("story-section") || $("library");
+    const anchor = $("story-section");
     anchor?.parentNode?.insertBefore(section, anchor);
     btn.addEventListener("click", () => show(true));
-    ["story-tab-btn", "vip-videos-btn", "regular-videos-btn"].forEach((id) => $(id)?.addEventListener("click", () => show(false), true));
-    show(true); // open the game first, where Explore Videos used to be
+    ["story-tab-btn"].forEach((id) => $(id)?.addEventListener("click", () => show(false), true));
+    show(true); // open the game first
   }
   function show(on) {
     const section = $("detective-section");
@@ -137,14 +135,11 @@
     section.classList.toggle("hidden", !on);
     $("detective-tab-btn")?.classList.toggle("active", on);
     if (!on) return;
-    $("library")?.classList.add("hidden");
     $("story-section")?.classList.add("hidden");
     $("vip-hero")?.classList.add("hidden");
-    ["regular-videos-btn", "vip-videos-btn", "story-tab-btn"].forEach((id) => $(id)?.classList.remove("active"));
+    ["story-tab-btn"].forEach((id) => $(id)?.classList.remove("active"));
     render(); refreshStatus();
   }
-  // The VIP tab must bring the video library back after the game hid it.
-  $("vip-videos-btn")?.addEventListener("click", () => $("library")?.classList.remove("hidden"));
 
   // ---------- API ----------
   async function api(path, options = {}) {

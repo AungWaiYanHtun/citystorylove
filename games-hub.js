@@ -1,4 +1,4 @@
-/* VideoSpace Fix 32: one "Story Games" tab. It lists AI Detective and Story as cards;
+/* CityStoryLove Fix 32: one "Story Games" tab. It lists AI Detective and Story as cards;
    tap a card to play, "← Story Games" goes back to the list. Load after detective-game.js and story-game.js. */
 (function () {
   "use strict";
@@ -18,21 +18,21 @@
     try { l = localStorage.getItem("hub_lang") || "en"; } catch {}
     return TXT[l] || TXT.en;
   }
-  const OTHER = ["city-tab-btn", "regular-videos-btn", "vip-videos-btn"];
+  const OTHER = ["city-tab-btn"];
 
   function mount() {
-    const nav = document.querySelector(".video-switch");
+    const nav = document.querySelector(".game-tabs");
     const det = $("detective-tab-btn"), story = $("story-tab-btn");
     if (!nav || $("games-tab-btn") || (!det && !story)) return;
     [det, story].forEach((b) => b && b.classList.add("hidden"));
 
     const btn = document.createElement("button");
-    btn.type = "button"; btn.id = "games-tab-btn"; btn.className = "video-switch-btn";
+    btn.type = "button"; btn.id = "games-tab-btn"; btn.className = "game-tabs-btn";
     nav.insertBefore(btn, nav.firstChild);
 
     const sec = document.createElement("section");
     sec.id = "games-section"; sec.className = "story-section games-section hidden";
-    const anchor = $("detective-section") || $("story-section") || $("library");
+    const anchor = $("detective-section") || $("story-section");
     anchor?.parentNode?.insertBefore(sec, anchor);
 
     // A back button on top of each game.
@@ -67,8 +67,8 @@
   }
 
   function hideAll() {
-    ["library", "vip-hero", "story-section", "detective-section", "city-section"].forEach((id) => $(id)?.classList.add("hidden"));
-    ["regular-videos-btn", "vip-videos-btn", "story-tab-btn", "detective-tab-btn", "city-tab-btn"].forEach((id) => $(id)?.classList.remove("active"));
+    ["vip-hero", "story-section", "detective-section", "city-section"].forEach((id) => $(id)?.classList.add("hidden"));
+    ["story-tab-btn", "detective-tab-btn", "city-tab-btn"].forEach((id) => $(id)?.classList.remove("active"));
   }
   function openHub() {
     hideAll();
@@ -82,7 +82,6 @@
     $(btnId)?.click(); // the game's own (hidden) tab button opens it
     $("story-section") && secId !== "story-section" && $("story-section").classList.add("hidden");
     $("detective-section") && secId !== "detective-section" && $("detective-section").classList.add("hidden");
-    $("library")?.classList.add("hidden");
     $("games-tab-btn")?.classList.add("active");
   }
 
