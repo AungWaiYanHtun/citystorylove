@@ -499,8 +499,11 @@
     const err = $("story-error");
     if (!err) return;
     const t = T();
-    err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? ' <button type="button" id="story-get-vip" class="button button-gold story-small">👑 Get VIP</button>' : "");
+    const adBtn = (code === "LIMIT" && window.CSLAds) ? ` <button type="button" id="story-ad-limit" class="vn-btn">${esc(window.CSLAds.label(state ? state.lang : setup.lang))}</button>` : "";
+    err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? adBtn + ' <button type="button" id="story-get-vip" class="button button-gold story-small">👑 Get VIP</button>' : "");
     $("story-get-vip")?.addEventListener("click", () => $("vip-page-buy")?.click());
+    // Fix 40: watch a Reward ad from the setup screen, then tap Start again.
+    $("story-ad-limit")?.addEventListener("click", async () => { if (await window.CSLAds?.reward("story", state ? state.lang : setup.lang)) err.innerHTML = ""; });
   }
 
   function historyFor(turns) {

@@ -494,8 +494,11 @@
   function showError(code) {
     const err = $("det-error"); if (!err) return;
     const t = T();
-    err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? ' <button type="button" id="det-get-vip" class="vn-btn gold">👑 Get VIP</button>' : "");
+    const adBtn = (code === "LIMIT" && window.CSLAds) ? ` <button type="button" id="det-ad-limit" class="vn-btn">${esc(window.CSLAds.label(state ? state.lang : setup.lang))}</button>` : "";
+    err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? adBtn + ' <button type="button" id="det-get-vip" class="vn-btn gold">👑 Get VIP</button>' : "");
     $("det-get-vip")?.addEventListener("click", () => { closeSetup(); $("vip-page-buy")?.click(); });
+    // Fix 40: watch a Reward ad from the setup screen, then tap Start again.
+    $("det-ad-limit")?.addEventListener("click", async () => { if (await window.CSLAds?.reward("detective", state ? state.lang : setup.lang)) err.innerHTML = ""; });
   }
   function history() {
     const h = [];
