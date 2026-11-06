@@ -2,18 +2,23 @@
 <title>Hanok Love</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
+#quest{left:50%;top:calc(8px + var(--st));transform:translateX(-50%);background:#fffaf0ee;color:#3a2a1a;border:1px solid #c79a6a;border-radius:14px;padding:5px 14px;font-size:13px;white-space:nowrap;box-shadow:0 2px 8px #0003}
+#quest b{color:#c0466e}
+#toast{left:50%;top:30%;transform:translateX(-50%);background:#3c5a7aee;color:#fff;padding:8px 18px;border-radius:14px;font-size:15px;opacity:0;transition:opacity .4s;pointer-events:none;border:1px solid #f3d9b1}
+#fade{position:fixed;inset:0;z-index:15;background:#fff;opacity:0;pointer-events:none;transition:opacity 1.2s;display:flex;align-items:center;justify-content:center;font-size:22px;color:#c0466e;text-align:center}
+:root{--st:env(safe-area-inset-top,0px);--sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px)}
 html,body{margin:0;height:100%;overflow:hidden;background:#1a0f0a;font-family:system-ui,"Noto Sans Myanmar",sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{display:block}
 .ui{position:fixed;z-index:5}
-#hud{left:calc(10px + env(safe-area-inset-left));top:calc(10px + env(safe-area-inset-top));color:#fff;background:linear-gradient(#3c5a7add,#2a3e58dd);border:1px solid #f3d9b1;padding:6px 12px;border-radius:14px;font-size:13px;box-shadow:0 2px 8px #0006}
+#hud{left:calc(10px + var(--sl));top:calc(8px + var(--st));color:#fff;background:linear-gradient(#3c5a7add,#2a3e58dd);border:1px solid #f3d9b1;padding:6px 12px;border-radius:14px;font-size:13px;box-shadow:0 2px 8px #0006}
 #hud b{color:#ffcf6b}
-#who{right:calc(12px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));width:44px;height:44px;border-radius:50%;border:2px solid #e0b252;background:#3a0b0bcc;color:#fff;font-size:20px}
-#quit{right:calc(64px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));width:44px;height:44px;border-radius:50%;border:2px solid #e0b252;background:#3a0b0bcc;color:#fff;font-size:18px}
-#hint{left:50%;top:16%;transform:translateX(-50%);background:#000b;color:#ffd76b;padding:6px 16px;border-radius:14px;font-size:14px;display:none;border:1px solid #e0b25288}
-#joy{left:calc(26px + env(safe-area-inset-left));bottom:26px;width:124px;height:124px;border-radius:50%;background:radial-gradient(#ffffff18,#ffffff30);border:2px solid #e0b25299}
+#who{right:calc(12px + var(--sr));top:calc(8px + var(--st));width:44px;height:44px;border-radius:50%;border:2px solid #e0b252;background:#3a0b0bcc;color:#fff;font-size:20px}
+#quit{right:calc(64px + var(--sr));top:calc(8px + var(--st));width:44px;height:44px;border-radius:50%;border:2px solid #e0b252;background:#3a0b0bcc;color:#fff;font-size:18px}
+#hint{left:50%;bottom:110px;transform:translateX(-50%);background:#000b;color:#ffd76b;padding:6px 16px;border-radius:14px;font-size:14px;display:none;border:1px solid #e0b25288}
+#joy{left:calc(26px + var(--sl));bottom:26px;width:124px;height:124px;border-radius:50%;background:radial-gradient(#ffffff18,#ffffff30);border:2px solid #e0b25299}
 #knob{position:absolute;left:37px;top:37px;width:50px;height:50px;border-radius:50%;background:#fff8;border:2px solid #e0b252}
 .btn{position:fixed;z-index:5;width:66px;height:66px;border-radius:50%;border:2px solid #e0b252;color:#fff;font:bold 20px system-ui;box-shadow:0 3px 0 #0007}
-#A{right:calc(28px + env(safe-area-inset-right));bottom:44px;background:radial-gradient(#d8343c,#8a1218)}#B{right:calc(106px + env(safe-area-inset-right));bottom:22px;background:radial-gradient(#7a5226,#3a240c)}
+#A{right:calc(28px + var(--sr));bottom:44px;background:radial-gradient(#d8343c,#8a1218)}#B{right:calc(106px + var(--sr));bottom:22px;background:radial-gradient(#7a5226,#3a240c)}
 #talk{left:50%;bottom:16px;transform:translateX(-50%);width:min(56%,520px);background:linear-gradient(#fffaf0f5,#f6ead6f5);border:1px solid #c79a6a;color:#3a2a1a;border-radius:16px;padding:10px 16px 12px;display:none;font-size:15px}
 #talk .n{color:#c0466e;font-weight:700}#talk p{margin:4px 0 8px}
 #talk button{display:block;width:100%;margin-top:6px;padding:8px;border-radius:10px;border:1px solid #e0b25288;background:#fff;color:#3a2a1a;font-size:14px;text-align:left}
@@ -22,7 +27,7 @@ canvas{display:block}
 #rot div{font-size:54px;animation:r 1.6s infinite}@keyframes r{50%{transform:rotate(90deg)}}
 @media (orientation:portrait){#rot{display:flex}}
 </style></head><body>
-<div id="hud" class="ui">👤 <span id="nm">Aung</span> · 💰 <b id="coins">120</b> · ❤ <b id="love">0</b></div>
+<div id="hud" class="ui">💰 <b id="coins">120</b> · ❤ <b id="love">0</b> · 🎁 <b id="gifts">0</b></div><div id="quest" class="ui"></div><div id="toast" class="ui"></div><div id="fade"></div>
 <button id="who" class="ui">👤</button><button id="quit" class="ui" style="display:none">✕</button>
 <div id="hint" class="ui"></div><div id="heart" class="ui">💗</div>
 <div id="joy" class="ui"><div id="knob"></div></div><button class="btn" id="A">A</button><button class="btn" id="B">B</button>
@@ -31,7 +36,8 @@ canvas{display:block}
 <script type="module">
 import * as T from './three.module.min.js';
 const tg=window.Telegram&&Telegram.WebApp;try{tg.ready();tg.expand();tg.requestFullscreen&&tg.requestFullscreen();tg.disableVerticalSwipes&&tg.disableVerticalSwipes()}catch(e){}
-const shot=new URLSearchParams(location.search).get('shot')||'';
+const Q=new URLSearchParams(location.search);const shot=Q.get('shot')||'';
+{const r=document.documentElement.style,inF=window.parent!==window;const st=Q.has('st')?+Q.get('st'):(inF?56:0);if(st||inF)r.setProperty('--st',st+'px');if(Q.has('sl'))r.setProperty('--sl',Q.get('sl')+'px');if(Q.has('sr'))r.setProperty('--sr',Q.get('sr')+'px');}
 const R=new T.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(1.5,devicePixelRatio));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;R.outputColorSpace=T.SRGBColorSpace;R.toneMapping=T.ACESFilmicToneMapping;R.toneMappingExposure=1.1;document.body.prepend(R.domElement);
 const S=new T.Scene();S.background=new T.Color(0xbfe3ff);S.fog=new T.Fog(0xd6ecff,35,110);
 const cam=new T.PerspectiveCamera(52,1,0.1,300);
@@ -50,8 +56,8 @@ const walls=[];const wall=(...a)=>{const m=box(...a);walls.push(m);return m};
 const skyT=TL.load('a/k_sky.jpg');skyT.colorSpace=T.SRGBColorSpace;
 const sky=new T.Mesh(new T.CylinderGeometry(150,150,110,48,1,true),new T.MeshBasicMaterial({map:skyT,side:T.BackSide,fog:false}));sky.position.y=38;S.add(sky);
 // ---------- ground ----------
-const grass=box(220,0.1,220,0x8fbf5a,0,-0.06,0);
-box(130,0.1,9,TM('k_dirt.jpg',26,2),0,0.0,0);
+const grass=box(220,0.1,220,TM('k_grass.jpg',70,70),0,-0.06,0);
+box(130,0.1,9,TM('k_path.jpg',34,2.4),0,0.0,0);
 box(130,0.1,2.2,TM('k_dirt.jpg',26,0.5,0xe8d8c0),0,0.0,5.0);
 box(130,0.1,14,TM('k_dirt.jpg',26,3,0xd8c8b0),0,0.0,-11);
 box(130,0.1,14,TM('k_dirt.jpg',26,3,0xd8c8b0),0,0.0,16);
@@ -126,15 +132,16 @@ for(let i=0;i<5;i++){box(1.5,0.08,0.8,[0xd8343c,0x3a7bd5,0xe0b252,0x2f9f6a,0xf7a
 for(const x of[-30,-14,1,16,31]){const c=[0xf3ead2,0xe8dcc0,0xf6efe0][Math.abs(x)%3];box(2.8,0.9,1.2,0x6b4a2a,x,0.45,-6.8);for(const a of[-1.3,1.3])cyl(0.07,0.07,2.6,0x4a2a12,x+a,1.3,-6.3);const aw=box(3.2,0.1,2,c,x,2.55,-6.5);aw.rotation.x=-0.28;
   for(let i=0;i<4;i++)cyl(0.25,0.2,0.22,[0xffcf6b,0xd8343c,0x9fd47a,0xf7a8c4][i],x-1+i*0.66,1.02,-6.8);lantern(x+1.3,2.25,-5.6,0.7);}
 for(let x=-40;x<=40;x+=16){cyl(0.08,0.1,2.6,0x5a3a22,x,1.3,-5.3);lantern(x,2.3,-5.0,0.8);cyl(0.08,0.1,2.6,0x5a3a22,x+8,1.3,4.6);lantern(x+8,2.3,4.3,0.8);}
-// ---------- cherry trees ----------
-const pinkM=[0xf7a8c4,0xf9bcd3,0xfff4f6,0xffd0e0].map(c=>new T.MeshLambertMaterial({color:c,flatShading:true}));
-function tree(x,z,s=1){const g=new T.Group();const tr=cyl(0.18*s,0.32*s,2.4*s,0x5a3a26,0,1.2*s,0,g,8);
-  for(const[a,b,r]of[[0.5,0.3,0.6],[-0.5,0.2,-0.7],[0.1,-0.5,0.2]]){const br=cyl(0.08*s,0.13*s,1.4*s,0x5a3a26,a*0.6*s,2.4*s,b*0.6*s,g,6);br.rotation.z=r;}
-  for(let i=0;i<8;i++){const a=i/8*Math.PI*2,rr=i?1.0*s:0;const m=new T.Mesh(new T.IcosahedronGeometry((0.9+Math.random()*0.4)*s,1),pinkM[i%4]);m.position.set(Math.cos(a)*rr,(2.9+Math.random()*0.7+(i?0:0.6))*s,Math.sin(a)*rr);m.castShadow=true;g.add(m);}
-  g.position.set(x,0,z);g.rotation.y=Math.random()*6;S.add(g);}
-for(let x=-46;x<50;x+=9.5)if(BR.every(b=>Math.abs(x-b)>3))tree(x,10.3,0.95);
-for(const[x,z]of[[-34,-9],[34,-9],[-15,-9.3],[17,-9.3],[-36,12],[36,12],[5,12],[27,22],[-16,22],[-30,-22],[2,-22],[18,-24],[40,-20]])tree(x,z,1.15);
-const gM=[0x6aa84f,0x7fbf5a,0x4f8f3a].map(c=>new T.MeshLambertMaterial({color:c,flatShading:true}));for(const[x,z]of[[-44,-20],[-20,-25],[10,-28],[30,-26],[-40,24],[0,26],[40,26]]){cyl(0.3,0.4,2.5,0x5a3a26,x,1.25,z);for(let i=0;i<5;i++){const m=new T.Mesh(new T.IcosahedronGeometry(1.4,1),gM[i%3]);m.position.set(x+Math.cos(i)*1.1,3.4+(i%2)*0.8,z+Math.sin(i)*1.1);m.castShadow=true;S.add(m)}}
+// ---------- painted trees (billboards) ----------
+const flora=[];const blobG=new T.CircleGeometry(1,20);
+function flat(n,x,z,H,sh=0.4){const t=TL.load('a/'+n+'.webp',()=>{m.scale.set(H*t.image.width/t.image.height,H,1)});t.colorSpace=T.SRGBColorSpace;
+  const m=new T.Mesh(new T.PlaneGeometry(1,1).translate(0,0.5,0),new T.MeshBasicMaterial({map:t,transparent:true,alphaTest:0.4,side:T.DoubleSide}));m.position.set(x,-0.05,z);m.scale.set(H,H,1);S.add(m);flora.push(m);
+  if(sh){const b=new T.Mesh(blobG,new T.MeshBasicMaterial({color:0x2a3a10,transparent:true,opacity:0.22,depthWrite:false}));b.rotation.x=-Math.PI/2;b.position.set(x,0.02,z);b.scale.set(H*sh,H*sh*0.6,1);S.add(b)}return m}
+const TP=['tree_pink','tree_pink','tree_white'];let ti=0;const tree=(x,z,s=1)=>flat(TP[ti++%3],x,z,5.2*s);
+for(let x=-46;x<50;x+=9.5)if(BR.every(b=>Math.abs(x-b)>3))tree(x,10.6,0.95);
+for(const[x,z]of[[-34,-9.5],[34,-9.5],[-15,-9.6],[17,-9.6],[-36,12],[36,12],[5,12.2],[27,22],[-16,22],[-30,-22],[2,-22],[18,-24],[40,-20]])tree(x,z,1.1);
+for(const[x,z]of[[-44,-20],[-20,-25],[10,-28],[30,-26],[-40,24],[0,26],[40,26],[-52,-6],[52,-6],[-52,14],[52,14]])flat('tree_green',x,z,6.5);
+for(let i=0;i<22;i++){const x=-50+i*4.8+Math.random()*2;if(BR.some(b=>Math.abs(x-b)<2.5))continue;flat('bush',x,i%2?-9.0:9.7,0.9,0.5)}
 // flowers along path
 for(let i=0;i<70;i++){const x=(Math.random()-0.5)*100,z=Math.random()<0.5?-5.1-Math.random()*0.8:4.4+Math.random()*0.8;const f=new T.Mesh(new T.SphereGeometry(0.12,6,4),M([0xff8fb8,0xffffff,0xffd34d,0xc58bff][i%4]));f.position.set(x,0.12,z);S.add(f);const lf=new T.Mesh(new T.SphereGeometry(0.18,6,4),M(0x5f9f3f));lf.scale.y=0.5;lf.position.set(x,0.05,z);S.add(lf);}
 // petals
@@ -176,34 +183,69 @@ joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);mv(e)}
 function mv(e){const r=joy.getBoundingClientRect();let x=(e.clientX-r.left-62)/50,y=(e.clientY-r.top-62)/50;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}J.x=x;J.y=y;knob.style.transform=`translate(${x*36}px,${y*36}px)`}
 let run=false;const Bb=document.getElementById('B');Bb.onpointerdown=()=>run=true;Bb.onpointerup=Bb.onpointerleave=()=>run=false;
 const $=id=>document.getElementById(id);const hint=$('hint'),talk=$('talk');
-let mode='walk',seat=null,act=null,love=+(localStorage.getItem('hanok_love')||0),coins=120;$('love').textContent=love;
-if(window.parent!==window){$('quit').style.display='block';$('quit').onclick=()=>window.parent.postMessage('palace-close','*')}
+const SV=JSON.parse(localStorage.getItem('hanok_save')||'{}');
+let mode='walk',seat=null,act=null,love=SV.love||0,coins=SV.coins??120,q=SV.q||0,inv=SV.inv||[],cc=SV.cc||0,follow=false;
+function save(){localStorage.setItem('hanok_save',JSON.stringify({love,coins,q,inv,cc}));}
+function hudUp(){$('love').textContent=love;$('coins').textContent=coins;$('gifts').textContent=inv.length;$('quest').innerHTML=q<QS.length?'🎯 <b>'+(q+1)+'/'+QS.length+'</b> '+QS[q].t:'🌸 <b>All done!</b> Free play';}
+if(window.parent!==window){$('quit').style.display='block';$('quit').onclick=()=>{save();window.parent.postMessage('palace-close','*')}}
 $('who').onclick=()=>{pc=pc%6+1;localStorage.setItem('hanok_char',pc);setTex(P,'c'+pc)};
+function toast(m){const e=$('toast');e.textContent=m;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,1800)}
 function heart(){const h=$('heart');h.style.opacity=1;h.style.top='34%';setTimeout(()=>{h.style.opacity=0;h.style.top='40%'},700)}
-function addLove(n){love=Math.min(100,love+n);localStorage.setItem('hanok_love',love);$('love').textContent=love;heart()}
+function addLove(n){love=Math.min(100,love+n);heart();hudUp();save()}
+const QS=[{t:'Talk to Ha-eun 💬',r:20},{t:'Collect 5 lucky coins 🪙',r:30},{t:'Buy a gift at a stall 🛍️',r:0},{t:'Give the gift to Ha-eun 🎁',r:20},
+ {t:'Have tea with Ha-eun 🍵 (sit in TEA)',r:30},{t:'Ride the horse cart 🐎',r:20},{t:'Reach ❤ 40, then walk with her 🌉',r:40},{t:'Take her to a bridge 🌉',r:50},{t:'Reach ❤ 100 and confess 💌',r:100}];
+function done(i){if(q!==i)return;coins+=QS[i].r;q++;toast('✅ Mission done!'+(QS[i].r?'  +$'+QS[i].r:''));hudUp();save();}
+const GIFTS=[['🍡 Rice cake',15,8],['🌸 Flower',10,6],['💍 Jade hairpin',40,18],['🎐 Silk ribbon',25,12]];
 const DLG={
- start:{t:"Annyeong! 🌸 The cherry blossoms are falling everywhere today. Isn't our village pretty in spring?",c:[["Your hanbok is beautiful 🌸","hanfu",8],["Is the tea house good?","tea",4],["See you later 👋",null,0]]},
- hanfu:{t:"Oh… thank you! My grandmother sewed these flowers on my chima herself. 😊",c:[["It suits you perfectly","shy",6],["Bye for now",null,0]]},
- tea:{t:"Try the plum tea at the tea house. Sit at a table inside — I may join you. 🍵",c:[["I'll wait for you there",null,3]]},
+ hanbok:{t:"Oh… thank you! My grandmother sewed these flowers on my chima herself. 😊",c:[["It suits you perfectly","shy",6],["Bye for now",null,0]]},
+ tea:{t:"Try the plum tea at the tea house. Sit at a table inside — I'll join you. 🍵",c:[["I'll wait for you there",null,3]]},
  shy:{t:"You're making me blush… Walk with me along the stream sometime? ❤",c:[["It's a promise",null,5]]},
  date:{t:"I'm glad you waited for me. This plum tea tastes like spring… 🍵❤",c:[["Cheers to us",null,6],["Tell me about you","about",3]]},
- about:{t:"I dream of seeing the lantern festival with someone special.",c:[["Let's go together",null,8]]}};
-function say(k){const d=DLG[k];$('tt').textContent=d.t;const tc=$('tc');tc.innerHTML='';
-  for(const[l,nx,lv]of d.c){const b=document.createElement('button');b.textContent=l;b.onclick=e=>{e.stopPropagation();if(lv)addLove(lv);if(nx)say(nx);else endTalk()};tc.appendChild(b)}
-  talk.style.display='block'}
+ about:{t:"I dream of seeing the lantern festival with someone special.",c:[["Let's go together",null,8]]},
+ bridge:{t:"The water sparkles like stars here… I'm happy I came with you. ❤",c:[["Me too 😊",null,10]]},
+ confess:{t:"…Really? I've liked you since the first day you said annyeong. 🌸💗",c:[["Hold her hand 🤝","end",0]]}};
+function opts(list){$('tt').textContent=list.t;const tc=$('tc');tc.innerHTML='';
+  for(const o of list.c){const b=document.createElement('button');b.textContent=o[0];b.onclick=e=>{e.stopPropagation();o[1]()};tc.appendChild(b)}talk.style.display='block'}
+function say(k){if(k==='end')return ending();const d=DLG[k];$('tn').textContent='Ha-eun';opts({t:d.t,c:d.c.map(([l,nx,lv])=>[l,()=>{if(lv)addLove(lv);if(nx)say(nx);else endTalk()}])})}
+function talkStart(){mode='talk';$('tn').textContent='Ha-eun';done(0);const c=[];
+  if(inv.length)c.push(['🎁 Give '+inv[0][0],()=>{const g=inv.shift();addLove(g[2]);done(3);opts({t:g[0].includes('hairpin')?"A jade hairpin?! It's so pretty… I'll wear it every day. 💗":"For me? Thank you, that's so sweet! 😊",c:[['😊',endTalk]]})}]);
+  if(love>=40&&!follow)c.push(['🌉 Walk with me',()=>{follow=true;done(6);opts({t:"Okay! Lead the way~ 🌸",c:[['Let\'s go',endTalk]]})}]);
+  if(follow)c.push(['👋 You can rest here',()=>{follow=false;endTalk()}]);
+  if(love>=100)c.push(['💌 I like you, Ha-eun',()=>say('confess')]);
+  c.push(['Your hanbok is beautiful 🌸',()=>{if(!SV['h'+Math.floor(Date.now()/864e5)]){SV['h'+Math.floor(Date.now()/864e5)]=1;addLove(8)}say('hanbok')}]);
+  c.push(['Is the tea house good?',()=>say('tea')]);c.push(['See you later 👋',endTalk]);
+  opts({t:love<20?"Annyeong! 🌸 The blossoms are falling everywhere today. Isn't our village pretty?":love<60?"Oh, it's you! I was hoping you'd come by. 😊":"There you are… I missed you. 💗",c})}
+function shop(){mode='talk';$('tn').textContent='Market stall';opts({t:'Gifts for someone special? 🛍️  You have $'+coins,c:[...GIFTS.map(g=>[g[0]+'  $'+g[1],()=>{if(coins<g[1]){toast('Not enough money 💰');return}coins-=g[1];inv.push(g);done(2);hudUp();save();toast('Bought '+g[0]);endTalk()}]),['Just looking 👋',endTalk]]})}
+function ending(){talk.style.display='none';done(8);const f=$('fade');f.innerHTML='💗<br>Ha-eun & you<br><small style="color:#7a5a4a">Spring romance · to be continued…</small>';f.style.pointerEvents='auto';f.style.opacity=1;setTimeout(()=>{f.style.opacity=0;f.style.pointerEvents='none';mode='walk'},4200)}
 function endTalk(){talk.style.display='none';if(mode==='talk')mode='walk';}
 $('A').onclick=pressA;addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter')pressA()});
 function pressA(){if(talk.style.display==='block')return;
-  if(mode==='sit'){mode='walk';P.position.x+=seat.face*0.9;seat=null;mei.position.copy(meiHome);return}
+  if(mode==='sit'){mode='walk';P.position.x+=seat.face*0.9;seat=null;if(!follow)mei.position.copy(meiHome);return}
   if(mode==='car'){mode='walk';P.visible=true;P.position.set(car.position.x+Math.cos(car.rotation.y)*1.9,0,car.position.z-Math.sin(car.rotation.y)*1.9);return}
   if(act)act.fn();}
+const STALLS=[-30,-14,1,16,31];
 function nearest(){const p=P.position;act=null;let bd=1.2;
   for(const s of seats){const d=Math.hypot(p.x-s.x,p.z-s.z);if(d<bd){bd=d;act={t:'🪑 A = Sit',fn:()=>sit(s)}}}
-  if(Math.hypot(p.x-car.position.x,p.z-car.position.z)<3)act={t:'🐎 A = Ride carriage',fn:()=>{mode='car';P.visible=false}};
-  if(Math.hypot(p.x-mei.position.x,p.z-mei.position.z)<2.1)act={t:'💬 A = Talk to Ha-eun',fn:()=>{mode='talk';say('start')}};
+  for(const x of STALLS)if(Math.abs(p.x-x)<1.8&&p.z>-6.2&&p.z<-4.2)act={t:'🛍️ A = Buy a gift',fn:shop};
+  if(Math.hypot(p.x-car.position.x,p.z-car.position.z)<3)act={t:'🐎 A = Ride cart',fn:()=>{mode='car';P.visible=false;done(5)}};
+  if(Math.hypot(p.x-mei.position.x,p.z-mei.position.z)<2.1)act={t:'💬 A = Talk to Ha-eun',fn:talkStart};
   hint.style.display=act&&mode==='walk'?'block':'none';if(act)hint.textContent=act.t;}
 function sit(s){mode='sit';seat=s;const tx=teaT.find(t=>Math.abs(s.x-t)<1.5&&Math.abs(s.z+12.6)<0.5);
-  if(tx!==undefined&&love>=10){const o=seats.find(q=>q!==s&&Math.abs(q.z-s.z)<0.1&&Math.abs(q.x-(tx*2-s.x))<0.1);if(o){mei.position.set(o.x,0.55,o.z+0.05);setTimeout(()=>{if(mode==='sit')say('date')},600)}}}
+  if(tx!==undefined&&love>=10){const o=seats.find(q=>q!==s&&Math.abs(q.z-s.z)<0.1&&Math.abs(q.x-(tx*2-s.x))<0.1);if(o){mei.position.set(o.x,0.55,o.z+0.05);setTimeout(()=>{if(mode==='sit'){done(4);say('date')}},600)}}
+  else if(tx!==undefined&&love<10)toast('Talk to Ha-eun more first (❤ 10) 🍵');}
+// lucky coins
+const coinM=new T.MeshBasicMaterial({color:0xffd34d});const coinsL=[];
+function spawnCoin(c){c.position.set((Math.random()-0.5)*90,0.75,Math.random()<0.6?(Math.random()-0.5)*7:(Math.random()<0.5?-7.5-Math.random()*3:10.5+Math.random()*3));c.visible=true}
+for(let i=0;i<10;i++){const c=new T.Group();const d=new T.Mesh(new T.CylinderGeometry(0.28,0.28,0.06,18),coinM);d.rotation.x=Math.PI/2;c.add(d);const gl=new T.Sprite(glowM);gl.scale.set(1.2,1.2,1);c.add(gl);S.add(c);spawnCoin(c);coinsL.push(c)}
+let bridgeT=0;
+function gameTick(dt,t){const p=P.position;
+  for(const c of coinsL){c.rotation.y+=dt*3;c.children[0].position.y=Math.sin(t*3+c.position.x)*0.08;if(c.visible&&Math.hypot(p.x-c.position.x,p.z-c.position.z)<0.9&&mode==='walk'){c.visible=false;coins+=5;cc++;toast('🪙 +$5');if(q===1&&cc>=5)done(1);hudUp();save();setTimeout(()=>spawnCoin(c),15000)}}
+  if(follow&&mode!=='sit'){const tx=p.x+(camDir>0?1.1:-1.1),tz=p.z+0.4,dx=tx-mei.position.x,dz=tz-mei.position.z,d=Math.hypot(dx,dz);const u=mei.userData;
+    if(d>0.4){const sp=Math.min(d*1.6,run?5.6:3.2);mei.position.x+=dx/d*sp*dt;mei.position.z+=dz/d*sp*dt;u.ph+=dt*sp*2.2;const sx=dx*camRight.x;if(Math.abs(dx)>Math.abs(dz)*0.8)setTex(mei,GD.h1.s[Math.floor(u.ph)%2],sx>0?1:-1);else setTex(mei,'b1');}
+    else setTex(mei,'b1');mei.position.y=floorY(mei.position.x,mei.position.z);
+    const onB=BR.some(b=>Math.abs(p.x-b)<1.6&&p.z>6.4&&p.z<8.6);if(onB&&mode==='walk'){bridgeT+=dt;if(bridgeT>1.2&&q===7){bridgeT=0;done(7);mode='talk';say('bridge')}}else bridgeT=0;}
+  if(q===6&&follow)done(6);}
+hudUp();
 function blocked(x,z,r=0.3){for(const w of walls){const b=w.geometry.parameters,q=w.position;if(Math.abs(x-q.x)<b.width/2+r&&Math.abs(z-q.z)<b.depth/2+r)return true}
   if(z>5.7&&z<9.3&&BR.every(b=>Math.abs(x-b)>1.25))return true;return Math.abs(x)>60||Math.abs(z)>30}
 function floorY(x,z){for(const b of BR)if(Math.abs(x-b)<1.6&&z>5.4&&z<9.6)return 1.0*Math.sin(Math.PI*(z-5.4)/4.2)+0.12;
@@ -212,9 +254,10 @@ function floorY(x,z){for(const b of BR)if(Math.abs(x-b)<1.6&&z>5.4&&z<9.6)return
 let camDir=1;let last=performance.now();const tmp=new T.Vector3(),look=new T.Vector3();
 function resize(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 if(shot==='house'){P.position.set(-20,0.6,-11.5)}
-if(shot==='sit'){love=20;sit(seats.find(s=>Math.abs(s.x+7.2)<0.1))}
+if(shot==='sit'){love=20;hudUp();sit(seats.find(s=>Math.abs(s.x+7.2)<0.1))}
 if(shot==='car'){mode='car';P.visible=false;C.sp=6}
-if(shot==='talk'){P.position.set(-4.4,0,-6.9);mode='talk';say('hanfu')}
+if(shot==='talk'){P.position.set(-4.4,0,-6.9);talkStart()}
+if(shot==='shop'){P.position.set(-14,0,-5.2);shop()}
 if(shot==='bridge'){P.position.set(-6,1,7.3)}
 if(shot==='palace'){P.position.set(-6,0.6,10.5)}
 cam.position.set(P.position.x,4,P.position.z+6);
@@ -231,7 +274,7 @@ function tick(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const t=now/
     P.position.y+=(floorY(P.position.x,P.position.z)-P.position.y)*0.25;
     const inside=halls.some(H=>Math.abs(P.position.x-H.x)<H.w&&Math.abs(P.position.z-H.z)<H.d);
     if(mode==='talk'){const mx=(P.position.x+mei.position.x)/2,mz=(P.position.z+mei.position.z)/2;tmp.set(mx+0.2,1.55,mz+2.7);look.set(mx,0.95,mz);if(u.cur!=='s'+pc+'_0')setTex(P,'s'+pc+'_0',mei.position.x<P.position.x?-1:1);}
-    else{tmp.set(P.position.x,P.position.y+(inside?3.4:3.6),P.position.z+camDir*(inside?4.2:6.4));look.set(P.position.x,P.position.y+1.2,P.position.z-camDir);}
+    else{tmp.set(P.position.x,P.position.y+(inside?3.1:2.9),P.position.z+camDir*(inside?3.9:4.9));look.set(P.position.x,P.position.y+1.15,P.position.z-camDir*1.2);}
     cam.position.lerp(tmp,0.1);cam.lookAt(look);}
   if(mode==='sit'){P.position.set(seat.x,seat.h-0.55,seat.z+0.05);setTex(P,'s'+pc+'_0',seat.face||1);u.m.position.y=0;tmp.set(seat.x+seat.face*-1.2,2.7,seat.z+3.6);cam.position.lerp(tmp,0.12);cam.lookAt(seat.x+seat.face*-1.2,1.5,seat.z);}
   if(mode==='car'){C.sp+=-iy*9*dt;C.sp*=0.985;C.sp=Math.max(-3,Math.min(run?13:8,C.sp));car.rotation.y-=ix*dt*1.5*Math.sign(C.sp)*Math.min(1,Math.abs(C.sp)/3);
@@ -246,6 +289,6 @@ function tick(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const t=now/
     if(pp[i*3+1]<0){pp[i*3]=cam.position.x+(Math.random()-0.5)*40;pp[i*3+1]=7+Math.random()*3;pp[i*3+2]=cam.position.z-8+(Math.random()-0.5)*26}}pg.attributes.position.needsUpdate=true;
   lanterns.forEach((l,i)=>l.rotation.z=Math.sin(t*1.4+i*0.7)*0.07);wT.offset.x=t*0.02;wT.offset.y=Math.sin(t*0.5)*0.03;
   for(const H of halls){const inn=(o,m)=>Math.abs(o.x-H.x)<H.w-m&&Math.abs(o.z-H.z)<H.d-m;const hide=mode!=='car'&&(inn(P.position,1.9)||inn(cam.position,0));if(H.hid!==hide){H.hid=hide;H.parts.forEach(o=>o.visible=!hide)}}
-  bill(P);bill(mei);bill(ven1);bill(ven2);nearest();R.render(S,cam);requestAnimationFrame(tick);}
+  for(const f of flora)f.rotation.y=Math.atan2(cam.position.x-f.position.x,cam.position.z-f.position.z);bill(P);bill(mei);bill(ven1);bill(ven2);gameTick(dt,t);nearest();R.render(S,cam);requestAnimationFrame(tick);}
 requestAnimationFrame(tick);
 </script></body></html>
