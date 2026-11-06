@@ -1,4 +1,4 @@
-/* CityStoryLove AI Detective game (Fix 20). Story Games.
+/* CityStoryLove AI Detective game (Fix 20; Fix 37 = portrait visual-novel UI). Story Games.
    Talks only to the game backend; the AI keys and the case culprit stay on the server. */
 (() => {
   "use strict";
@@ -105,7 +105,7 @@
   const FX = { party: "bokeh", cafe: "bokeh", room: "bokeh", campus: "petals", rain: "rain", night: "stars", beach: "sparkle", forest: "fireflies", mansion: "fog" };
 
   let state = load();
-  let setup = { identity: "", name: "", mature: false, lang: (state && state.lang) || "en" };
+  let setup = { identity: "", name: "", mature: false, lang: (state && state.lang) || "en", avatar: 0 };
   let quota = null, busy = false, picking = false;
   const T = () => TEXT[state ? state.lang : setup.lang] || TEXT.en;
   function load() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch { return null; } }
@@ -158,41 +158,25 @@
   function paintQuota() {
     const el = $("det-quota"); if (!el) return;
     el.textContent = !quota ? "" : !quota.enabled ? T().soon : quota.vip ? T().vip : T().left(quota.remaining, quota.limit);
+    if (vn) hud();
   }
 
-  // ---------- Rendering ----------
-  function render() {
-    const h = document.querySelector("#detective-section .section-heading h2");
-    if (h) h.innerHTML = T().heading;
-    const btn = $("detective-tab-btn"); if (btn) btn.textContent = T().tab;
-    paintQuota();
-    const body = $("det-body"); if (!body) return;
-    if (!state) return renderSetup(body);
-    renderCase(body);
-  }
-  function suspectsFor(identity) { const c = CRUSH[identity] || "lin"; return [c, "ray", "mira"]; }
 
-  function renderSetup(body) {
-    const t = T();
-    const crush = CRUSH[setup.identity] || "lin";
-    body.innerHTML = `
-      <div class="story-card">
-        <p class="det-intro">${t.intro}</p>
-        <div class="det-suspects">${[crush, "ray", "mira"].map((s, i) => `<div class="det-sus${i === 0 ? " crush" : ""}"><div class="ph"><img src="${SPRITE[s]("smile")}" alt=""></div><b>${NAMES[s]}</b>${i === 0 ? "<span>💘</span>" : "<span>❔</span>"}</div>`).join("")}</div>
-        <h3>🌐 ${t.lang}</h3>
-        <div class="story-chips">${LANGS.map(([k, l]) => `<button type="button" class="story-chip${setup.lang === k ? " active" : ""}" data-lang="${k}">${l}</button>`).join("")}</div>
-        <h3>${t.who}</h3>
-        <div class="story-chips">${IDENTITY_KEYS.map((k) => `<button type="button" class="story-chip${setup.identity === k ? " active" : ""}" data-identity="${k}">${t.identities[k]}</button>`).join("")}</div>
-        <label class="story-label">${t.name}<input id="det-name" maxlength="30" placeholder="${esc(t.namePh)}" value="${esc(setup.name)}"></label>
-        <label class="story-check"><input type="checkbox" id="det-mature"${setup.mature ? " checked" : ""}> ${t.mature}</label>
-        <button type="button" id="det-start" class="button button-gold full-width">${t.start}</button>
-        <p id="det-error" class="story-error"></p>
-      </div>`;
-    const read = () => { setup.name = ($("det-name")?.value || "").trim(); setup.mature = !!$("det-mature")?.checked; };
-    body.querySelectorAll("[data-identity]").forEach((b) => b.addEventListener("click", () => { read(); setup.identity = b.dataset.identity; render(); }));
-    body.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { read(); setup.lang = b.dataset.lang; render(); }));
-    $("det-start")?.addEventListener("click", () => { read(); startGame(); });
-  }
+  // ---------- Fix 37: VN extras ----------
+  const AV_SET = { boy: [1, 2, 3], girl: [4, 5, 6], gay: [7, 8], lesbian: [9, 10], transwoman: [11, 12], transman: [13, 14] };
+  const AV_FOR = { boy: 1, girl: 4, gay: 7, lesbian: 9, transwoman: 11, transman: 13 };
+  const ASSET = "story-assets/";
+  const VX = {
+    my: { avatar: "ကိုယ့် Avatar", next: "ရှေ့ဆက် ▶", back: "◀ နောက်သို့", cont: "▶ ဆက်ဆော့မယ်", pickSay: "ဘာမေးမလဲ? ရွေးပါ 👆", retry: "↻ ထပ်စမ်းမယ်", log: "ယခင်စကားများ", partner: "💘 သင့်ရဲ့ ရင်ခုန်သူ", suspects: "သံသယတရားခံများ" },
+    en: { avatar: "Your avatar", next: "Next ▶", back: "◀ Back", cont: "▶ Continue", pickSay: "What will you ask? Pick one 👆", retry: "↻ Try again", log: "History", partner: "💘 Your crush", suspects: "Suspects" },
+    ru: { avatar: "Ваш аватар", next: "Далее ▶", back: "◀ Назад", cont: "▶ Продолжить", pickSay: "Что спросите? Выберите 👆", retry: "↻ Ещё раз", log: "История", partner: "💘 Ваша симпатия", suspects: "Подозреваемые" },
+    es: { avatar: "Tu avatar", next: "Siguiente ▶", back: "◀ Atrás", cont: "▶ Continuar", pickSay: "¿Qué preguntarás? Elige 👆", retry: "↻ Reintentar", log: "Historial", partner: "💘 Tu flechazo", suspects: "Sospechosos" }
+  };
+  const X = () => VX[state ? state.lang : setup.lang] || VX.en;
+  const avSet = () => AV_SET[setup.identity] || AV_SET.boy;
+  const myAv = () => (state && state.avatar) || AV_FOR[state?.identity] || 1;
+  const sprite = (who, e) => SPRITE[who] ? SPRITE[who](e || "neutral") : "";
+  const haptic = (k) => { try { k ? tg?.HapticFeedback?.impactOccurred?.(k) : tg?.HapticFeedback?.selectionChanged?.(); } catch {} };
 
   function fx(kind) {
     const n = { rain: 60, stars: 36, petals: 16, fireflies: 20, bokeh: 14, sparkle: 18, fog: 3 }[kind] || 0;
@@ -204,69 +188,294 @@
     }
     return html;
   }
-  function stage(turn) {
-    const scene = SCENES.includes(turn?.scene) ? turn.scene : "party";
-    const who = SPRITE[turn?.speaker] ? turn.speaker : "";
-    const expr = ["neutral", "smile", "shy", "sad", "surprised"].includes(turn?.expression) ? turn.expression : "neutral";
-    return `<div class="story-stage det-stage" id="det-stage">
-      <img class="stage-bg" src="${BG(scene)}" alt="">
-      <div class="stage-fx fx-${FX[scene]}">${fx(FX[scene])}</div>
-      ${who ? `<div class="stage-char" data-who="${who}" data-expr="${expr}"><img class="char-img" src="${SPRITE[who](expr)}" alt="${NAMES[who]}"></div><span class="stage-name">${NAMES[who]}${who === state.crush ? " 💘" : ""}</span>` : ""}
-      <div class="stage-shade"></div></div>`;
+
+  // ---------- Section card (inside the app) ----------
+  function render() {
+    const h = document.querySelector("#detective-section .section-heading h2");
+    if (h) h.innerHTML = T().heading;
+    const btn = $("detective-tab-btn"); if (btn) btn.textContent = T().tab;
+    paintQuota();
+    const body = $("det-body"); if (!body) return;
+    const t = T(), crush = state ? state.crush : (CRUSH[setup.identity] || "lin");
+    body.innerHTML = `
+      <div class="story-card">
+        <p class="det-intro">${t.intro}</p>
+        <div class="det-suspects">${[crush, "ray", "mira"].map((s, i) => `<div class="det-sus${i === 0 ? " crush" : ""}"><div class="ph"><img src="${sprite(s, "smile")}" alt=""></div><b>${NAMES[s]}</b><span>${i === 0 ? "💘" : "❔"}</span></div>`).join("")}</div>
+        ${state ? `<p class="story-who" style="margin:12px 0 8px"><img class="vn-mini" src="${ASSET}av${myAv()}.webp" alt=""> ${esc(state.name)} · ${t.chapter(state.chapter)}${state.caseTitle ? ` · ${esc(state.caseTitle)}` : ""}</p>
+          <button type="button" id="det-cont" class="button button-gold full-width">${X().cont}</button>
+          <button type="button" id="det-new" class="button button-quiet full-width" style="margin-top:8px">${t.newGame}</button>`
+        : `<button type="button" id="det-open" class="button button-gold full-width">${t.start}</button>`}
+      </div>`;
+    $("det-open")?.addEventListener("click", openSetup);
+    $("det-cont")?.addEventListener("click", openVN);
+    $("det-new")?.addEventListener("click", () => {
+      if (!confirm(t.confirmNew)) return;
+      setup = { identity: state.identity, name: state.name, mature: state.mature, lang: state.lang, avatar: state.avatar || 0 };
+      state = null; picking = false; save(); render(); openSetup();
+    });
+  }
+  function suspectsFor(identity) { const c = CRUSH[identity] || "lin"; return [c, "ray", "mira"]; }
+
+  // ---------- Step-by-step setup (full screen) ----------
+  let wiz = 0;
+  function openSetup() {
+    $("dvs")?.remove(); wiz = 0;
+    const el = document.createElement("div");
+    el.id = "dvs"; el.className = "vn vns dvn";
+    el.innerHTML = `<img class="vn-bg" src="${BG("party")}" alt=""><div class="vn-fx stage-fx fx-bokeh">${fx("bokeh")}</div>
+      <img class="vn-partner vns-me hidden" data-r="me" alt="">
+      <div class="vn-hud"><span class="vns-dots" data-r="dots"></span><button type="button" class="vn-x" data-r="x">✕</button></div>
+      <div class="vn-box vns-box" data-r="box"></div>`;
+    document.body.appendChild(el);
+    document.documentElement.classList.add("vn-open");
+    el.querySelector('[data-r="x"]').addEventListener("click", closeSetup);
+    paintSetup();
+  }
+  function closeSetup() { $("dvs")?.remove(); if (!$("dvn") && !$("vn") && !$("vns")) document.documentElement.classList.remove("vn-open"); }
+  function readInputs() { const n = $("det-name"), m = $("det-mature"); if (n) setup.name = (n.value || "").trim(); if (m) setup.mature = !!m.checked; }
+  function paintSetup() {
+    const root = $("dvs"); if (!root) return;
+    const box = root.querySelector('[data-r="box"]'), t = T(), x = X();
+    const me = root.querySelector('[data-r="me"]');
+    const showMe = wiz >= 2 && setup.identity;
+    me.classList.toggle("hidden", !showMe);
+    if (showMe) { if (!avSet().includes(setup.avatar)) setup.avatar = avSet()[0]; me.src = `${ASSET}p${setup.avatar}.webp`; }
+    root.querySelector('[data-r="dots"]').innerHTML = [0, 1, 2, 3].map((i) => `<i class="${i === wiz ? "on" : i < wiz ? "done" : ""}"></i>`).join("");
+    const chip = (a, k, l, on) => `<button type="button" class="vns-chip${on ? " on" : ""}" data-${a}="${k}">${l}</button>`;
+    let html = "";
+    if (wiz === 0) html = `<h3>🌐 ${t.lang}</h3><div class="vns-chips">${LANGS.map(([k, l]) => chip("lang", k, l, setup.lang === k)).join("")}</div>`;
+    if (wiz === 1) {
+      const c = CRUSH[setup.identity] || "";
+      html = `<h3>${t.who}</h3><div class="vns-chips">${IDENTITY_KEYS.map((k) => chip("identity", k, t.identities[k], setup.identity === k)).join("")}</div>
+        <p class="dvn-sub">${x.suspects}</p><div class="dvn-sus">${(c ? [c, "ray", "mira"] : ["lin", "kai", "ray", "mira"]).map((s) => `<span class="${s === c ? "crush" : ""}"><img src="${sprite(s, "smile")}" alt="">${NAMES[s]}${s === c ? " 💘" : ""}</span>`).join("")}</div>`;
+    }
+    if (wiz === 2) html = `<h3>${x.avatar}</h3><div class="vn-avs vns-avs">${avSet().map((n) => `<button type="button" class="vn-av${setup.avatar === n ? " on" : ""}" data-av="${n}"><img src="${ASSET}av${n}.webp" alt=""></button>`).join("")}</div>`;
+    if (wiz === 3) html = `<h3>${t.name}</h3><input id="det-name" class="vns-input" maxlength="30" placeholder="${esc(t.namePh)}" value="${esc(setup.name)}">
+        <label class="vns-check"><input type="checkbox" id="det-mature"${setup.mature ? " checked" : ""}> <span>${t.mature}</span></label>`;
+    const canNext = wiz !== 1 || !!setup.identity;
+    html += `<p id="det-error" class="story-error vns-err"></p><div class="vns-nav">
+      ${wiz > 0 ? `<button type="button" class="vn-btn" data-r="back">${x.back}</button>` : "<span></span>"}
+      ${wiz < 3 ? `<button type="button" class="vn-btn gold" data-r="next"${canNext ? "" : " disabled"}>${x.next}</button>` : `<button type="button" class="vn-btn gold" data-r="start">${t.start}</button>`}</div>`;
+    box.innerHTML = html;
+    box.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { setup.lang = b.dataset.lang; paintSetup(); render(); }));
+    box.querySelectorAll("[data-identity]").forEach((b) => b.addEventListener("click", () => { setup.identity = b.dataset.identity; if (!avSet().includes(setup.avatar)) setup.avatar = AV_FOR[setup.identity]; paintSetup(); render(); }));
+    box.querySelectorAll("[data-av]").forEach((b) => b.addEventListener("click", () => { setup.avatar = Number(b.dataset.av); paintSetup(); }));
+    box.querySelector('[data-r="back"]')?.addEventListener("click", () => { readInputs(); wiz = Math.max(0, wiz - 1); paintSetup(); });
+    box.querySelector('[data-r="next"]')?.addEventListener("click", () => { if (wiz === 1 && !setup.identity) return; wiz = Math.min(3, wiz + 1); paintSetup(); });
+    box.querySelector('[data-r="start"]')?.addEventListener("click", () => { readInputs(); startGame(); });
+    haptic();
   }
 
-  function renderCase(body) {
-    const t = T(), last = state.turns[state.turns.length - 1] || {};
-    const past = state.turns.slice(0, -1);
-    const asks = state.asks || 0, left = MIN_ASKS - asks;
-    const crushName = NAMES[state.crush];
-    const roles = state.roles || {};
-    const ended = !!state.ended;
-    const choices = ended ? "" : (asks >= MAX_ASKS
-      ? `<p class="det-last">${t.lastChance}</p>`
-      : (last.choices || []).map((c, i) => `<button type="button" class="story-choice det-choice" data-choice="${i}">${esc(c.text)}<span>${t.kinds[c.kind] || "💬"}</span></button>`).join(""));
-    const accuseBtn = ended ? "" : `<button type="button" id="det-accuse" class="det-accuse"${left > 0 ? " disabled" : ""}>${left > 0 ? t.accuseLocked(left) : t.accuse}</button>`;
-    const picker = picking ? `<div class="det-picker"><h3>${t.pickCulprit}</h3><div class="det-suspects">${suspectsFor(state.identity).map((s) => `<button type="button" class="det-sus pick${s === state.crush ? " crush" : ""}" data-suspect="${s}"><div class="ph"><img src="${SPRITE[s]("neutral")}" alt=""></div><b>${NAMES[s]}</b><span>${esc(roles[s === state.crush ? "crush" : s] || "")}</span></button>`).join("")}</div><button type="button" id="det-cancel" class="button button-quiet story-small">${t.cancel}</button></div>` : "";
-    const verdict = ended ? `<div class="det-verdict ${state.correct ? "ok" : "bad"}">${state.correct ? t.right : t.wrong(NAMES[state.culprit] || "?")}</div>` : "";
-    const after = ended ? `${last.hook ? `<p class="det-hook">🔮 ${esc(last.hook)}</p>` : ""}<p class="det-score">🏅 ${t.solved(state.solved || 0, state.total || 0)}</p>
-      <button type="button" id="det-next" class="button button-gold full-width">${t.next(state.chapter + 1)}</button>` : "";
-    body.innerHTML = `
-      <div class="story-toolbar"><span class="story-who">🕵️ ${esc(state.name)} · ${t.chapter(state.chapter)}${state.caseTitle ? ` · ${esc(state.caseTitle)}` : ""}</span>
-        <button type="button" id="det-new" class="button button-quiet story-small">${t.newGame}</button></div>
-      <div class="det-meters">
-        <div class="det-m">🔍 ${t.clues} ${state.clues.length}<div class="det-bar"><i style="width:${Math.min(100, state.clues.length * 20)}%;background:#ffcf6b"></i></div></div>
-        <div class="det-m">💘 ${t.love(crushName)} ${state.love}%<div class="det-bar"><i style="width:${state.love}%;background:#ff5fa2"></i></div></div>
+  // ---------- Portrait visual-novel player ----------
+  function pagesOf(text) {
+    const parts = String(text || "").replace(/\r/g, "").split(/\n+|(?<=[.!?။…”"」])\s+/).map((z) => z.trim()).filter(Boolean);
+    const out = []; let cur = "";
+    parts.forEach((p) => { if (cur && (cur + " " + p).length > 150) { out.push(cur); cur = p; } else cur = cur ? cur + " " + p : p; });
+    if (cur) out.push(cur);
+    return out.length ? out : [""];
+  }
+  const QUOTE = /["“”「」«»]/;
+  let vn = null, typeTimer = null, autoTimer = null;
+  const R = (k) => $("dvn")?.querySelector(`[data-r="${k}"]`);
+
+  function openVN() {
+    if (!state) return;
+    closeVN(true);
+    const el = document.createElement("div");
+    el.id = "dvn"; el.className = "vn dvn";
+    el.innerHTML = `<img class="vn-bg" data-r="bg" alt=""><div class="vn-fx" data-r="fx"></div>
+      <img class="vn-partner" data-r="partner" alt=""><img class="vn-me" data-r="me" alt="">
+      <div class="vn-hud"><span class="vn-pill" data-r="clues"></span><span class="vn-pill" data-r="love"></span><span class="vn-pill" data-r="asks"></span><span class="vn-pill vn-q" data-r="quota"></span><button type="button" class="vn-x" data-r="x">✕</button></div>
+      <div class="vn-choices" data-r="choices"></div>
+      <div class="vn-box" data-r="box">
+        <div class="vn-name hidden" data-r="name"><img data-r="nav" alt=""><span data-r="nt"></span></div>
+        <div class="vn-tools"><button type="button" data-t="log">📜</button><button type="button" data-t="notes">📒</button><button type="button" data-t="skip">⏩</button><button type="button" data-t="auto">▶</button></div>
+        <div class="vn-txt" data-r="txt"></div><div class="vn-extra" data-r="extra"></div><span class="vn-next" data-r="nx">▼</span>
       </div>
-      ${past.length ? `<details class="story-past"><summary>${t.past} (${past.length})</summary>${past.map((p) => `<div class="story-past-item">${p.title ? `<b>${esc(p.title)}</b>` : ""}<p>${esc(p.story)}</p>${p.picked ? `<em>➜ ${esc(p.picked)}</em>` : ""}</div>`).join("")}</details>` : ""}
-      ${stage(last)}
-      <article class="story-card story-current">
-        <span class="eyebrow">${esc(last.title || "")}${ended ? "" : ` · ${t.asks(asks, MAX_ASKS)}`}</span>
-        ${verdict}
-        <p class="story-text">${esc(last.story || "")}</p>
-        ${last.clue ? `<div class="det-clue">${t.newClue} – ${esc(last.clue)}</div>` : ""}
-        <div class="story-choices">${choices}</div>
-        ${accuseBtn}${picker}${after}
-        <p id="det-error" class="story-error"></p>
-      </article>
-      <details class="story-past det-notebook"><summary>${t.notebook} (${state.clues.length})</summary>${state.clues.length ? `<ol>${state.clues.map((c) => `<li>${esc(c)}</li>`).join("")}</ol>` : `<p>${t.noClues}</p>`}</details>`;
-    $("det-new")?.addEventListener("click", () => { if (!confirm(t.confirmNew)) return; setup = { identity: state.identity, name: state.name, mature: state.mature, lang: state.lang }; state = null; picking = false; save(); render(); });
-    body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => ask(Number(b.dataset.choice))));
-    $("det-accuse")?.addEventListener("click", () => { picking = true; render(); document.querySelector(".det-picker")?.scrollIntoView({ behavior: "smooth", block: "center" }); });
-    $("det-cancel")?.addEventListener("click", () => { picking = false; render(); });
-    body.querySelectorAll("[data-suspect]").forEach((b) => b.addEventListener("click", () => accuse(b.dataset.suspect)));
-    $("det-next")?.addEventListener("click", nextChapter);
+      <div class="vn-log hidden" data-r="log"></div>`;
+    document.body.appendChild(el);
+    document.documentElement.classList.add("vn-open");
+    R("x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
+    el.addEventListener("click", onTap);
+    el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
+    R("log").addEventListener("click", (e) => { e.stopPropagation(); R("log").classList.add("hidden"); });
+    haptic("light");
+    vn = { auto: false };
+    loadTurn(state.turns[state.turns.length - 1]);
+  }
+  function closeVN(silent) {
+    clearInterval(typeTimer); clearTimeout(autoTimer);
+    $("dvn")?.remove(); if (!$("dvs") && !$("vn") && !$("vns")) document.documentElement.classList.remove("vn-open");
+    vn = null; picking = false;
+    if (!silent) render();
+  }
+  function hud() {
+    if (!vn) return;
+    const t = T();
+    R("clues").textContent = `🔍 ${state.clues.length}`;
+    R("love").textContent = `💘 ${NAMES[state.crush]} ${state.love}%`;
+    R("asks").textContent = state.ended ? `📖 ${t.chapter(state.chapter)}` : `❓ ${state.asks || 0}/${MAX_ASKS}`;
+    R("quota").textContent = quota ? (quota.vip ? "👑 VIP" : `⚡ ${quota.remaining}/${quota.limit}`) : "";
+  }
+  function setScene(turn) {
+    const scene = SCENES.includes(turn?.scene) ? turn.scene : "party";
+    const bg = R("bg"); if (bg && !bg.src.endsWith(BG(scene))) bg.src = BG(scene);
+    const f = R("fx"); if (f && f.dataset.k !== scene) { f.dataset.k = scene; f.className = `vn-fx stage-fx fx-${FX[scene]}`; f.innerHTML = fx(FX[scene]); }
+    const who = SPRITE[turn?.speaker] ? turn.speaker : "";
+    const expr = ["neutral", "smile", "shy", "sad", "surprised"].includes(turn?.expression) ? turn.expression : "neutral";
+    const pt = R("partner"); if (pt) { pt.classList.toggle("hidden", !who); if (who) pt.src = sprite(who, expr); }
+    vn.partner = who ? NAMES[who] + (who === state.crush ? " 💘" : "") : "";
+    hud();
+  }
+  function loadTurn(turn) {
+    if (!vn) return;
+    setScene(turn);
+    vn.turn = turn;
+    const t = T();
+    const pre = state.ended && turn === state.turns[state.turns.length - 1] ? [state.correct ? t.right : t.wrong(NAMES[state.culprit] || "?")] : [];
+    vn.pages = [...pre, ...pagesOf(turn?.story || "")];
+    vn.i = 0;
+    showPage();
+  }
+  function speaker(mode, name) {
+    const n = R("name"), av = R("nav"); if (!n) return;
+    n.classList.toggle("hidden", !name); n.classList.toggle("me", mode === "me");
+    R("nt").textContent = name || "";
+    av.classList.toggle("hidden", mode !== "me");
+    if (mode === "me") av.src = `${ASSET}av${myAv()}.webp`;
+  }
+  function meVisible(on) {
+    const me = R("me"); if (!me) return;
+    if (on) me.src = `${ASSET}p${myAv()}.webp`;
+    me.classList.toggle("on", on);
+    $("dvn")?.classList.toggle("dim", on);
+  }
+  function typeText(txt, done) {
+    clearInterval(typeTimer);
+    const box = R("txt"); if (!box) return;
+    const chars = Array.from(txt); let k = 0;
+    vn.typing = true; vn.full = txt; vn.onDone = done;
+    box.textContent = ""; R("nx").classList.add("hidden");
+    typeTimer = setInterval(() => { k += 2; box.textContent = chars.slice(0, k).join(""); if (k >= chars.length) finishType(); }, 28);
+  }
+  function finishType() {
+    clearInterval(typeTimer); if (!vn) return;
+    R("txt").textContent = vn.full; vn.typing = false; R("nx").classList.remove("hidden");
+    const d = vn.onDone; vn.onDone = null; d && d();
+  }
+  function showPage() {
+    vn.mode = "read";
+    meVisible(false); R("choices").innerHTML = ""; R("extra").innerHTML = "";
+    const page = vn.pages[vn.i] || "";
+    const talk = vn.partner && QUOTE.test(page);
+    speaker("partner", talk ? vn.partner : "");
+    R("txt").classList.toggle("narr", !talk);
+    const lastPage = vn.i === vn.pages.length - 1;
+    typeText(page, () => {
+      if (lastPage && vn.turn?.clue) R("extra").innerHTML = `<span class="dvn-clue">${esc(T().newClue)} – ${esc(vn.turn.clue)}</span>`;
+      if (vn?.auto) autoTimer = setTimeout(() => advance(), 1600);
+    });
+  }
+  function advance() {
+    clearTimeout(autoTimer);
+    if (!vn || vn.mode !== "read") return;
+    if (vn.typing) return finishType();
+    if (vn.i < vn.pages.length - 1) { vn.i++; showPage(); return; }
+    state.ended ? showEnd() : showChoices();
+  }
+  function showChoices() {
+    vn.mode = "choice"; picking = false;
+    const t = T(), asks = state.asks || 0, left = MIN_ASKS - asks;
+    meVisible(true); speaker("me", state.name);
+    R("txt").classList.remove("narr"); R("nx").classList.add("hidden"); R("extra").innerHTML = "";
+    R("txt").textContent = asks >= MAX_ASKS ? t.lastChance : X().pickSay;
+    const ch = asks >= MAX_ASKS ? [] : (vn.turn?.choices || []);
+    R("choices").innerHTML = ch.map((c, i) => `<button type="button" data-c="${i}"><b>${"ABC"[i]}</b>${esc(c.text)} <span class="dvn-k">${t.kinds[c.kind] || "💬"}</span></button>`).join("") +
+      `<button type="button" class="dvn-acc" data-acc="1"${left > 0 ? " disabled" : ""}>${left > 0 ? t.accuseLocked(left) : t.accuse}</button>`;
+    R("choices").querySelectorAll("[data-c]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); vnAsk(Number(b.dataset.c)); }));
+    R("choices").querySelector("[data-acc]")?.addEventListener("click", (e) => { e.stopPropagation(); if (left <= 0) showPicker(); });
+  }
+  function showPicker() {
+    vn.mode = "pick"; picking = true; haptic("medium");
+    const t = T(), roles = state.roles || {};
+    R("txt").textContent = t.pickCulprit;
+    R("choices").innerHTML = `<div class="dvn-pick">${suspectsFor(state.identity).map((s) => `<button type="button" data-s="${s}" class="${s === state.crush ? "crush" : ""}"><img src="${sprite(s, "neutral")}" alt=""><b>${NAMES[s]}</b><small>${esc(roles[s === state.crush ? "crush" : s] || "")}</small></button>`).join("")}</div>
+      <button type="button" class="dvn-cancel" data-r="cancel">${t.cancel}</button>`;
+    R("choices").querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); vnAccuse(b.dataset.s); }));
+    R("cancel").addEventListener("click", (e) => { e.stopPropagation(); showChoices(); });
+  }
+  function showEnd() {
+    vn.mode = "end";
+    const t = T(), last = state.turns[state.turns.length - 1] || {};
+    meVisible(true); speaker("me", state.name); R("choices").innerHTML = "";
+    R("txt").classList.remove("narr"); R("nx").classList.add("hidden");
+    R("txt").textContent = (last.hook ? "🔮 " + last.hook + "\n" : "") + "🏅 " + t.solved(state.solved || 0, state.total || 0);
+    R("extra").innerHTML = `<button type="button" class="vn-btn gold" data-r="nextch">${t.next(state.chapter + 1)}</button>`;
+    R("nextch").addEventListener("click", (e) => { e.stopPropagation(); vnNext(); });
+  }
+  function waiting(text) {
+    R("choices").innerHTML = "";
+    speaker("me", state.name);
+    typeText(text, () => { R("nx").classList.add("hidden"); R("extra").innerHTML = `<span class="vn-dots3"><i></i><i></i><i></i></span>`; });
+  }
+  function failed(err, retry) {
+    if (!vn) return;
+    if (vn.typing) finishType();
+    vn.mode = "err";
+    R("extra").innerHTML = `<span class="vn-err">${esc(T()[err] || T().FAILED)}</span>` +
+      (err === "LIMIT" ? `<button type="button" class="vn-btn gold" data-r="vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" data-r="retry">${X().retry}</button>`);
+    R("vip")?.addEventListener("click", (e) => { e.stopPropagation(); closeVN(); $("vip-page-buy")?.click(); });
+    R("retry")?.addEventListener("click", (e) => { e.stopPropagation(); retry(); });
+  }
+  async function vnAsk(i) {
+    const picked = vn?.turn?.choices?.[i]?.text;
+    if (!picked || vn.mode !== "choice") return;
+    vn.mode = "say"; haptic(); waiting(picked);
+    const err = await ask(i);
+    if (!vn) return;
+    if (err) return failed(err, showChoices);
+    loadTurn(state.turns[state.turns.length - 1]);
+  }
+  async function vnAccuse(s) {
+    if (!vn || vn.mode !== "pick") return;
+    vn.mode = "say"; haptic("heavy"); waiting(`⚖️ ${NAMES[s]}!`);
+    const err = await accuse(s);
+    if (!vn) return;
+    if (err) return failed(err, showPicker);
+    loadTurn(state.turns[state.turns.length - 1]);
+  }
+  async function vnNext() {
+    if (!vn || vn.mode !== "end") return;
+    vn.mode = "say"; R("extra").innerHTML = `<span class="vn-dots3"><i></i><i></i><i></i></span>`;
+    const err = await nextChapter();
+    if (!vn) return;
+    if (err) return failed(err, showEnd);
+    loadTurn(state.turns[state.turns.length - 1]);
+  }
+  function tool(k, btn) {
+    if (!vn) return;
+    if (k === "skip") { if (vn.mode === "read") { finishType(); vn.i = vn.pages.length - 1; showPage(); finishType(); } return; }
+    if (k === "auto") { vn.auto = !vn.auto; btn.classList.toggle("on", vn.auto); if (vn.auto && vn.mode === "read" && !vn.typing) advance(); return; }
+    const lg = R("log"), t = T();
+    if (k === "log") lg.innerHTML = `<h3>📜 ${esc(X().log)}</h3>` + state.turns.map((z) => `<div class="vn-log-i">${z.title ? `<b>${esc(z.title)}</b>` : ""}<p>${esc(z.story)}</p>${z.picked ? `<em>➜ ${esc(state.name)}: ${esc(z.picked)}</em>` : ""}</div>`).join("");
+    if (k === "notes") lg.innerHTML = `<h3>${t.notebook} (${state.clues.length})</h3>` + (state.clues.length ? `<ol class="dvn-notes">${state.clues.map((c) => `<li>${esc(c)}</li>`).join("")}</ol>` : `<p>${t.noClues}</p>`);
+    lg.classList.remove("hidden"); lg.scrollTop = k === "log" ? lg.scrollHeight : 0;
+  }
+  function onTap(e) {
+    if (!vn || e.target.closest(".vn-choices,.vn-hud,.vn-tools,.vn-btn,.vn-extra button")) return;
+    if (vn.mode === "read") advance();
   }
 
   function setLoading(on) {
     busy = on;
-    document.querySelectorAll("#detective-section button").forEach((b) => { b.disabled = on || (b.id === "det-accuse" && (state?.asks || 0) < MIN_ASKS); });
+    document.querySelectorAll("#detective-section button, #dvs button").forEach((b) => { b.disabled = on; });
     const err = $("det-error"); if (err) err.innerHTML = on ? `<span class="vn-dots3"><i></i><i></i><i></i></span>` : "";
   }
   function showError(code) {
     const err = $("det-error"); if (!err) return;
     const t = T();
-    err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? ' <button type="button" id="det-get-vip" class="button button-gold story-small">👑 Get VIP</button>' : "");
-    $("det-get-vip")?.addEventListener("click", () => $("vip-page-buy")?.click());
+    err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? ' <button type="button" id="det-get-vip" class="vn-btn gold">👑 Get VIP</button>' : "");
+    $("det-get-vip")?.addEventListener("click", () => { closeSetup(); $("vip-page-buy")?.click(); });
   }
   function history() {
     const h = [];
@@ -295,21 +504,24 @@
     };
   }
 
+
   async function startGame() {
     if (busy) return;
     if (!setup.identity) { const e = $("det-error"); if (e) e.textContent = T().pickWho; return; }
-    const keep = { identity: setup.identity, name: setup.name || "Detective", mature: setup.mature, lang: setup.lang, crush: CRUSH[setup.identity], love: 20, prev: "", solved: 0, total: 0 };
+    const avatar = avSet().includes(setup.avatar) ? setup.avatar : AV_FOR[setup.identity] || 1;
+    const keep = { identity: setup.identity, name: setup.name || "Detective", mature: setup.mature, lang: setup.lang, avatar, crush: CRUSH[setup.identity], love: 20, prev: "", solved: 0, total: 0 };
     setLoading(true);
     try {
       const d = await call({ identity: keep.identity, name: keep.name, mature: keep.mature, lang: keep.lang, love: keep.love, chapter: 1, action: "start" });
-      state = caseFrom(d, keep); save(); setLoading(false); render(); refreshStatus();
+      state = caseFrom(d, keep); save(); setLoading(false); closeSetup(); render(); refreshStatus(); openVN();
     } catch (e) { setLoading(false); showError(e.message); }
   }
+  // These return null on success, or an error code.
   async function ask(i) {
-    if (busy || !state) return;
+    if (busy || !state) return "BUSY";
     const last = state.turns[state.turns.length - 1];
-    const picked = last?.choices?.[i]?.text; if (!picked) return;
-    setLoading(true);
+    const picked = last?.choices?.[i]?.text; if (!picked) return "FAILED";
+    busy = true;
     try {
       const d = await call({ ...base(), action: "ask", choice: picked, token: state.token, history: history(), clues: state.clues });
       last.picked = picked;
@@ -317,13 +529,12 @@
       if (d.clue && !state.clues.includes(d.clue)) state.clues.push(d.clue);
       state.love = Math.max(0, Math.min(100, state.love + (Number(d.love) || 0)));
       state.asks = (state.asks || 0) + 1;
-      save(); setLoading(false); render(); refreshStatus();
-      $("detective-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch (e) { setLoading(false); showError(e.message === "CASE" ? "CASE" : e.message); }
+      save(); refreshStatus(); return null;
+    } catch (e) { return e.message || "FAILED"; } finally { busy = false; }
   }
   async function accuse(suspect) {
-    if (busy || !state) return;
-    setLoading(true);
+    if (busy || !state) return "BUSY";
+    busy = true;
     try {
       const d = await call({ ...base(), action: "accuse", suspect, token: state.token, history: history(), clues: state.clues });
       state.turns = [...state.turns, turnOf(d)].slice(-40);
@@ -331,19 +542,17 @@
       state.ended = true; state.correct = !!d.correct; state.culprit = d.culprit || "";
       state.total = (state.total || 0) + 1; if (d.correct) state.solved = (state.solved || 0) + 1;
       state.prev = [state.prev, `Chapter ${state.chapter}: ${d.summary || ""}`].filter(Boolean).join(" ").slice(-1700);
-      picking = false; save(); setLoading(false); render(); refreshStatus();
-      $("detective-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch (e) { setLoading(false); showError(e.message); }
+      picking = false; save(); refreshStatus(); return null;
+    } catch (e) { return e.message || "FAILED"; } finally { busy = false; }
   }
   async function nextChapter() {
-    if (busy || !state) return;
-    setLoading(true);
+    if (busy || !state) return "BUSY";
+    busy = true;
     try {
       const d = await call({ ...base(), action: "next" });
-      const keep = { identity: state.identity, name: state.name, mature: state.mature, lang: state.lang, crush: state.crush, love: state.love, prev: state.prev, solved: state.solved, total: state.total };
-      state = caseFrom(d, keep); save(); setLoading(false); render(); refreshStatus();
-      $("detective-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch (e) { setLoading(false); showError(e.message); }
+      const keep = { identity: state.identity, name: state.name, mature: state.mature, lang: state.lang, avatar: state.avatar, crush: state.crush, love: state.love, prev: state.prev, solved: state.solved, total: state.total };
+      state = caseFrom(d, keep); save(); refreshStatus(); return null;
+    } catch (e) { return e.message || "FAILED"; } finally { busy = false; }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
