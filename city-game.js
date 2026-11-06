@@ -406,8 +406,26 @@
       <button type="button" class="cg-card" id="cg-card-city">
         <div class="cg-card-img" style="background-image:url('city-assets/bg_club.webp')"><img src="city-assets/yuna.webp" alt=""><span class="cg-card-tag">2D · 18+</span></div>
         <div class="cg-card-body"><b>🏙️ ${GAME_TITLE}</b><small>${sub}</small><span class="cg-card-play">▶ ${S ? fmt(t.cont, { d: S.day }).replace("▶ ", "") : t.tapPlay}</span></div>
+      </button>
+      <button type="button" class="cg-card" id="cg-card-palace">
+        <div class="cg-card-img" style="background-image:url('hanok3d/a/k_sky.jpg')"><img src="hanok3d/a/b1.webp" alt=""><span class="cg-card-tag">3D · NEW</span></div>
+        <div class="cg-card-body"><b>🌸 Hanok Love</b><small>Korean spring village · Ha-eun</small><span class="cg-card-play">▶ ${t.tapPlay}</span></div>
       </button></div>`;
     $("cg-card-city").addEventListener("click", () => openTitle());
+    $("cg-card-palace").addEventListener("click", openPalace);
+  }
+
+  // Hanok Love (3D) runs in its own page inside a full-screen frame.
+  function openPalace() {
+    try { tg && tg.requestFullscreen && tg.requestFullscreen(); } catch (e) {}
+    let ov = $("palace-ov");
+    if (!ov) {
+      ov = document.createElement("div"); ov.id = "palace-ov";
+      ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:#1a0f0a";
+      ov.innerHTML = '<iframe src="hanok3d/index.html" style="border:0;width:100%;height:100%" allow="fullscreen"></iframe>';
+      document.body.appendChild(ov);
+      addEventListener("message", (e) => { if (e.data === "palace-close") { $("palace-ov")?.remove(); } });
+    }
   }
 
   // ---------------- Landscape setup: language -> character -> name ----------------
