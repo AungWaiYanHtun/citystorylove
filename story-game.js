@@ -9,7 +9,7 @@
 
   const TEXT = {
     my: {
-      avatar: "ကိုယ့် Avatar", cont: "▶ ဆက်ဆော့မယ်", pickSay: "ဘာပြန်ပြောမလဲ? ရွေးပါ 👆", retry: "↻ ထပ်စမ်းမယ်", log: "ယခင်စကားများ", ch: "အပိုင်း",
+      avatar: "ကိုယ့် Avatar", next: "ရှေ့ဆက် ▶", back: "◀ နောက်သို့", cont: "▶ ဆက်ဆော့မယ်", pickSay: "ဘာပြန်ပြောမလဲ? ရွေးပါ 👆", retry: "↻ ထပ်စမ်းမယ်", log: "ယခင်စကားများ", ch: "အပိုင်း",
       heading: '🎮 ကိုယ်တိုင်ဆော့ရတဲ့ <span class="gold-text">ဇာတ်လမ်း</span>',
       who: "သင် ဘယ်သူလဲ?", genre: "ဇာတ်လမ်းအမျိုးအစား", name: "ဇာတ်ကောင်နာမည်", namePh: "ဥပမာ - မောင်မောင်",
       lang: "ဘာသာစကား",
@@ -24,7 +24,7 @@
       genres: { romance: "💕 အချစ်", school: "🎓 တက္ကသိုလ်", mystery: "🕵️ လျှို့ဝှက်", horror: "👻 သရဲ", fantasy: "🐉 Fantasy", drama: "🎭 ဘဝဒရာမာ" }
     },
     en: {
-      avatar: "Your avatar", cont: "▶ Continue", pickSay: "What will you say? Pick one 👆", retry: "↻ Try again", log: "History", ch: "Ch.",
+      avatar: "Your avatar", next: "Next ▶", back: "◀ Back", cont: "▶ Continue", pickSay: "What will you say? Pick one 👆", retry: "↻ Try again", log: "History", ch: "Ch.",
       heading: '🎮 Play Your Own <span class="gold-text">Story</span>',
       who: "Who are you?", genre: "Story type", name: "Character name", namePh: "e.g. Alex",
       lang: "Language",
@@ -40,7 +40,7 @@
     }
   };
   TEXT.ru = {
-    avatar: "Ваш аватар", cont: "▶ Продолжить", pickSay: "Что ответите? Выберите 👆", retry: "↻ Ещё раз", log: "История", ch: "Гл.",
+    avatar: "Ваш аватар", next: "Далее ▶", back: "◀ Назад", cont: "▶ Продолжить", pickSay: "Что ответите? Выберите 👆", retry: "↻ Ещё раз", log: "История", ch: "Гл.",
       heading: '🎮 Сыграй свою <span class="gold-text">историю</span>',
     who: "Кто вы?", genre: "Жанр истории", name: "Имя персонажа", namePh: "например, Саша",
     lang: "Язык",
@@ -55,7 +55,7 @@
     genres: { romance: "💕 Романтика", school: "🎓 Студенчество", mystery: "🕵️ Детектив", horror: "👻 Ужасы", fantasy: "🐉 Фэнтези", drama: "🎭 Драма" }
   };
   TEXT.es = {
-    avatar: "Tu avatar", cont: "▶ Continuar", pickSay: "¿Qué dirás? Elige 👆", retry: "↻ Reintentar", log: "Historial", ch: "Cap.",
+    avatar: "Tu avatar", next: "Siguiente ▶", back: "◀ Atrás", cont: "▶ Continuar", pickSay: "¿Qué dirás? Elige 👆", retry: "↻ Reintentar", log: "Historial", ch: "Cap.",
       heading: '🎮 Juega tu propia <span class="gold-text">historia</span>',
     who: "¿Quién eres?", genre: "Tipo de historia", name: "Nombre del personaje", namePh: "p. ej. Alex",
     lang: "Idioma",
@@ -76,7 +76,8 @@
 
   let state = load() || null;
   let setup = { identity: "", genre: "romance", name: "", mature: false, lang: "en", avatar: 0 };
-  const AV_FOR = { boy: 1, gay: 1, transman: 2, girl: 4, lesbian: 4, transwoman: 5 };
+  const AV_SET = { boy: [1, 2, 3], girl: [4, 5, 6], gay: [7, 8], lesbian: [9, 10], transwoman: [11, 12], transman: [13, 14] };
+  const AV_FOR = { boy: 1, girl: 4, gay: 7, lesbian: 9, transwoman: 11, transman: 13 };
   const ASSET = "story-assets/";
   let lastQuota = null;
   let busy = false;
@@ -101,6 +102,7 @@
     if (on) {
       render();
       refreshStatus();
+      if (!state) openSetup();
     }
   }
   $("story-tab-btn")?.addEventListener("click", () => showStory(true));
@@ -150,36 +152,80 @@
   function renderSetup(body) {
     body.innerHTML = `
       <div class="story-card">
-        <h3>🌐 ${T().lang}</h3>
-        <div class="story-chips">
-          ${LANGS.map(([k, l]) => `<button type="button" class="story-chip${setup.lang === k ? " active" : ""}" data-lang="${k}">${l}</button>`).join("")}
-        </div>
-        <h3>${T().who}</h3>
-        <div class="story-chips" id="story-identities">
-          ${IDENTITY_KEYS.map((k) => `<button type="button" class="story-chip${setup.identity === k ? " active" : ""}" data-identity="${k}">${T().identities[k]}</button>`).join("")}
-        </div>
-        <h3>${T().genre}</h3>
-        <div class="story-chips" id="story-genres">
-          ${GENRE_KEYS.map((k) => `<button type="button" class="story-chip${setup.genre === k ? " active" : ""}" data-genre="${k}">${T().genres[k]}</button>`).join("")}
-        </div>
-        <h3>${T().avatar}</h3>
-        <div class="vn-avs">${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" class="vn-av${(setup.avatar || AV_FOR[setup.identity] || 1) === n ? " on" : ""}" data-av="${n}"><img src="${ASSET}av${n}.webp" alt=""></button>`).join("")}</div>
-        <label class="story-label">${T().name}
-          <input id="story-name" maxlength="30" placeholder="${esc(T().namePh)}" value="${esc(setup.name)}">
-        </label>
-        <label class="story-check"><input type="checkbox" id="story-mature"${setup.mature ? " checked" : ""}> ${T().mature}</label>
-        <button type="button" id="story-start" class="button button-gold full-width">${T().start}</button>
-        <p id="story-error" class="story-error"></p>
+        <button type="button" id="story-open-setup" class="button button-gold full-width">${T().start}</button>
       </div>`;
-    body.querySelectorAll("[data-identity]").forEach((b) => b.addEventListener("click", () => { setup.identity = b.dataset.identity; readInputs(); render(); }));
-    body.querySelectorAll("[data-genre]").forEach((b) => b.addEventListener("click", () => { setup.genre = b.dataset.genre; readInputs(); render(); }));
-    body.querySelectorAll("[data-av]").forEach((b) => b.addEventListener("click", () => { setup.avatar = Number(b.dataset.av); readInputs(); render(); }));
-    body.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { setup.lang = b.dataset.lang; readInputs(); render(); }));
-    $("story-start")?.addEventListener("click", startStory);
+    $("story-open-setup")?.addEventListener("click", openSetup);
   }
   function readInputs() {
-    setup.name = ($("story-name")?.value || "").trim();
-    setup.mature = !!$("story-mature")?.checked;
+    const n = $("story-name"), m = $("story-mature");
+    if (n) setup.name = (n.value || "").trim();
+    if (m) setup.mature = !!m.checked;
+  }
+
+  // ── Step-by-step setup wizard (full-screen, VN style) ──
+  let wiz = 0;
+  function avSet() { return AV_SET[setup.identity] || AV_SET.boy; }
+  function openSetup() {
+    $("vns")?.remove();
+    wiz = 0;
+    const el = document.createElement("div");
+    el.id = "vns"; el.className = "vn vns";
+    el.innerHTML = `
+      <img class="vn-bg" id="vns-bg" alt=""><div class="vn-fx" id="vns-fx"></div>
+      <img class="vn-partner vns-me" id="vns-me" alt="">
+      <div class="vn-hud"><span class="vns-dots" id="vns-dots"></span><button type="button" class="vn-x" id="vns-x">✕</button></div>
+      <div class="vn-box vns-box" id="vns-box"></div>`;
+    document.body.appendChild(el);
+    document.documentElement.classList.add("vn-open");
+    $("vns-x").addEventListener("click", closeSetup);
+    paintSetup();
+  }
+  function closeSetup() {
+    $("vns")?.remove();
+    if (!$("vn")) document.documentElement.classList.remove("vn-open");
+  }
+  function paintSetup() {
+    const box = $("vns-box");
+    if (!box) return;
+    const t = T();
+    const scene = wiz >= 3 ? (GENRE_SCENE[setup.genre] || "cafe") : "cafe";
+    const bg = $("vns-bg"); if (bg && !bg.src.endsWith(`bg_${scene}.webp`)) bg.src = `${ASSET}bg_${scene}.webp`;
+    const fx = $("vns-fx"); if (fx) { fx.className = "vn-fx stage-fx fx-" + (FX[scene] || "bokeh"); fx.innerHTML = fxParticles(FX[scene] || "bokeh"); }
+    const me = $("vns-me");
+    if (me) {
+      const show = wiz >= 2 && setup.identity;
+      me.classList.toggle("hidden", !show);
+      if (show) { if (!avSet().includes(setup.avatar)) setup.avatar = avSet()[0]; me.src = `${ASSET}p${setup.avatar}.webp`; }
+    }
+    $("vns-dots").innerHTML = [0, 1, 2, 3, 4].map((i) => `<i class="${i === wiz ? "on" : i < wiz ? "done" : ""}"></i>`).join("");
+    const chip = (attr, k, label, on) => `<button type="button" class="vns-chip${on ? " on" : ""}" data-${attr}="${k}">${label}</button>`;
+    let html = "";
+    if (wiz === 0) html = `<h3>🌐 ${t.lang}</h3><div class="vns-chips">${LANGS.map(([k, l]) => chip("lang", k, l, setup.lang === k)).join("")}</div>`;
+    if (wiz === 1) html = `<h3>${t.who}</h3><div class="vns-chips">${IDENTITY_KEYS.map((k) => chip("identity", k, t.identities[k], setup.identity === k)).join("")}</div>`;
+    if (wiz === 2) html = `<h3>${t.avatar}</h3><div class="vn-avs vns-avs">${avSet().map((n) => `<button type="button" class="vn-av${setup.avatar === n ? " on" : ""}" data-av="${n}"><img src="${ASSET}av${n}.webp" alt=""></button>`).join("")}</div>`;
+    if (wiz === 3) html = `<h3>${t.genre}</h3><div class="vns-chips">${GENRE_KEYS.map((k) => chip("genre", k, t.genres[k], setup.genre === k)).join("")}</div>`;
+    if (wiz === 4) html = `<h3>${t.name}</h3>
+        <input id="story-name" class="vns-input" maxlength="30" placeholder="${esc(t.namePh)}" value="${esc(setup.name)}">
+        <label class="vns-check"><input type="checkbox" id="story-mature"${setup.mature ? " checked" : ""}> <span>${t.mature}</span></label>`;
+    const canNext = wiz !== 1 || !!setup.identity;
+    html += `<p id="story-error" class="story-error vns-err"></p>
+      <div class="vns-nav">
+        ${wiz > 0 ? `<button type="button" class="vn-btn" id="vns-back">${t.back}</button>` : "<span></span>"}
+        ${wiz < 4 ? `<button type="button" class="vn-btn gold" id="vns-next"${canNext ? "" : " disabled"}>${t.next}</button>` : `<button type="button" class="vn-btn gold" id="vns-start">${t.start}</button>`}
+      </div>`;
+    box.innerHTML = html;
+    box.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { setup.lang = b.dataset.lang; paintSetup(); render(); }));
+    box.querySelectorAll("[data-identity]").forEach((b) => b.addEventListener("click", () => {
+      setup.identity = b.dataset.identity;
+      if (!avSet().includes(setup.avatar)) setup.avatar = AV_FOR[setup.identity];
+      paintSetup();
+    }));
+    box.querySelectorAll("[data-av]").forEach((b) => b.addEventListener("click", () => { setup.avatar = Number(b.dataset.av); paintSetup(); }));
+    box.querySelectorAll("[data-genre]").forEach((b) => b.addEventListener("click", () => { setup.genre = b.dataset.genre; paintSetup(); }));
+    $("vns-back")?.addEventListener("click", () => { readInputs(); wiz = Math.max(0, wiz - 1); paintSetup(); });
+    $("vns-next")?.addEventListener("click", () => { if (wiz === 1 && !setup.identity) return; wiz = Math.min(4, wiz + 1); paintSetup(); });
+    $("vns-start")?.addEventListener("click", startStory);
+    try { tg?.HapticFeedback?.selectionChanged?.(); } catch {}
   }
 
   // ── Visual stage: animated anime background + character with expressions ──
@@ -251,7 +297,7 @@
     $("story-new")?.addEventListener("click", () => {
       if (!confirm(T().confirmNew)) return;
       setup = { identity: state.identity, genre: state.genre, name: state.name, mature: state.mature, lang: state.lang, avatar: state.avatar || 0 };
-      state = null; save(); render();
+      state = null; save(); render(); openSetup();
     });
     $("story-cont")?.addEventListener("click", openVN);
     startStageLife();
@@ -428,7 +474,7 @@
 
   function setLoading(on) {
     busy = on;
-    document.querySelectorAll("#story-section button").forEach((b) => { b.disabled = on; });
+    document.querySelectorAll("#story-section button, #vns button").forEach((b) => { b.disabled = on; });
     const err = $("story-error");
     if (err) err.innerHTML = on ? `<span class="spinner"></span> ${T().writing}` : "";
   }
@@ -468,12 +514,12 @@
     readInputs();
     if (!setup.identity) { const err = $("story-error"); if (err) err.textContent = T().pickWho; return; }
     const settings = { identity: setup.identity, genre: setup.genre, name: setup.name || "Player", mature: setup.mature, lang: setup.lang };
-    const avatar = setup.avatar || AV_FOR[setup.identity] || 1;
+    const avatar = avSet().includes(setup.avatar) ? setup.avatar : AV_FOR[setup.identity] || 1;
     setLoading(true);
     try {
       const turn = await requestTurn(settings, [], "");
       state = { ...settings, avatar, turns: [{ title: turn.title, story: turn.story, choices: turn.choices, scene: turn.scene, character: turn.character, expression: turn.expression }] };
-      save(); setLoading(false); render(); refreshStatus(); openVN();
+      save(); setLoading(false); closeSetup(); render(); refreshStatus(); openVN();
     } catch (e) {
       setLoading(false); showError(e.message);
     }
