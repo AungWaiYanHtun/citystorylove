@@ -157,7 +157,7 @@
   }
   function paintQuota() {
     const el = $("det-quota"); if (!el) return;
-    el.textContent = !quota ? "" : !quota.enabled ? T().soon : quota.vip ? T().vip : T().left(quota.remaining, quota.limit);
+    el.textContent = !quota ? "" : !quota.enabled ? T().soon : quota.vip ? T().vip : T().left(quota.remaining, Math.max(quota.limit, quota.remaining || 0));
     if (vn) hud();
   }
 
@@ -316,7 +316,7 @@
     R("clues").textContent = `🔍 ${state.clues.length}`;
     R("love").textContent = `💘 ${NAMES[state.crush]} ${state.love}%`;
     R("asks").textContent = state.ended ? `📖 ${t.chapter(state.chapter)}` : `❓ ${state.asks || 0}/${MAX_ASKS}`;
-    R("quota").textContent = quota ? (quota.vip ? "👑 VIP" : `⚡ ${quota.remaining}/${quota.limit}`) : "";
+    R("quota").textContent = quota ? (quota.vip ? "👑 VIP" : `⚡ ${quota.remaining}/${Math.max(quota.limit, quota.remaining || 0)}`) : "";
     paintAd();
   }
   // Fix 38: Adsgram reward button (free players only)

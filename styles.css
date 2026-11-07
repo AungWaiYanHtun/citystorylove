@@ -409,7 +409,7 @@ html.vn-open,html.vn-open body{overflow:hidden}
 .vn-next{position:absolute;right:16px;bottom:8px;color:#ff9cc6;font-size:13px;animation:hop 1s infinite}
 .vn-next.hidden{display:none}
 .vn-choices{position:absolute;left:14px;right:14px;bottom:calc(166px + var(--vb));z-index:6;display:flex;flex-direction:column;gap:9px}
-.vn-choices button{text-align:left;background:rgba(255,255,255,.96);color:#5b0f33;border:2px solid #ff7eb3;border-radius:16px;padding:12px 14px;font-size:15px;font-weight:700;line-height:1.4;box-shadow:0 6px 16px rgba(0,0,0,.35);animation:vnIn .35s ease-out both;font-family:inherit}
+.vn-choices button{text-align:left;background:rgba(255,255,255,.96);color:#5b0f33;border:2px solid #ff7eb3;border-radius:16px;padding:12px 14px;font-size:15px;font-weight:700;line-height:1.4;box-shadow:0 6px 16px rgba(0,0,0,.35);animation:vnIn .35s ease-out;font-family:inherit;opacity:1}
 @keyframes vnIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .vn-choices button:nth-child(2){animation-delay:.07s}.vn-choices button:nth-child(3){animation-delay:.14s}
 .vn-choices button:active{background:linear-gradient(90deg,#ff7eb3,#ffb3d1);color:#fff}
@@ -426,7 +426,7 @@ html.vn-open,html.vn-open body{overflow:hidden}
 .vns-box{overflow:auto!important;max-height:58%;padding:16px 14px 14px}
 .vns-box h3{margin:0 0 12px;font-size:18px;color:#ffd6e8;font-weight:900}
 .vns-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.vns-chip{background:rgba(255,255,255,.96);color:#5b0f33;border:2px solid #ff7eb3;border-radius:14px;padding:12px 10px;font-size:15px;font-weight:800;font-family:inherit;line-height:1.3;animation:vnIn .3s ease-out both}
+.vns-chip{background:rgba(255,255,255,.96);color:#5b0f33;border:2px solid #ff7eb3;border-radius:14px;padding:12px 10px;font-size:15px;font-weight:800;font-family:inherit;line-height:1.3;animation:vnIn .3s ease-out;opacity:1}
 .vns-chip.on{background:linear-gradient(135deg,#ff4f9a,#ff9cc6);color:#fff;border-color:#fff;box-shadow:0 0 0 3px rgba(255,79,154,.4)}
 .vns-avs{grid-template-columns:repeat(3,1fr);max-width:330px;margin:0 auto}
 .vns-input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:14px;border:2px solid #ff7eb3;background:#fff;color:#5b0f33;font-size:16px;font-family:inherit}

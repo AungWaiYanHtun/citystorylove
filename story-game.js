@@ -135,7 +135,7 @@
   function paintQuota() {
     const el = $("story-quota"), d = lastQuota;
     if (!el || !d) return;
-    el.textContent = !d.enabled ? T().soon : d.vip ? T().vip : T().left(d.remaining, d.limit);
+    el.textContent = !d.enabled ? T().soon : d.vip ? T().vip : T().left(d.remaining, Math.max(d.limit, d.remaining || 0));
   }
 
   // ---------- Rendering ----------
@@ -366,7 +366,7 @@
     vn.partner = who === "lin" ? "Lin" : who === "kai" ? "Kai" : "";
     $("vn-scene").textContent = "📍 " + scene.charAt(0).toUpperCase() + scene.slice(1);
     $("vn-ch").textContent = `📖 ${T().ch} ${state.turns.length}`;
-    $("vn-quota").textContent = lastQuota ? (lastQuota.vip ? "👑 VIP" : `⚡ ${lastQuota.remaining}/${lastQuota.limit}`) : "";
+    $("vn-quota").textContent = lastQuota ? (lastQuota.vip ? "👑 VIP" : `⚡ ${lastQuota.remaining}/${Math.max(lastQuota.limit, lastQuota.remaining || 0)}`) : "";
     paintAd();
   }
   // Fix 38: Adsgram reward button (free players only)
@@ -439,6 +439,7 @@
     if (vn.i < vn.pages.length - 1) { vn.i++; showPage(); return; }
     showChoices();
   }
+  const CONT_FB = { en: "Continue the story", my: "ဇာတ်လမ်း ဆက်မယ်", ru: "Продолжить историю", es: "Continuar la historia" };
   function showChoices() {
     vn.mode = "choice";
     const t = T();
@@ -446,7 +447,14 @@
     speaker("me", state.name);
     $("vn-txt").classList.remove("narr");
     $("vn-txt").textContent = t.pickSay; $("vn-next").classList.add("hidden");
-    const ch = vn.turn?.choices || [];
+    // Fix 43: never leave the player stuck. If a turn has no choices, offer "Continue".
+    if (!Array.isArray(vn.turn?.choices) || vn.turn.choices.filter(Boolean).length === 0) {
+      const fb = [CONT_FB[state.lang] || CONT_FB.en];
+      if (vn.turn) vn.turn.choices = fb;
+      const last = state.turns[state.turns.length - 1];
+      if (last) { last.choices = fb; save(); }
+    }
+    const ch = (vn.turn?.choices || []).filter(Boolean);
     $("vn-choices").innerHTML = ch.map((c, i) => `<button type="button" data-c="${i}"><b>${"ABC"[i]}</b>${esc(c)}</button>`).join("");
     $("vn-choices").querySelectorAll("[data-c]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); vnPick(Number(b.dataset.c)); }));
   }
