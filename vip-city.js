@@ -1,25 +1,30 @@
 /*
-  VIP City (Fix 53). One painted town map (city-assets/map.webp, 1376x768) with player houses on top.
+  VIP City (Fix 54). One painted town map (city-assets/map.webp, 1376x768) with player houses on top.
   - Every Telegram player owns one plot. A house (home.webp) is drawn on its plot with the player's name.
   - Auto landscape: requestFullscreen + lockOrientation; if the phone is upright the game is rotated 90° with CSS.
   - Data: GET /api/city/map -> { me, district, districts, myDistrict, houses: [{ id, name, plot }] }  (plot 0..11)
   - window.VipCity.open({ me, houses }) takes mock data (demo); VipCity.play() loads the real map.
 */
 (function () {
-  const MW = 1376, MH = 768;
+  const MW = 2752, MH = 1536, OX = 688, OY = 384; // map3 = map2 extended on every side; map2 sits at (OX, OY)
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
   // Plot = centre of an empty fenced lawn painted on map2.webp (map pixels). Order = closest to the neighbourhood centre first.
-  const PLOTS = [[705,468],[780,438],[630,510],[780,512],[630,385],[855,478],[705,545],[855,405],[520,440],[535,340],[930,445],[425,395]];
+  const PLOTS = [[705,468],[780,438],[630,510],[780,512],[630,385],[855,478],[705,545],[855,405],[520,440],[535,340],[930,445],[425,395]].map(([x, y]) => [x + OX, y + OY]);
   // Landmarks painted on the map: tag position (x, y) above the building.
   const LAND = [
-    { x: 230, y: 170, name: "🎓 University" },
-    { x: 1170, y: 600, name: "⛲ Park" },
-    { x: 95, y: 550, name: "🏖️ Beach" },
-    { x: 760, y: 200, name: "Villa", locked: true },
-    { x: 300, y: 390, name: "Mall", locked: true },
-    { x: 1050, y: 462, name: "Hotel", locked: true },
-    { x: 1255, y: 330, name: "Gym", locked: true },
-    { x: 1240, y: 135, name: "Station", locked: true }
+    { x: 918, y: 554, name: "🎓 University" },
+    { x: 1858, y: 984, name: "⛲ Park" },
+    { x: 420, y: 860, name: "🏖️ Beach" },
+    { x: 2670, y: 640, name: "🎡 Fun Park" },
+    { x: 1900, y: 100, name: "🏕️ Lake" },
+    { x: 1448, y: 584, name: "Villa", locked: true },
+    { x: 988, y: 774, name: "Mall", locked: true },
+    { x: 1738, y: 846, name: "Hotel", locked: true },
+    { x: 1943, y: 714, name: "Gym", locked: true },
+    { x: 1950, y: 545, name: "Station", locked: true },
+    { x: 750, y: 70, name: "Hospital", locked: true },
+    { x: 1590, y: 1165, name: "Stadium", locked: true },
+    { x: 150, y: 590, name: "Lighthouse", locked: true }
   ];
   const HOUSE_W = 96;
   const TINTS = [0, -14, 14, -26, 26, -7, 7]; // small hue shifts keep the roof warm and the lawn green
@@ -43,7 +48,7 @@
 
   function render() {
     const houses = data.houses || [];
-    let html = `<img class="vc-map" src="${ASSET}map2.webp" alt="" draggable="false">`;
+    let html = `<img class="vc-map" src="${ASSET}map3.webp" alt="" draggable="false">`;
     LAND.forEach((l) => {
       html += `<button class="vc-tag ${l.locked ? "locked" : ""}" data-land="${esc(l.name)}" style="left:${l.x}px;top:${l.y}px">${l.locked ? "🔒 " : ""}${esc(l.name)}</button>`;
     });
@@ -60,7 +65,7 @@
   function focusMine() {
     const houses = data.houses || [];
     const mine = houses.find((h) => String(h.id) === String(data.me));
-    const p = mine ? PLOTS[Number(mine.plot) % PLOTS.length] : [690, 460];
+    const p = mine ? PLOTS[Number(mine.plot) % PLOTS.length] : [690 + OX, 460 + OY];
     const { W, H } = box();
     view.z = Math.max(minZ() * 1.35, 0.9);
     view.x = W / 2 - p[0] * view.z;
