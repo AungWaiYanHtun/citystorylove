@@ -483,3 +483,11 @@ html.vn-open,html.vn-open body{overflow:hidden}
 
 /* Fix 41: VIP plans must open above the full-screen games */
 .vip-plans-overlay{z-index:20001!important}
+
+/* Fix 45: one joined ⚡ N + pill */
+.vn-q.joined{border-radius:13px 0 0 13px;border-right:0;padding-right:8px;cursor:pointer}
+.vn-q.joined+.vn-ad{margin-left:-6px;border-radius:0 13px 13px 0;min-width:34px;padding:5px 9px;font-size:15px}
+/* Fix 46: pill sits next to ✕; ad loading spinner */
+.vn-ad+.vn-x{margin-left:0}
+.csl-ad-spin{position:fixed;inset:0;z-index:20008;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
+.csl-ad-ring{width:54px;height:54px;border-radius:50%;border:5px solid rgba(255,255,255,.25);border-top-color:#ffd166;animation:spin .8s linear infinite}

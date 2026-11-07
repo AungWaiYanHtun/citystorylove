@@ -123,13 +123,13 @@
   }
   async function refreshStatus() {
     const el = $("story-quota");
-    if (!el) return;
     try {
-      const { ok, data } = await api("/api/story/status");
-      if (!ok) { lastQuota = null; el.textContent = ""; return; }
+      const { ok, data } = await api("/api/story/status", { cache: "no-store" });
+      if (!ok) { lastQuota = null; if (el) el.textContent = ""; paintAd(); return false; }
       lastQuota = data;
       paintQuota(); paintAd();
-    } catch { el.textContent = ""; }
+      return true;
+    } catch { if (el && !lastQuota) el.textContent = ""; return false; }
   }
 
   function paintQuota() {
@@ -340,6 +340,7 @@
     document.documentElement.classList.add("vn-open");
     $("vn-x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
     $("vn-ad").addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.openShop("story", state?.lang); });
+    $("vn-quota").addEventListener("click", (e) => { if (!e.currentTarget.classList.contains("joined")) return; e.stopPropagation(); window.CSLAds?.openShop("story", state?.lang); });
     el.addEventListener("click", onTap);
     el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
     $("vn-log").addEventListener("click", (e) => { e.stopPropagation(); $("vn-log").classList.add("hidden"); });
@@ -371,14 +372,22 @@
   }
   // Fix 38: Adsgram reward button (free players only)
   function paintAd() {
+    const qp = $("vn-quota"); // Fix 46: the HUD ⚡ updates right after an ad / purchase
+    if (qp) qp.textContent = lastQuota ? (lastQuota.vip ? "👑 VIP" : `⚡ ${lastQuota.remaining}`) : "";
     const b = $("vn-ad"); if (!b) return;
     const on = !!(window.CSLAds && lastQuota && lastQuota.enabled && !lastQuota.vip);
     b.classList.toggle("hidden", !on);
     if (on) b.textContent = window.CSLAds.label(state?.lang, true);
+    $("vn-quota")?.classList.toggle("joined", on); // Fix 45: ⚡ N and + drawn as one pill
   }
   document.addEventListener("csl-ad-reward", async (e) => {
     if (e.detail?.game !== "story") return;
-    await refreshStatus();
+    const before = lastQuota?.remaining;
+    const fresh = await refreshStatus();
+    // Fix 46: if the status call failed or is stale, still show the bonus at once
+    if (e.detail?.bonus && lastQuota && !lastQuota.vip && (!fresh || lastQuota.remaining === before)) {
+      lastQuota = { ...lastQuota, remaining: (Number(before) || 0) + Number(e.detail.bonus) }; paintQuota(); paintAd();
+    }
     if (vn && vn.mode === "err") showChoices();
   });
   function loadTurn(turn) {

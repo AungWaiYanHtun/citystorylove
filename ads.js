@@ -45,31 +45,88 @@
     try { await interCtl.show(); } catch { /* skipped or no ad: just continue */ }
   }
 
+  // Fix 46: spinner while the ad loads, network error message, and a reliable +5 credit.
+  const NET = { en: "📡 Network error. Check your connection and try again.", my: "📡 အင်တာနက် ချိတ်ဆက်မှု မရပါ။ လိုင်းစစ်ပြီး ပြန်စမ်းပါ။", ru: "📡 Ошибка сети. Проверьте подключение.", es: "📡 Error de red. Revisa tu conexión." };
+  const net = (lang) => NET[lang] || NET.en;
+  function spin(on) {
+    let el = document.getElementById("csl-ad-spin");
+    if (!on) { el?.remove(); return; }
+    if (el) return;
+    el = document.createElement("div");
+    el.id = "csl-ad-spin"; el.className = "csl-ad-spin";
+    el.innerHTML = '<div class="csl-ad-ring"></div>';
+    el.addEventListener("click", (e) => e.stopPropagation());
+    document.body.appendChild(el);
+  }
+  const PEND = "csl_ad_pending";
+  async function credit(game, tg, API) {
+    // Up to 4 tries: the player already watched, so a short network drop must not lose the bonus.
+    for (let k = 0; k < 4; k++) {
+      try {
+        const resp = await fetch(API + "/api/ads/reward", {
+          method: "POST", cache: "no-store",
+          headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData },
+          body: JSON.stringify({ game })
+        });
+        if (resp.ok) { const d = await resp.json().catch(() => ({})); return { ok: true, bonus: Number(d.bonus) || 5 }; }
+        if (resp.status === 429 || resp.status === 401) return { ok: false, status: resp.status };
+      } catch { /* network: retry */ }
+      await new Promise((r) => setTimeout(r, 1500 * (k + 1)));
+    }
+    return { ok: false, net: true };
+  }
+  // A bonus that could not reach the server is retried the next time the app opens.
+  async function flushPending() {
+    let p; try { p = JSON.parse(localStorage.getItem(PEND) || "null"); } catch {}
+    const tg = window.Telegram?.WebApp, API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
+    if (!p || !tg?.initData || !API || Date.now() - p.ts > 6 * 3600 * 1000) { try { localStorage.removeItem(PEND); } catch {} return; }
+    const r = await credit(p.game, tg, API);
+    if (r.ok || !r.net) try { localStorage.removeItem(PEND); } catch {}
+    if (r.ok) document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game: p.game, bonus: r.bonus } }));
+  }
+  setTimeout(() => { flushPending().catch(() => {}); }, 3000);
+
   // Player tapped the reward button. game = "story" | "detective".
   async function reward(game, lang) {
     if (busy) return false;
     const tg = window.Telegram?.WebApp;
     const API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
     if (!API || !tg?.initData) { toast(t(lang).none); return false; }
+    if (navigator.onLine === false) { toast(net(lang)); return false; }
     rewardCtl = rewardCtl || ctl(REWARD_BLOCK);
-    if (!rewardCtl) { toast(t(lang).none); return false; }
+    if (!rewardCtl) { toast(navigator.onLine === false || !window.Adsgram ? net(lang) : t(lang).none); return false; }
     busy = true;
+    spin(true);
+    const offStart = () => spin(false);
+    try { rewardCtl.addEventListener?.("onStart", offStart); } catch {}
+    const safety = setTimeout(() => spin(false), 20000);
     try {
       let result;
-      try { result = await rewardCtl.show(); } catch (r) { toast(r && r.error ? t(lang).none : t(lang).no); return false; }
-      if (!result || !result.done) { toast(t(lang).no); return false; }
-      const resp = await fetch(API + "/api/ads/reward", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData },
-        body: JSON.stringify({ game })
-      });
-      if (resp.status === 429) { toast(t(lang).max); return false; }
-      if (!resp.ok) { toast(t(lang).none); return false; }
-      toast(t(lang).ok);
+      try { result = await rewardCtl.show(); }
+      catch (r) {
+        spin(false);
+        const desc = String(r?.description || r?.message || "");
+        if (navigator.onLine === false || /network|fetch|timeout|load|connection/i.test(desc)) toast(net(lang));
+        else toast(r && r.error ? t(lang).none : t(lang).no);
+        return false;
+      }
+      if (!result || !result.done) { spin(false); toast(t(lang).no); return false; }
+      spin(true); // crediting
+      try { localStorage.setItem(PEND, JSON.stringify({ game, ts: Date.now() })); } catch {}
+      const c = await credit(game, tg, API);
+      spin(false);
+      if (c.ok || !c.net) try { localStorage.removeItem(PEND); } catch {}
+      if (c.status === 429) { toast(t(lang).max); return false; }
+      if (!c.ok) { toast(c.net ? net(lang) : t(lang).none); return false; }
+      toast(t(lang).ok.replace("+5", "+" + c.bonus).replace("+၅", "+" + c.bonus));
       try { tg.HapticFeedback?.notificationOccurred?.("success"); } catch {}
-      document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game } }));
+      document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game, bonus: c.bonus } }));
       return true;
-    } catch { toast(t(lang).none); return false; } finally { busy = false; }
+    } catch { toast(net(lang)); return false; }
+    finally {
+      busy = false; clearTimeout(safety); spin(false);
+      try { rewardCtl.removeEventListener?.("onStart", offStart); } catch {}
+    }
   }
 
   // Fix 44: "+" shop sheet: watch an ad (+5 ⚡) or buy ⚡ energy with Telegram Stars.
@@ -91,6 +148,7 @@
     const tg = window.Telegram?.WebApp;
     const API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
     if (!API || !tg?.initData || !tg.openInvoice) { toast(s(lang).fail); return; }
+    if (navigator.onLine === false) { toast(net(lang)); return; }
     try {
       const r = await fetch(API + "/api/energy/checkout", { method: "POST", headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData }, body: JSON.stringify({ packId: pack.id }) });
       const d = await r.json().catch(() => ({}));
@@ -102,7 +160,7 @@
           setTimeout(() => done(game), 1500); setTimeout(() => done(game), 4000);
         } else if (status === "failed") toast(s(lang).fail);
       });
-    } catch { toast(s(lang).fail); }
+    } catch { toast(net(lang)); }
   }
   async function openShop(game, lang) {
     document.getElementById("csl-shop")?.remove();

@@ -151,9 +151,10 @@
   }
   async function refreshStatus() {
     try {
-      const { ok, data } = await api("/api/detective/status");
+      const { ok, data } = await api("/api/detective/status", { cache: "no-store" });
       quota = ok ? data : null; paintQuota(); paintAd();
-    } catch { quota = null; paintQuota(); paintAd(); }
+      return ok;
+    } catch { paintQuota(); paintAd(); return false; }
   }
   function paintQuota() {
     const el = $("det-quota"); if (!el) return;
@@ -297,6 +298,7 @@
     document.documentElement.classList.add("vn-open");
     R("x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
     R("ad").addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.openShop("detective", state?.lang); });
+    R("quota").addEventListener("click", (e) => { if (!e.currentTarget.classList.contains("joined")) return; e.stopPropagation(); window.CSLAds?.openShop("detective", state?.lang); });
     el.addEventListener("click", onTap);
     el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
     R("log").addEventListener("click", (e) => { e.stopPropagation(); R("log").classList.add("hidden"); });
@@ -326,11 +328,16 @@
     const on = !!(window.CSLAds && quota && quota.enabled && !quota.vip);
     b.classList.toggle("hidden", !on);
     if (on) b.textContent = window.CSLAds.label(state?.lang, true);
+    R("quota")?.classList.toggle("joined", on); // Fix 45: ⚡ N and + drawn as one pill
   }
   let lastRetry = null;
   document.addEventListener("csl-ad-reward", async (e) => {
     if (e.detail?.game !== "detective") return;
-    await refreshStatus();
+    const before = quota?.remaining;
+    const fresh = await refreshStatus();
+    if (e.detail?.bonus && quota && !quota.vip && (!fresh || quota.remaining === before)) {
+      quota = { ...quota, remaining: (Number(before) || 0) + Number(e.detail.bonus) }; paintQuota(); paintAd();
+    }
     if (vn && vn.mode === "err" && lastRetry) lastRetry();
   });
   function setScene(turn) {
