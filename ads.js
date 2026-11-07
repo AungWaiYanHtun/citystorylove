@@ -72,5 +72,58 @@
     } catch { toast(t(lang).none); return false; } finally { busy = false; }
   }
 
-  window.CSLAds = { afterTurn, reward, label: (lang, short) => (short ? t(lang).short : t(lang).btn) };
+  // Fix 44: "+" shop sheet: watch an ad (+5 ⚡) or buy ⚡ energy with Telegram Stars.
+  const S = {
+    en: { title: "⚡ Get more energy", sub: "1 ⚡ = 1 story turn. Bought energy never expires.", ad: "📺 Watch ad: +5 ⚡ (free)", buy: (s, e) => `${e} ⚡  ·  ${s} ⭐`, close: "Close", paid: "⚡ Energy added!", fail: "Payment not completed.", more: "⚡ Get more turns" },
+    my: { title: "⚡ လျှပ်စီး ထပ်ယူမယ်", sub: "၁ ⚡ = ၁ ကြိမ်ဆော့ခွင့်။ ဝယ်ထားတဲ့ ⚡ က သက်တမ်းမကုန်ပါ။", ad: "📺 ကြော်ငြာကြည့်: +၅ ⚡ (အခမဲ့)", buy: (s, e) => `${e} ⚡  ·  ${s} ⭐`, close: "ပိတ်မယ်", paid: "⚡ လျှပ်စီး ထည့်ပြီးပါပြီ!", fail: "ငွေပေးချေမှု မပြီးပါ။", more: "⚡ ဆော့ခွင့် ထပ်ယူမယ်" },
+    ru: { title: "⚡ Больше энергии", sub: "1 ⚡ = 1 ход. Купленная энергия не сгорает.", ad: "📺 Реклама: +5 ⚡ (бесплатно)", buy: (s, e) => `${e} ⚡  ·  ${s} ⭐`, close: "Закрыть", paid: "⚡ Энергия добавлена!", fail: "Оплата не завершена.", more: "⚡ Больше ходов" },
+    es: { title: "⚡ Más energía", sub: "1 ⚡ = 1 turno. La energía comprada no caduca.", ad: "📺 Ver anuncio: +5 ⚡ (gratis)", buy: (s, e) => `${e} ⚡  ·  ${s} ⭐`, close: "Cerrar", paid: "⚡ ¡Energía añadida!", fail: "Pago no completado.", more: "⚡ Más turnos" }
+  };
+  const s = (lang) => S[lang] || S.en;
+  let packs = null;
+  async function loadPacks(API) {
+    if (packs) return packs;
+    try { const r = await fetch(API + "/api/energy/packs"); const d = await r.json(); packs = Array.isArray(d.packs) ? d.packs : []; } catch { packs = []; }
+    return packs;
+  }
+  function done(game) { document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game } })); }
+  async function buy(game, lang, pack, sheet) {
+    const tg = window.Telegram?.WebApp;
+    const API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
+    if (!API || !tg?.initData || !tg.openInvoice) { toast(s(lang).fail); return; }
+    try {
+      const r = await fetch(API + "/api/energy/checkout", { method: "POST", headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData }, body: JSON.stringify({ packId: pack.id }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.invoiceLink) { toast(s(lang).fail); return; }
+      tg.openInvoice(d.invoiceLink, (status) => {
+        if (status === "paid") {
+          sheet.remove(); toast(s(lang).paid);
+          try { tg.HapticFeedback?.notificationOccurred?.("success"); } catch {}
+          setTimeout(() => done(game), 1500); setTimeout(() => done(game), 4000);
+        } else if (status === "failed") toast(s(lang).fail);
+      });
+    } catch { toast(s(lang).fail); }
+  }
+  async function openShop(game, lang) {
+    document.getElementById("csl-shop")?.remove();
+    const L2 = s(lang);
+    const el = document.createElement("div");
+    el.id = "csl-shop"; el.className = "csl-shop";
+    el.innerHTML = `<div class="csl-shop-card"><h3>${L2.title}</h3><p>${L2.sub}</p>
+      <button type="button" class="csl-shop-ad" data-x="ad">${L2.ad}</button>
+      <div class="csl-shop-packs" data-x="packs"><span class="vn-dots3"><i></i><i></i><i></i></span></div>
+      <button type="button" class="csl-shop-close" data-x="close">${L2.close}</button></div>`;
+    document.body.appendChild(el);
+    el.addEventListener("click", (e) => { e.stopPropagation(); if (e.target === el) el.remove(); });
+    el.querySelector('[data-x="close"]').addEventListener("click", () => el.remove());
+    el.querySelector('[data-x="ad"]').addEventListener("click", async () => { el.remove(); await reward(game, lang); });
+    const API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
+    const list = API ? await loadPacks(API) : [];
+    const box = el.querySelector('[data-x="packs"]');
+    if (!box) return;
+    box.innerHTML = list.map((p, i) => `<button type="button" class="csl-shop-pack" data-i="${i}">${L2.buy(p.stars, p.energy)}</button>`).join("");
+    box.querySelectorAll("[data-i]").forEach((b) => b.addEventListener("click", () => buy(game, lang, list[Number(b.dataset.i)], el)));
+  }
+
+  window.CSLAds = { afterTurn, reward, openShop, label: (lang, short) => (short ? "+" : s(lang).more) };
 })();

@@ -471,7 +471,15 @@ html.vn-open,html.vn-open body{overflow:hidden}
 
 /* Fix 38: Adsgram */
 .vn-ad{border:0;background:linear-gradient(135deg,#ffe08a,#f0b93a)!important;color:#1b1406!important;font-weight:800;cursor:pointer}
-.toast{z-index:20000}
+.toast{z-index:20010}
+.vn-ad{min-width:38px;justify-content:center;font-size:18px;line-height:1}
+.csl-shop{position:fixed;inset:0;z-index:20005;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;font-family:"DM Sans","Noto Sans Myanmar","Pyidaungsu","Padauk",sans-serif}
+.csl-shop-card{width:100%;max-width:480px;background:#2a1020;border:2px solid #ff7eb3;border-bottom:0;border-radius:22px 22px 0 0;padding:20px 16px calc(18px + env(safe-area-inset-bottom,0px));color:#fff;display:flex;flex-direction:column;gap:10px;animation:vnIn .25s ease-out}
+.csl-shop-card h3{margin:0;font-size:19px}.csl-shop-card p{margin:0 0 4px;color:#ffc9de;font-size:13px;line-height:1.5}
+.csl-shop-card button{border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer}
+.csl-shop-ad{background:linear-gradient(135deg,#ffe08a,#f0b93a);color:#1b1406}
+.csl-shop-packs{display:flex;flex-direction:column;gap:8px}.csl-shop-pack{background:#fff;color:#5b0f33}
+.csl-shop-close{background:transparent;color:#ffc9de;border:1px solid rgba(255,126,179,.4)!important}
 
 /* Fix 41: VIP plans must open above the full-screen games */
 .vip-plans-overlay{z-index:20001!important}

@@ -296,7 +296,7 @@
     document.body.appendChild(el);
     document.documentElement.classList.add("vn-open");
     R("x").addEventListener("click", (e) => { e.stopPropagation(); closeVN(); });
-    R("ad").addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.reward("detective", state?.lang); });
+    R("ad").addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.openShop("detective", state?.lang); });
     el.addEventListener("click", onTap);
     el.querySelectorAll(".vn-tools button").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); tool(b.dataset.t, b); }));
     R("log").addEventListener("click", (e) => { e.stopPropagation(); R("log").classList.add("hidden"); });
@@ -316,7 +316,7 @@
     R("clues").textContent = `🔍 ${state.clues.length}`;
     R("love").textContent = `💘 ${NAMES[state.crush]} ${state.love}%`;
     R("asks").textContent = state.ended ? `📖 ${t.chapter(state.chapter)}` : `❓ ${state.asks || 0}/${MAX_ASKS}`;
-    R("quota").textContent = quota ? (quota.vip ? "👑 VIP" : `⚡ ${quota.remaining}/${Math.max(quota.limit, quota.remaining || 0)}`) : "";
+    R("quota").textContent = quota ? (quota.vip ? "👑 VIP" : `⚡ ${quota.remaining}`) : "";
     paintAd();
   }
   // Fix 38: Adsgram reward button (free players only)
@@ -442,7 +442,7 @@
       (err === "LIMIT" ? (window.CSLAds ? `<button type="button" class="vn-btn" data-r="adr">${window.CSLAds.label(state?.lang)}</button>` : "") + `<button type="button" class="vn-btn gold" data-r="vip">👑 Get VIP</button>` : `<button type="button" class="vn-btn" data-r="retry">${X().retry}</button>`);
     lastRetry = retry;
     R("vip")?.addEventListener("click", (e) => { e.stopPropagation(); closeVN(); $("vip-page-buy")?.click(); });
-    R("adr")?.addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.reward("detective", state?.lang); });
+    R("adr")?.addEventListener("click", (e) => { e.stopPropagation(); window.CSLAds?.openShop("detective", state?.lang); });
     R("retry")?.addEventListener("click", (e) => { e.stopPropagation(); retry(); });
   }
   async function vnAsk(i) {
@@ -498,7 +498,7 @@
     err.innerHTML = esc(t[code] || t.FAILED) + (code === "LIMIT" ? adBtn + ' <button type="button" id="det-get-vip" class="vn-btn gold">👑 Get VIP</button>' : "");
     $("det-get-vip")?.addEventListener("click", () => { closeSetup(); $("vip-page-buy")?.click(); });
     // Fix 40: watch a Reward ad from the setup screen, then tap Start again.
-    $("det-ad-limit")?.addEventListener("click", async () => { if (await window.CSLAds?.reward("detective", state ? state.lang : setup.lang)) err.innerHTML = ""; });
+    $("det-ad-limit")?.addEventListener("click", async () => { window.CSLAds?.openShop("detective", state ? state.lang : setup.lang); });
   }
   function history() {
     const h = [];
