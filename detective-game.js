@@ -279,9 +279,29 @@
   let vn = null, typeTimer = null, autoTimer = null;
   const R = (k) => $("dvn")?.querySelector(`[data-r="${k}"]`);
 
+  // Fix 47: hide Telegram's white header while a game is open (fullscreen, Bot API 8.0+).
+  window.CSLFull = window.CSLFull || (() => {
+    let mine = false, t = 0;
+    const tg = () => window.Telegram?.WebApp;
+    return {
+      on() {
+        clearTimeout(t);
+        try { const w = tg(); if (w?.isVersionAtLeast?.("8.0") && !w.isFullscreen && w.requestFullscreen) { w.requestFullscreen(); mine = true; } } catch {}
+      },
+      off() {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          if (!mine || document.querySelector(".vn")) return;
+          mine = false;
+          try { const w = tg(); if (w?.isFullscreen) w.exitFullscreen(); } catch {}
+        }, 400);
+      }
+    };
+  })();
   function openVN() {
     if (!state) return;
     closeVN(true);
+    window.CSLFull.on();
     const el = document.createElement("div");
     el.id = "dvn"; el.className = "vn dvn";
     el.innerHTML = `<img class="vn-bg" data-r="bg" alt=""><div class="vn-fx" data-r="fx"></div>
@@ -309,6 +329,7 @@
   function closeVN(silent) {
     clearInterval(typeTimer); clearTimeout(autoTimer);
     $("dvn")?.remove(); if (!$("dvs") && !$("vn") && !$("vns")) document.documentElement.classList.remove("vn-open");
+    window.CSLFull.off();
     vn = null; picking = false;
     if (!silent) render();
   }

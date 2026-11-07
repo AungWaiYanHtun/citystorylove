@@ -491,3 +491,11 @@ html.vn-open,html.vn-open body{overflow:hidden}
 .vn-ad+.vn-x{margin-left:0}
 .csl-ad-spin{position:fixed;inset:0;z-index:20008;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
 .csl-ad-ring{width:54px;height:54px;border-radius:50%;border:5px solid rgba(255,255,255,.25);border-top-color:#ffd166;animation:spin .8s linear infinite}
+/* Fix 47: ⚡ N and + are exactly the same height */
+.vn-q.joined,.vn-q.joined+.vn-ad{height:30px;box-sizing:border-box;display:inline-flex;align-items:center;line-height:1}
+.vn-q.joined+.vn-ad{border:1px solid rgba(255,224,138,.6);padding:0 11px;font-size:16px}
+/* Fix 48: the + is drawn with CSS so it sits exactly in the middle */
+.vn-q.joined+.vn-ad{position:relative;width:40px;min-width:40px;padding:0;font-size:0!important;color:transparent!important}
+.vn-q.joined+.vn-ad::before,.vn-q.joined+.vn-ad::after{content:"";position:absolute;left:50%;top:50%;background:#1b1406;border-radius:2px;transform:translate(-50%,-50%)}
+.vn-q.joined+.vn-ad::before{width:12px;height:2.6px}
+.vn-q.joined+.vn-ad::after{width:2.6px;height:12px}
