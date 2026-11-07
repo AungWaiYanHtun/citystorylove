@@ -403,8 +403,15 @@
     const sub = S ? `👤 ${esc(S.name)} · ${fmt(t.day, { d: S.day })} · 💰 $${S.money}` : esc(t.cardSub);
     // Fix 31: City Love and Hanok Love removed; library waits for the next game.
     void sub;
-    box.innerHTML = `<div class="cg-library"><div class="cg-card" style="padding:28px 18px;text-align:center;cursor:default">
-      <div style="font-size:42px">🎮</div><b>New game coming soon</b><small>ဂိမ်းအသစ် မကြာခင် လာပါမယ်</small></div></div>`;
+    // Fix 50: VIP City — a shared town where every Telegram player gets a house.
+    const vc = { en: ["🏙️ VIP City", "Your own house in a town of Telegram players", "▶ Play"],
+      ru: ["🏙️ VIP City", "Свой дом в городе игроков Telegram", "▶ Играть"],
+      es: ["🏙️ VIP City", "Tu propia casa en un pueblo de jugadores de Telegram", "▶ Jugar"],
+      my: ["🏙️ VIP City", "Telegram ကစားသမားတွေရဲ့မြို့ထဲမှာ ကိုယ်ပိုင်အိမ်", "▶ ဆော့မယ်"] };
+    let lg = "en"; try { lg = localStorage.getItem("hub_lang") || "en"; } catch {}
+    const v = vc[lg] || vc.en;
+    box.innerHTML = `<div class="cg-library"><button type="button" class="cg-card" id="vc-card-play"><div class="cg-card-img" style="background:linear-gradient(160deg,#8fd16a,#4fb7d9)"><img src="city-assets/house.webp" alt="" style="object-fit:contain"><span class="cg-card-tag">NEW</span></div><div class="cg-card-body"><b>${v[0]}</b><small>${v[1]}</small><span class="cg-card-play">${v[2]}</span></div></button></div>`;
+    $("vc-card-play")?.addEventListener("click", () => window.VipCity?.play());
   }
 
   // Hanok Love (3D) runs in its own page inside a full-screen frame.
