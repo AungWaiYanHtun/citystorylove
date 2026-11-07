@@ -410,7 +410,7 @@
       my: ["🏙️ VIP City", "Telegram ကစားသမားတွေရဲ့မြို့ထဲမှာ ကိုယ်ပိုင်အိမ်", "▶ ဆော့မယ်"] };
     let lg = "en"; try { lg = localStorage.getItem("hub_lang") || "en"; } catch {}
     const v = vc[lg] || vc.en;
-    box.innerHTML = `<div class="cg-library"><button type="button" class="cg-card" id="vc-card-play"><div class="cg-card-img" style="background:linear-gradient(160deg,#8fd16a,#4fb7d9)"><img src="city-assets/house.webp" alt="" style="object-fit:contain"><span class="cg-card-tag">NEW</span></div><div class="cg-card-body"><b>${v[0]}</b><small>${v[1]}</small><span class="cg-card-play">${v[2]}</span></div></button></div>`;
+    box.innerHTML = `<div class="cg-library"><button type="button" class="cg-card" id="vc-card-play"><div class="cg-card-img" style="background:linear-gradient(160deg,#8fd16a,#4fb7d9)"><img src="city-assets/home.webp" alt="" style="object-fit:contain"><span class="cg-card-tag">NEW</span></div><div class="cg-card-body"><b>${v[0]}</b><small>${v[1]}</small><span class="cg-card-play">${v[2]}</span></div></button></div>`;
     $("vc-card-play")?.addEventListener("click", () => window.VipCity?.play());
   }
 

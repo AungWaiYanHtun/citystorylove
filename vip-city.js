@@ -1,105 +1,70 @@
 /*
-  VIP City (demo). A landscape isometric town where every Telegram player gets a small house.
-  - Auto landscape: requestFullscreen + lockOrientation when possible; if the phone is still
-    upright, the whole game is rotated 90° with CSS so it always plays sideways.
-  - Players come from GET /api/city/map  -> { me: tgid, houses: [{ id, name, plot, color }] }
-    and the first visit calls POST /api/city/claim, which gives the player the next free plot.
-  - window.VipCity.open({ me, houses }) can be fed mock data (demo); VipCity.play() loads the real map.
+  VIP City (Fix 53). One painted town map (city-assets/map.webp, 1376x768) with player houses on top.
+  - Every Telegram player owns one plot. A house (home.webp) is drawn on its plot with the player's name.
+  - Auto landscape: requestFullscreen + lockOrientation; if the phone is upright the game is rotated 90° with CSS.
+  - Data: GET /api/city/map -> { me, district, districts, myDistrict, houses: [{ id, name, plot }] }  (plot 0..11)
+  - window.VipCity.open({ me, houses }) takes mock data (demo); VipCity.play() loads the real map.
 */
 (function () {
-  const TW = 128, TH = 64, N = 22;              // tile size and grid size
+  const MW = 1376, MH = 768;
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  // Fixed landmarks (col, row, sprite, scale)
+  // Plot = centre of an empty fenced lawn painted on map2.webp (map pixels). Order = closest to the neighbourhood centre first.
+  const PLOTS = [[705,468],[780,438],[630,510],[780,512],[630,385],[855,478],[705,545],[855,405],[520,440],[535,340],[930,445],[425,395]];
+  // Landmarks painted on the map: tag position (x, y) above the building.
   const LAND = [
-    { c: 10, r: 10, s: "park", w: 2.1, name: "Central Park" },
-    { c: 6, r: 9, s: "school", w: 1.9, name: "University", locked: false },
-    { c: 14, r: 7, s: "cafe", w: 1.3, name: "Cafe" },
-    { c: 15, r: 14, s: "school", w: 1.9, name: "Hospital", locked: true },
-    { c: 5, r: 15, s: "cafe", w: 1.3, name: "Mall", locked: true }
+    { x: 230, y: 170, name: "🎓 University" },
+    { x: 1170, y: 600, name: "⛲ Park" },
+    { x: 95, y: 550, name: "🏖️ Beach" },
+    { x: 760, y: 200, name: "Villa", locked: true },
+    { x: 300, y: 390, name: "Mall", locked: true },
+    { x: 1050, y: 462, name: "Hotel", locked: true },
+    { x: 1255, y: 330, name: "Gym", locked: true },
+    { x: 1240, y: 135, name: "Station", locked: true }
   ];
-  const ROADS = new Set();
-  for (let i = 0; i < N; i++) { ROADS.add(`${i},8`); ROADS.add(`${i},12`); ROADS.add(`8,${i}`); ROADS.add(`12,${i}`); ROADS.add(`${i},4`); ROADS.add(`${i},16`); ROADS.add(`4,${i}`); ROADS.add(`16,${i}`); }
-  const busy = new Set();
-  LAND.forEach((l) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) busy.add(`${l.c + a},${l.r + b}`); });
-  // Plots for houses: every free grass tile next to a road, closest to the center first.
-  const PLOTS = [];
-  for (let c = 1; c < N - 1; c++) for (let r = 1; r < N - 1; r++) {
-    const k = `${c},${r}`;
-    if (ROADS.has(k) || busy.has(k)) continue;
-    const nearRoad = ROADS.has(`${c + 1},${r}`) || ROADS.has(`${c - 1},${r}`) || ROADS.has(`${c},${r + 1}`) || ROADS.has(`${c},${r - 1}`);
-    if (nearRoad) PLOTS.push([c, r]);
-  }
-  PLOTS.sort((a, b) => Math.hypot(a[0] - 10.5, a[1] - 10.5) - Math.hypot(b[0] - 10.5, b[1] - 10.5));
-  // keep houses apart: at least 2 tiles between plots
-  for (let i = PLOTS.length - 1; i >= 0; i--) {
-    if (PLOTS.slice(0, i).some((p) => Math.abs(p[0] - PLOTS[i][0]) + Math.abs(p[1] - PLOTS[i][1]) < 2)) PLOTS.splice(i, 1);
-  }
-
-  const iso = (c, r) => ({ x: (c - r) * TW / 2, y: (c + r) * TH / 2 });
+  const HOUSE_W = 96;
+  const TINTS = [0, -14, 14, -26, 26, -7, 7]; // small hue shifts keep the roof warm and the lawn green
   const hue = (id) => { let h = 0; String(id).split("").forEach((ch) => (h = (h * 31 + ch.charCodeAt(0)) % 360)); return h; };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
-  function drawGround(cv) {
-    const p = iso(0, 0), W = N * TW, H = N * TH + 40;
-    cv.width = W; cv.height = H;
-    const g = cv.getContext("2d");
-    const ox = W / 2;
-    // water around the island
-    g.fillStyle = "#4fb7d9"; g.fillRect(0, 0, W, H);
-    for (let c = 0; c < N; c++) for (let r = 0; r < N; r++) {
-      const q = iso(c, r), x = ox + q.x, y = q.y + 20;
-      const edge = c === 0 || r === 0 || c === N - 1 || r === N - 1;
-      const road = ROADS.has(`${c},${r}`) && !edge;
-      g.beginPath(); g.moveTo(x, y); g.lineTo(x + TW / 2, y + TH / 2); g.lineTo(x, y + TH); g.lineTo(x - TW / 2, y + TH / 2); g.closePath();
-      g.fillStyle = edge ? "#f1dca0" : road ? "#8e939b" : ((c + r) % 2 ? "#8fd16a" : "#86c962");
-      g.fill();
-      g.strokeStyle = road ? "rgba(255,255,255,.18)" : "rgba(0,0,0,.05)"; g.stroke();
-      if (road) { // dashed centre mark
-        g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(x - 3, y + TH / 2 - 1.5, 6, 3);
-      }
-    }
-    void p;
-    return { ox };
+  let root = null, world = null, view = { x: 0, y: 0, z: 1 }, data = null, opts = null;
+
+  const box = () => {
+    const r = root.querySelector(".vc-stage").getBoundingClientRect();
+    return root.classList.contains("rot") ? { W: r.height, H: r.width } : { W: r.width, H: r.height };
+  };
+  const minZ = () => { const { W, H } = box(); return Math.max(W / MW, H / MH); };
+  function clamp() {
+    const { W, H } = box();
+    view.z = Math.min(2.6, Math.max(minZ(), view.z));
+    view.x = Math.min(0, Math.max(W - MW * view.z, view.x));
+    view.y = Math.min(0, Math.max(H - MH * view.z, view.y));
   }
-
-  let root = null, world = null, view = { x: 0, y: 0, z: 0.45 }, data = null;
-
-  function apply() { world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`; }
-
-  function sprite(kind, c, r, w, extra = "") {
-    const q = iso(c, r), size = TW * w;
-    return `<img class="vc-sp ${extra}" src="${ASSET}${kind}.webp" alt="" style="left:${q.x + N * TW / 2 - size / 2}px;top:${q.y + 20 + TH - size * 0.92}px;width:${size}px;z-index:${(c + r) * 10}">`;
-  }
+  function apply() { clamp(); world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`; }
 
   function render() {
-    const houses = (data.houses || []).map((h, i) => ({ ...h, plot: h.plot ?? i }));
-    let html = `<canvas class="vc-ground"></canvas>`;
+    const houses = data.houses || [];
+    let html = `<img class="vc-map" src="${ASSET}map2.webp" alt="" draggable="false">`;
     LAND.forEach((l) => {
-      html += sprite(l.s, l.c, l.r, l.w, l.locked ? "vc-lock" : "");
-      const q = iso(l.c, l.r);
-      html += `<button class="vc-tag ${l.locked ? "locked" : ""}" data-land="${esc(l.name)}" style="left:${q.x + N * TW / 2}px;top:${q.y + 20 - TW * l.w * 0.55}px;z-index:${(l.c + l.r) * 10 + 5}">${l.locked ? "🔒 " : ""}${esc(l.name)}</button>`;
+      html += `<button class="vc-tag ${l.locked ? "locked" : ""}" data-land="${esc(l.name)}" style="left:${l.x}px;top:${l.y}px">${l.locked ? "🔒 " : ""}${esc(l.name)}</button>`;
     });
     houses.forEach((h) => {
-      const p = PLOTS[h.plot % PLOTS.length]; if (!p) return;
-      const [c, r] = p, q = iso(c, r), me = String(h.id) === String(data.me), size = TW * 0.95;
-      html += `<img class="vc-sp vc-house ${me ? "me" : ""}" data-h="${esc(h.id)}" src="${ASSET}house.webp" alt="" style="left:${q.x + N * TW / 2 - size / 2}px;top:${q.y + 20 + TH - size * 0.9}px;width:${size}px;z-index:${(c + r) * 10};filter:hue-rotate(${me ? 0 : hue(h.id)}deg) drop-shadow(0 6px 4px rgba(0,0,0,.25))${me ? " drop-shadow(0 0 14px #ffd166)" : ""}">`;
-      html += `<button class="vc-name ${me ? "me" : ""}" data-h="${esc(h.id)}" style="left:${q.x + N * TW / 2}px;top:${q.y + 20 - size * 0.62}px;z-index:${(c + r) * 10 + 6}">${me ? "👑 " : ""}${esc(h.name)}</button>`;
+      const p = PLOTS[Number(h.plot) % PLOTS.length]; if (!p) return;
+      const [x, y] = p, me = String(h.id) === String(data.me);
+      html += `<img class="vc-house ${me ? "me" : ""}" data-h="${esc(h.id)}" src="${ASSET}home.webp" alt="" draggable="false" style="left:${x - HOUSE_W / 2}px;top:${y - HOUSE_W * 0.62}px;width:${HOUSE_W}px;z-index:${y};filter:hue-rotate(${me ? 0 : TINTS[hue(h.id) % TINTS.length]}deg) drop-shadow(0 3px 3px rgba(0,0,0,.3))${me ? " drop-shadow(0 0 8px #ffd166)" : ""}">`;
+      html += `<button class="vc-name ${me ? "me" : ""}" data-h="${esc(h.id)}" style="left:${x}px;top:${y - HOUSE_W * 0.6}px;z-index:${y + 1000}">${me ? "👑 " : ""}${esc(h.name)}</button>`;
     });
     world.innerHTML = html;
-    drawGround(world.querySelector(".vc-ground"));
     root.querySelector("#vc-count").textContent = `🏠 ${houses.length}`;
   }
 
   function focusMine() {
     const houses = data.houses || [];
-    const i = houses.findIndex((h) => String(h.id) === String(data.me));
-    const p = PLOTS[(houses[i]?.plot ?? i) % PLOTS.length] || [10, 10];
-    const q = iso(p[0], p[1]), box = root.querySelector(".vc-stage").getBoundingClientRect();
-    const rot = root.classList.contains("rot");
-    const W = rot ? box.height : box.width, H = rot ? box.width : box.height;
-    view.z = 0.45;
-    view.x = W / 2 - (q.x + N * TW / 2) * view.z;
-    view.y = H / 2 - (q.y + 20) * view.z;
+    const mine = houses.find((h) => String(h.id) === String(data.me));
+    const p = mine ? PLOTS[Number(mine.plot) % PLOTS.length] : [690, 460];
+    const { W, H } = box();
+    view.z = Math.max(minZ() * 1.35, 0.9);
+    view.x = W / 2 - p[0] * view.z;
+    view.y = H / 2 - p[1] * view.z;
     apply();
   }
 
@@ -108,11 +73,10 @@
     el.innerHTML = html + `<button class="vc-btn ghost" data-x>Close</button>`;
     el.classList.remove("hidden");
   }
-
   function onTap(e) {
-    const h = e.target.closest("[data-h]"), l = e.target.closest("[data-land]");
+    const h = e.target.closest?.("[data-h]"), l = e.target.closest?.("[data-land]");
     if (h) {
-      const house = data.houses.find((x) => String(x.id) === h.dataset.h);
+      const house = data.houses.find((x) => String(x.id) === h.dataset.h); if (!house) return;
       const me = String(house.id) === String(data.me);
       card(`<b>${me ? "👑 " : "🏠 "}${esc(house.name)}${me ? " (You)" : ""}</b><p>${me ? "This is your house. Decorate it and invite friends." : "A neighbour from Telegram."}</p>` +
         (me ? `<button class="vc-btn gold">🚪 Enter my house</button>` : `<button class="vc-btn gold">👋 Say hi</button><button class="vc-btn">🚪 Visit</button>`));
@@ -124,23 +88,42 @@
 
   function enableDrag() {
     const st = root.querySelector(".vc-stage");
-    let d = null, moved = false;
-    const pt = (e) => { const t = e.touches ? e.touches[0] : e; return root.classList.contains("rot") ? { x: t.clientY, y: window.innerWidth - t.clientX } : { x: t.clientX, y: t.clientY }; };
-    const down = (e) => { if (e.touches && e.touches.length > 1) return; d = pt(e); d.vx = view.x; d.vy = view.y; moved = false; };
-    const move = (e) => { if (!d) return; const p = pt(e); const dx = p.x - d.x, dy = p.y - d.y; if (Math.abs(dx) + Math.abs(dy) > 6) moved = true; view.x = d.vx + dx; view.y = d.vy + dy; apply(); if (e.cancelable) e.preventDefault(); };
-    const up = (e) => { if (d && !moved) onTap(e); d = null; };
+    let d = null, moved = false, pinch = null;
+    const pt = (t) => root.classList.contains("rot") ? { x: t.clientY, y: window.innerWidth - t.clientX } : { x: t.clientX, y: t.clientY };
+    const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const down = (e) => {
+      if (e.touches && e.touches.length === 2) {
+        const a = pt(e.touches[0]), b = pt(e.touches[1]);
+        pinch = { d: dist(a, b), z: view.z, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, vx: view.x, vy: view.y }; d = null; moved = true; return;
+      }
+      const p = pt(e.touches ? e.touches[0] : e); d = { ...p, vx: view.x, vy: view.y }; moved = false;
+    };
+    const move = (e) => {
+      if (pinch && e.touches && e.touches.length === 2) {
+        const a = pt(e.touches[0]), b = pt(e.touches[1]);
+        const z = Math.min(2.6, Math.max(minZ(), pinch.z * dist(a, b) / pinch.d)), k = z / pinch.z;
+        view.z = z; view.x = pinch.cx - (pinch.cx - pinch.vx) * k; view.y = pinch.cy - (pinch.cy - pinch.vy) * k; apply();
+        if (e.cancelable) e.preventDefault(); return;
+      }
+      if (!d) return;
+      const p = pt(e.touches ? e.touches[0] : e), dx = p.x - d.x, dy = p.y - d.y;
+      if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
+      view.x = d.vx + dx; view.y = d.vy + dy; apply();
+      if (e.cancelable) e.preventDefault();
+    };
+    const up = (e) => { if (d && !moved) onTap(e); d = null; if (!e.touches || !e.touches.length) pinch = null; };
     st.addEventListener("mousedown", down); window.addEventListener("mousemove", move); window.addEventListener("mouseup", up);
     st.addEventListener("touchstart", down, { passive: true }); st.addEventListener("touchmove", move, { passive: false }); st.addEventListener("touchend", up);
-    st.addEventListener("wheel", (e) => { view.z = Math.min(1.2, Math.max(0.3, view.z * (e.deltaY < 0 ? 1.1 : 0.9))); apply(); }, { passive: true });
+    st.addEventListener("wheel", (e) => {
+      const { W, H } = box(), z = view.z * (e.deltaY < 0 ? 1.1 : 0.9), k = Math.min(2.6, Math.max(minZ(), z)) / view.z;
+      view.x = W / 2 - (W / 2 - view.x) * k; view.y = H / 2 - (H / 2 - view.y) * k; view.z *= k; apply();
+    }, { passive: true });
   }
 
-  function orient() {
-    // Rotate to landscape when the phone is held upright.
-    root.classList.toggle("rot", window.innerHeight > window.innerWidth);
-  }
+  function orient() { root.classList.toggle("rot", window.innerHeight > window.innerWidth); }
 
-  function open(opts) {
-    data = opts;
+  function open(o) {
+    opts = o; data = o;
     const tg = window.Telegram?.WebApp;
     try { if (tg?.isVersionAtLeast?.("8.0")) { tg.requestFullscreen?.(); tg.lockOrientation?.(); } } catch {}
     root?.remove();
@@ -156,6 +139,7 @@
       <div class="vc-card hidden" id="vc-card"></div>`;
     document.body.appendChild(root);
     world = root.querySelector(".vc-world");
+    world.style.width = MW + "px"; world.style.height = MH + "px";
     orient(); render(); enableDrag();
     setTimeout(focusMine, 30);
     root.querySelector("#vc-home").addEventListener("click", () => { if (data.me == null && opts.load) opts.load(data.myDistrict); else focusMine(); });
