@@ -96,35 +96,58 @@
   const ROOMS = {
     living: { img: "room_living.webp", name: "Living room", arrows: [
       { x: 54, y: 57, dir: "up", act: "soon", label: "Kitchen" },
-      { x: 96, y: 66, dir: "right", go: "bed", label: "Bedroom" },
-      { x: 50, y: 93, dir: "down", act: "out", label: "Go out" } ] },
+      { x: 88, y: 62, dir: "right", go: "bed", label: "Bedroom" },
+      { x: 42, y: 84, dir: "down", act: "out", label: "Go out" } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
-      { x: 92, y: 56, dir: "right", go: "living", label: "Living room" } ] }
+      { x: 86, y: 58, dir: "right", go: "living", label: "Living room" } ] }
   };
+  // Keep arrows away from the screen edges (phone gesture bar, notch) so taps always land.
+  const SAFE = 72;
+  const imgCache = {};
+  function preload(name) {
+    if (!imgCache[name]) { const im = new Image(); im.src = ASSET + name; imgCache[name] = im.decode ? im.decode().catch(() => {}) : Promise.resolve(); }
+    return imgCache[name];
+  }
   function layoutRoom() {
     const el = root?.querySelector("#vc-room"); if (!el || !room) return;
     const { W, H } = box(), k = Math.max(W / RW, H / RH), w = RW * k, h = RH * k, ox = (W - w) / 2, oy = (H - h) / 2;
     const rb = el.querySelector(".vc-rbox"); rb.style.cssText = `width:${w}px;height:${h}px;left:${ox}px;top:${oy}px`;
     el.querySelectorAll(".vc-arrow").forEach((a) => {
-      const x = Math.min(W - 40, Math.max(40, ox + w * a.dataset.x / 100)), y = Math.min(H - 42, Math.max(90, oy + h * a.dataset.y / 100));
+      const x = Math.min(W - SAFE, Math.max(SAFE, ox + w * a.dataset.x / 100)), y = Math.min(H - SAFE, Math.max(96, oy + h * a.dataset.y / 100));
       a.style.left = x + "px"; a.style.top = y + "px";
     });
   }
-  function enterRoom(id) {
-    const r = ROOMS[id]; if (!r || !root) return;
-    room = id;
-    const el = root.querySelector("#vc-room");
-    el.classList.remove("hidden"); el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade");
-    el.querySelector(".vc-rimg").src = ASSET + r.img;
-    el.querySelector(".vc-arrows").innerHTML = r.arrows.map((a, i) =>
-      `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(a.label)}"><span></span><em>${esc(a.label)}</em></button>`).join("");
-    root.classList.add("in-room");
+  let switching = false;
+  async function enterRoom(id) {
+    const r = ROOMS[id]; if (!r || !root || switching) return;
+    switching = true;
+    const el = root.querySelector("#vc-room"), rb = el.querySelector(".vc-rbox"), arrows = el.querySelector(".vc-arrows");
+    const first = el.classList.contains("hidden");
     root.querySelector("#vc-card").classList.add("hidden");
+    arrows.classList.add("off");
+    await preload(r.img);
+    if (!root) { switching = false; return; }
+    room = id;
+    // Cross-fade: the new picture fades in on top of the old one, so the city map never shows through.
+    const img = document.createElement("img");
+    img.className = "vc-rimg in"; img.alt = ""; img.draggable = false; img.src = ASSET + r.img;
+    rb.appendChild(img);
+    if (first) { el.classList.remove("hidden"); root.classList.add("in-room"); }
+    arrows.innerHTML = r.arrows.map((a, i) =>
+      `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(a.label)}"><span></span><em>${esc(a.label)}</em></button>`).join("");
     layoutRoom();
+    requestAnimationFrame(() => requestAnimationFrame(() => img.classList.remove("in")));
+    setTimeout(() => {
+      rb.querySelectorAll(".vc-rimg").forEach((x) => { if (x !== img) x.remove(); });
+      arrows.classList.remove("off"); switching = false;
+    }, 320);
+    Object.values(ROOMS).forEach((x) => preload(x.img));
   }
   function leaveRoom() {
+    if (switching) return;
     room = null; root?.classList.remove("in-room");
-    root?.querySelector("#vc-room")?.classList.add("hidden");
+    const el = root?.querySelector("#vc-room");
+    if (el) { el.classList.add("hidden"); el.querySelector(".vc-rbox").innerHTML = ""; el.querySelector(".vc-arrows").innerHTML = ""; }
     focusMine();
   }
   function onRoomTap(e) {
@@ -177,7 +200,7 @@
     root = document.createElement("div");
     root.className = "vc";
     root.innerHTML = `<div class="vc-stage"><div class="vc-world"></div></div>
-      <div class="vc-room hidden" id="vc-room"><div class="vc-rbox"><img class="vc-rimg" alt="" draggable="false"></div><div class="vc-arrows"></div></div>
+      <div class="vc-room hidden" id="vc-room"><div class="vc-rbox"></div><div class="vc-arrows"></div></div>
       <div class="vc-hud">
         <span class="vc-pill2 day"><img src="${ASSET}hud/sun.webp" alt=""><b>▶▶ DAY 1</b></span>
         <span class="vc-pill2 cash"><img src="${ASSET}hud/cash.webp" alt=""><b>$0</b><button class="vc-plus" id="vc-cash">+</button></span>
@@ -202,6 +225,7 @@
     root.querySelector("#vc-cash").addEventListener("click", () => toast("💵 Earn money in the story — coming soon"));
     root.querySelector("#vc-set").addEventListener("click", () => card(`<b>⚙️ Settings</b><p>More options are coming soon.</p><button class="vc-btn gold" data-exit>🚪 Exit VIP City</button>`));
     root.querySelector("#vc-room").addEventListener("click", onRoomTap);
+    Object.values(ROOMS).forEach((x) => preload(x.img));
     root.querySelector("#vc-x").addEventListener("click", close);
     if (opts.load && data.districts > 1) {
       root.querySelector(".vc-dist").classList.remove("hidden");
@@ -221,7 +245,8 @@
   }
   function toast(msg) {
     let t = document.getElementById("vc-toast");
-    if (!t) { t = document.createElement("div"); t.id = "vc-toast"; t.className = "vc-toast"; document.body.appendChild(t); }
+    if (!t) { t = document.createElement("div"); t.id = "vc-toast"; t.className = "vc-toast"; }
+    (root || document.body).appendChild(t);
     t.textContent = msg; t.classList.remove("hidden"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add("hidden"), 2600);
   }
 
