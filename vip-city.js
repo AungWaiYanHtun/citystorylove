@@ -389,6 +389,8 @@
 
 
   // ---- First-run setup (Fix 69): language → name → avatar. Saved in localStorage vc_profile. ----
+  // Fix 72: the setup's language choice must not switch the app menus (they stay English). One-time reset of hub_lang set by v69-v71.
+  try { if (!localStorage.getItem("csl_lang_fix72")) { localStorage.setItem("hub_lang", "en"); localStorage.setItem("csl_lang_fix72", "1"); } } catch {}
   const LANGS = [["en", "🇬🇧", "English"], ["ru", "🇷🇺", "Русский"], ["es", "🇪🇸", "Español"], ["my", "🇲🇲", "မြန်မာ"]];
   const GENDERS = [["m", "♂", "Male"], ["f", "♀", "Female"], ["g", "🏳️‍🌈", "Gay"]];
   const AV_PER = 4; // avatar slots per group: city-assets/avatars/{m,f,g}{1..4}.webp (user's pictures go here)
@@ -418,13 +420,50 @@
       const a = e.target.closest("[data-a]"); if (a) { pf.avatar = Number(a.dataset.a); step(3); return; }
       if (e.target.closest("[data-back]")) { if (n === 2) pf.name = el.querySelector(".vc-name-in").value.trim(); step(n - 1); return; }
       if (!e.target.closest("[data-next]")) return;
-      if (n === 1) { try { localStorage.setItem("hub_lang", pf.lang); } catch {} step(2); return; }
+      if (n === 1) { step(2); return; }
       if (n === 2) { const v = el.querySelector(".vc-name-in").value.trim().slice(0, 16); if (!v) { toast("✍️ Please type your name."); return; } pf.name = v; step(3); return; }
       try { localStorage.setItem("vc_profile", JSON.stringify(pf)); } catch {}
       el.remove(); toast(`👋 Welcome to VIP City, ${pf.name}!`); done && done(pf);
     });
     el.addEventListener("keydown", (e) => { if (e.key === "Enter" && el.dataset.step === "2") el.querySelector("[data-next]").click(); });
     step(1);
+  }
+
+
+  // ---- Talk scene (Fix 71): player on the left, girl on the right, dialogue box at the bottom. ----
+  // talk({ npc:"mia", name:"Mia", lines:[{who:"npc"|"me", text}], choices:[{text, reply}] })
+  function talk(t) {
+    if (!root) return;
+    const pf = getProfile() || { name: "You", gender: "m", avatar: 1 };
+    root.querySelector(".vc-talk")?.remove();
+    const el = document.createElement("div"); el.className = "vc-talk";
+    el.innerHTML = `<img class="vc-tme" src="${ASSET}player/${pf.gender}${pf.avatar}.webp" alt="" onerror="this.remove()">
+      <img class="vc-tnpc" src="${ASSET}npc/${t.npc}.webp" alt="">
+      <div class="vc-tbox"><b class="vc-tname"></b><p class="vc-ttext"></p><div class="vc-tch"></div><span class="vc-tnext">▼</span></div>`;
+    root.appendChild(el); root.classList.add("in-talk");
+    const lines = (t.lines || []).slice(); let i = 0, choosing = false;
+    const show = (ln) => {
+      const me = ln.who === "me";
+      el.classList.toggle("me-speaks", me); el.classList.toggle("npc-speaks", !me);
+      el.querySelector(".vc-tname").textContent = me ? pf.name : t.name;
+      el.querySelector(".vc-tname").className = "vc-tname " + (me ? "me" : "npc");
+      el.querySelector(".vc-ttext").textContent = ln.text;
+    };
+    const step = () => {
+      if (i < lines.length) { show(lines[i++]); return; }
+      if (t.choices?.length && !choosing) {
+        choosing = true; el.classList.add("choosing");
+        el.querySelector(".vc-tch").innerHTML = t.choices.map((c, k) => `<button class="vc-tc" data-c="${k}">${c.text}</button>`).join("");
+        return;
+      }
+      if (!choosing || el.classList.contains("done")) { el.remove(); root?.classList.remove("in-talk"); t.onEnd && t.onEnd(); }
+    };
+    el.addEventListener("click", (e) => {
+      const c = e.target.closest("[data-c]");
+      if (c) { const ch = t.choices[Number(c.dataset.c)]; el.classList.remove("choosing"); el.classList.add("done"); el.querySelector(".vc-tch").innerHTML = ""; lines.push({ who: "me", text: ch.text }); (ch.reply || []).forEach((r) => lines.push({ who: "npc", text: r })); step(); return; }
+      if (!el.classList.contains("choosing")) step();
+    });
+    step();
   }
 
   function open(o) {
@@ -513,5 +552,5 @@
     await load(null);
   }
 
-  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS, getProfile };
+  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS, getProfile, talk };
 })();
