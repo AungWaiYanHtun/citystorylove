@@ -1,15 +1,15 @@
 /*
-  VIP City (Fix 54). One painted town map (city-assets/map.webp, 1376x768) with player houses on top.
+  VIP City (Fix 56). One painted town map (city-assets/map4.webp, 2752x1536) with player houses on top.
   - Every Telegram player owns one plot. A house (home.webp) is drawn on its plot with the player's name.
   - Auto landscape: requestFullscreen + lockOrientation; if the phone is upright the game is rotated 90° with CSS.
   - Data: GET /api/city/map -> { me, district, districts, myDistrict, houses: [{ id, name, plot }] }  (plot 0..11)
   - window.VipCity.open({ me, houses }) takes mock data (demo); VipCity.play() loads the real map.
 */
 (function () {
-  const MW = 2752, MH = 1536, OX = 688, OY = 384; // map3 = map2 extended on every side; map2 sits at (OX, OY)
+  const MW = 2752, MH = 1536, OX = 688, OY = 384; // map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  // Plot = centre of an empty fenced lawn painted on map2.webp (map pixels). Order = closest to the neighbourhood centre first.
-  const PLOTS = [[705,468],[780,438],[630,510],[780,512],[630,385],[855,478],[705,545],[855,405],[520,440],[535,340],[930,445],[425,395]].map(([x, y]) => [x + OX, y + OY + 6]); // +6: true lawn centre
+  // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
+  const PLOTS = [[1394,853,83],[1470,820,83],[1318,888,87],[1471,894,85],[1316,770,106],[1546,859,82],[1396,930,85],[1542,788,83],[1206,822,105],[1222,722,101],[1617,826,81],[1114,773,100]]; // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
   const LAND = [
     { x: 918, y: 554, name: "🎓 University" },
@@ -21,12 +21,11 @@
     { x: 988, y: 774, name: "Mall", locked: true },
     { x: 1738, y: 846, name: "Hotel", locked: true },
     { x: 1943, y: 714, name: "Gym", locked: true },
-    { x: 1950, y: 545, name: "Station", locked: true },
+    { x: 1850, y: 600, name: "Ⓜ️ Metro", locked: true },
     { x: 750, y: 70, name: "Hospital", locked: true },
     { x: 1590, y: 1165, name: "Stadium", locked: true },
     { x: 150, y: 590, name: "Lighthouse", locked: true }
   ];
-  const HOUSE_W = 104; // base diamond of home.webp fills ~90% of a lawn
   const TINTS = [0, -14, 14, -26, 26, -7, 7]; // small hue shifts keep the roof warm and the lawn green
   const hue = (id) => { let h = 0; String(id).split("").forEach((ch) => (h = (h * 31 + ch.charCodeAt(0)) % 360)); return h; };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
@@ -48,12 +47,12 @@
 
   function render() {
     const houses = data.houses || [];
-    let html = `<img class="vc-map" src="${ASSET}map3.webp" alt="" draggable="false">`;
+    let html = `<img class="vc-map" src="${ASSET}map4.webp" alt="" draggable="false">`;
     LAND.forEach((l) => {
       html += `<button class="vc-tag ${l.locked ? "locked" : ""}" data-land="${esc(l.name)}" style="left:${l.x}px;top:${l.y}px">${l.locked ? "🔒 " : ""}${esc(l.name)}</button>`;
     });
     houses.forEach((h) => {
-      const p = PLOTS[Number(h.plot) % PLOTS.length]; if (!p) return;
+      const p = PLOTS[Number(h.plot) % PLOTS.length]; if (!p) return; const HOUSE_W = p[2];
       const [x, y] = p, me = String(h.id) === String(data.me);
       html += `<img class="vc-house ${me ? "me" : ""}" data-h="${esc(h.id)}" src="${ASSET}home.webp" alt="" draggable="false" style="left:${x - HOUSE_W / 2}px;top:${y - HOUSE_W * 0.52}px;width:${HOUSE_W}px;z-index:${y};filter:hue-rotate(${me ? 0 : TINTS[hue(h.id) % TINTS.length]}deg) drop-shadow(0 3px 3px rgba(0,0,0,.3))${me ? " drop-shadow(0 0 8px #ffd166)" : ""}">`;
       html += `<button class="vc-name ${me ? "me" : ""}" data-h="${esc(h.id)}" style="left:${x}px;top:${y - HOUSE_W * 0.5}px;z-index:${y + 1000}">${me ? "👑 " : ""}${esc(h.name)}</button>`;
