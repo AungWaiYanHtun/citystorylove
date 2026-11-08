@@ -211,9 +211,11 @@
   const RW = 1376, RH = 768;
   const ROOMS = {
     living: { img: "room_living.webp", name: "Living room", arrows: [
-      { x: 54, y: 57, dir: "up", act: "soon", label: "Kitchen" },
+      { x: 54, y: 57, dir: "up", go: "kitchen", label: "Kitchen" },
       { x: 88, y: 62, dir: "right", go: "bed", label: "Bedroom" },
       { x: 42, y: 84, dir: "down", act: "out", label: "Go out" } ] },
+    kitchen: { img: "room_kitchen.webp", name: "Kitchen", arrows: [
+      { x: 50, y: 88, dir: "down", go: "living", label: "Living room" } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
       { x: 93, y: 50, dir: "right", go: "living", label: "Living room" } ],
       // Tappable furniture (box in image %). Items must be bought before use.
