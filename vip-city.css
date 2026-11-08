@@ -70,3 +70,16 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-rothint span{font-size:20px;display:inline-block;animation:vcTurn 1.4s ease-in-out infinite}
 @keyframes vcTurn{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
 @keyframes vcHint{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
+
+/* Compact HUD (Fix 62) */
+.vc-hud{gap:6px}
+.vc-pill2{height:28px;padding:0 10px 0 30px;margin-left:12px;border-width:2px}
+.vc-pill2 img{height:36px;left:-14px}
+.vc-pill2 b{font-size:13px}
+.vc-pill2.cash img{height:34px;left:-15px}.vc-pill2.cash b{min-width:34px}
+.vc-plus{width:22px;height:22px;margin-left:4px}
+.vc-pill2.day{padding-right:10px;cursor:pointer}.vc-pill2.day img{border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.vc-icon{width:34px;height:34px}
+.vc-hud .vc-ic.sm.x{width:28px;height:28px;font-size:14px}
+.vc-hud .vc-pill.sm{height:24px;font-size:11px}
+.vc.tgbar .vc-hud{top:calc(var(--tg-safe-area-inset-top,0px) + (var(--tg-content-safe-area-inset-top,0px) - 34px) / 2);left:calc(var(--tg-safe-area-inset-left,0px) + 104px);right:calc(var(--tg-safe-area-inset-right,0px) + 96px);height:34px}

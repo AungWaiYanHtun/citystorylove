@@ -241,6 +241,24 @@
   // Telegram draws its own Close/menu buttons at the top of the REAL screen. To put them on the long
   // edge the phone must really be in landscape, so we only lock orientation once the phone is sideways.
   let oriLocked = false, hintT = 0;
+  // Time of day follows the phone clock; the day counter starts at 1 on the first visit and goes up by itself.
+  const TOD = [ { id: "night", name: "Night", from: 0 }, { id: "morning", name: "Morning", from: 5 },
+    { id: "afternoon", name: "Afternoon", from: 12 }, { id: "evening", name: "Evening", from: 17 }, { id: "night", name: "Night", from: 20 } ];
+  function tod() { const h = new Date().getHours(); let t = TOD[0]; TOD.forEach((x) => { if (h >= x.from) t = x; }); return t; }
+  function dayNo() {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let d0 = Number(localStorage.getItem("vc_day0"));
+    if (!d0) { d0 = today.getTime(); try { localStorage.setItem("vc_day0", String(d0)); } catch {} }
+    return Math.max(1, Math.round((today.getTime() - d0) / 864e5) + 1);
+  }
+  let clockT = 0;
+  function tickClock() {
+    if (!root) return;
+    const t = tod(), img = root.querySelector("#vc-tod"), b = root.querySelector("#vc-day");
+    if (img && !img.src.endsWith(t.id + ".webp")) img.src = ASSET + "tod/" + t.id + ".webp";
+    if (b) b.textContent = "Day " + dayNo();
+    root.dataset.tod = t.id;
+  }
   function rotHint(show) {
     let h = document.getElementById("vc-rothint");
     if (!show) { h?.remove(); return; }
@@ -250,6 +268,9 @@
   function orient() {
     const port = window.innerHeight > window.innerWidth;
     root.classList.toggle("rot", port);
+    // In Telegram fullscreen landscape the HUD sits in Telegram's own top bar, between Close and the menu buttons.
+    const ct = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--tg-content-safe-area-inset-top")) || 0;
+    root.classList.toggle("tgbar", !port && ct > 20);
     if (port) { rotHint(true); return; }
     rotHint(false);
     if (!oriLocked) {
@@ -267,7 +288,7 @@
     root.innerHTML = `<div class="vc-stage"><div class="vc-world"></div></div>
       <div class="vc-room hidden" id="vc-room"><div class="vc-rbox"></div><div class="vc-arrows"></div></div>
       <div class="vc-hud">
-        <span class="vc-pill2 day"><img src="${ASSET}hud/sun.webp" alt=""><b>▶▶ DAY 1</b></span>
+        <span class="vc-pill2 day" id="vc-daypill"><img id="vc-tod" src="${ASSET}tod/${tod().id}.webp" alt=""><b id="vc-day">Day ${dayNo()}</b></span>
         <span class="vc-pill2 cash"><img src="${ASSET}hud/cash.webp" alt=""><b>$0</b><button class="vc-plus" id="vc-cash">+</button></span>
         <span class="vc-pill sm" id="vc-count"></span>
         <span class="vc-sp-fill"></span>
@@ -283,6 +304,9 @@
     world = root.querySelector(".vc-world");
     world.style.width = MW + "px"; world.style.height = MH + "px";
     orient(); render(); enableDrag();
+    tickClock(); clearInterval(clockT); clockT = setInterval(tickClock, 60000);
+    root.querySelector("#vc-daypill").addEventListener("click", () => { const t = tod(); toast(`${t.name} · Day ${dayNo()}`); });
+    try { const tg = window.Telegram?.WebApp; if (!tgHooked && tg?.onEvent) { tgHooked = true; ["fullscreenChanged", "contentSafeAreaChanged", "safeAreaChanged"].forEach((ev) => tg.onEvent(ev, () => root && orient())); } } catch {}
     setTimeout(focusMine, 30);
     root.querySelector("#vc-home").addEventListener("click", () => { if (room) { leaveRoom(); return; } if (data.me == null && opts.load) opts.load(data.myDistrict); else focusMine(); });
     root.querySelector("#vc-love").addEventListener("click", () => toast("❤️ Love meter — coming soon"));
@@ -301,12 +325,12 @@
     root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Not enough money — earn money in the story (coming soon)"); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
-  let resizeHooked = false;
+  let resizeHooked = false, tgHooked = false;
 
   function close() {
     room = null; root?.remove(); root = null;
     const tg = window.Telegram?.WebApp;
-    rotHint(false); oriLocked = false;
+    rotHint(false); oriLocked = false; clearInterval(clockT);
     try { tg?.unlockOrientation?.(); if (!document.querySelector(".vn")) tg?.exitFullscreen?.(); } catch {}
   }
   function toast(msg) {
