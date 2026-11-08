@@ -1,7 +1,7 @@
 /*
   VIP City (Fix 57: enter your own house — living room + bedroom, new icon HUD). One painted town map (city-assets/map4.webp, 2752x1536) with player houses on top.
   - Every Telegram player owns one plot. A house (home.webp) is drawn on its plot with the player's name.
-  - Auto landscape: requestFullscreen + lockOrientation; if the phone is upright the game is rotated 90° with CSS.
+  - Landscape: requestFullscreen; lockOrientation only after the phone is really sideways (so Telegram buttons sit on the long edge). Upright phones get a hint and a CSS 90° rotation as fallback.
   - Data: GET /api/city/map -> { me, district, districts, myDistrict, houses: [{ id, name, plot }] }  (plot 0..11)
   - window.VipCity.open({ me, houses }) takes mock data (demo); VipCity.play() loads the real map.
 */
@@ -238,12 +238,29 @@
     }, { passive: true });
   }
 
-  function orient() { root.classList.toggle("rot", window.innerHeight > window.innerWidth); }
+  // Telegram draws its own Close/menu buttons at the top of the REAL screen. To put them on the long
+  // edge the phone must really be in landscape, so we only lock orientation once the phone is sideways.
+  let oriLocked = false, hintT = 0;
+  function rotHint(show) {
+    let h = document.getElementById("vc-rothint");
+    if (!show) { h?.remove(); return; }
+    if (!h) { h = document.createElement("div"); h.id = "vc-rothint"; h.className = "vc-rothint"; h.innerHTML = `<span>📱↻</span> Turn your phone sideways`; document.body.appendChild(h); }
+    clearTimeout(hintT); hintT = setTimeout(() => h?.remove(), 4500);
+  }
+  function orient() {
+    const port = window.innerHeight > window.innerWidth;
+    root.classList.toggle("rot", port);
+    if (port) { rotHint(true); return; }
+    rotHint(false);
+    if (!oriLocked) {
+      try { const tg = window.Telegram?.WebApp; if (tg?.isVersionAtLeast?.("8.0")) { tg.lockOrientation?.(); oriLocked = true; } } catch {}
+    }
+  }
 
   function open(o) {
-    opts = o; data = o;
+    opts = o; data = o; oriLocked = false;
     const tg = window.Telegram?.WebApp;
-    try { if (tg?.isVersionAtLeast?.("8.0")) { tg.requestFullscreen?.(); tg.lockOrientation?.(); } } catch {}
+    try { if (tg?.isVersionAtLeast?.("8.0")) { tg.requestFullscreen?.(); tg.unlockOrientation?.(); } } catch {}
     root?.remove();
     root = document.createElement("div");
     root.className = "vc";
@@ -289,6 +306,7 @@
   function close() {
     room = null; root?.remove(); root = null;
     const tg = window.Telegram?.WebApp;
+    rotHint(false); oriLocked = false;
     try { tg?.unlockOrientation?.(); if (!document.querySelector(".vn")) tg?.exitFullscreen?.(); } catch {}
   }
   function toast(msg) {

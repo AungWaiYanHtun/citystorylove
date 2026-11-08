@@ -66,3 +66,7 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(240,185,58,.35);border-radius:12px;padding:6px 8px}
 .vc-item .ic{font-size:24px;width:30px;text-align:center}.vc-item .nm{flex:1;font-weight:800;font-size:14px;display:flex;flex-direction:column}.vc-item small{color:#ffe08a;font-size:12px;font-weight:700}
 .vc-btn.sm{height:34px;padding:0 14px;font-size:13px}.vc-item .own{color:#7be38a;font-weight:800;font-size:13px}
+.vc-rothint{position:fixed;left:50%;top:calc(70px + var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px));transform:translateX(-50%);z-index:20061;background:rgba(26,18,10,.92);color:#fff;border:1.5px solid #f0b93a;border-radius:14px;padding:9px 14px;font:700 14px "DM Sans",system-ui,sans-serif;display:flex;gap:8px;align-items:center;white-space:nowrap;animation:vcHint 4.5s ease forwards;pointer-events:none}
+.vc-rothint span{font-size:20px;display:inline-block;animation:vcTurn 1.4s ease-in-out infinite}
+@keyframes vcTurn{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
+@keyframes vcHint{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
