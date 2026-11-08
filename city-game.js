@@ -393,6 +393,7 @@
     renderStart();
   }
   // The tab is a small game library ("VIP Game"); City Love is its first card.
+  document.addEventListener("csl-lang", () => { try { renderStart(); } catch {} }); // Fix 74
   function renderStart() {
     const box = $("city-start"); if (!box) return;
     const t = L();

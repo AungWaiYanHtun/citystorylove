@@ -92,6 +92,8 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wireVip); else wireVip();
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
+  // Fix 74: re-draw texts in place when the language changes (no page reload).
+  document.addEventListener("csl-lang", () => { const sec = $("games-section"); if (sec) { const open = !sec.classList.contains("hidden"); render(); if (!open) sec.classList.add("hidden"); } });
 })();
 
 // Fix 73: language picker in the top bar (EN / RU / ES / MY). Saves hub_lang and reloads.
@@ -106,7 +108,10 @@
     bar.appendChild(w);
     const menu = w.querySelector(".lang-menu");
     w.querySelector(".lang-btn").addEventListener("click", (e) => { e.stopPropagation(); menu.classList.toggle("hidden"); });
-    menu.addEventListener("click", (e) => { const b = e.target.closest("[data-lg]"); if (!b) return; try { localStorage.setItem("hub_lang", b.dataset.lg); localStorage.setItem("csl_lang_fix72", "1"); } catch {} location.reload(); });
+    menu.addEventListener("click", (e) => { const b = e.target.closest("[data-lg]"); if (!b) return; const lg = b.dataset.lg; try { localStorage.setItem("hub_lang", lg); localStorage.setItem("csl_lang_fix72", "1"); } catch {}
+      menu.classList.add("hidden"); w.querySelector(".lang-btn").textContent = "🌐 " + lg.toUpperCase() + " ▾";
+      menu.querySelectorAll("[data-lg]").forEach((x) => x.classList.toggle("on", x.dataset.lg === lg));
+      document.documentElement.lang = lg; document.dispatchEvent(new CustomEvent("csl-lang", { detail: lg })); });
     document.addEventListener("click", () => menu.classList.add("hidden"));
     const st = document.createElement("style");
     st.textContent = `.topbar{position:relative}.lang-pick{position:absolute;right:16px;top:50%;transform:translateY(-50%);z-index:50}
