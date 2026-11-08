@@ -104,3 +104,28 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 #vc-rb-x{position:absolute;top:calc(14px + var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px));right:calc(14px + var(--tg-safe-area-inset-right,0px));width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.35);font:700 20px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .vc.rot{display:none}
 .vc-spot.free i{top:35%;font-size:15px;width:30px;height:30px;line-height:30px}
+
+/* Fix 69: first-run setup */
+.vc-setup{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(60,20,60,.55),rgba(10,5,15,.85));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.vc-sbox{position:relative;width:min(340px,86vw);max-height:92%;overflow:auto;padding:16px 20px 14px;border-radius:20px;background:linear-gradient(160deg,#3b2342,#1f1424);border:2px solid #b26bd6;box-shadow:0 0 24px rgba(214,110,255,.45),inset 0 0 18px rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;gap:10px;color:#f3e6ff;text-align:center}
+.vc-sbox.wide{width:min(460px,90vw)}
+.vc-sbox h3{margin:0;font-size:18px;letter-spacing:.5px;color:#e9b8ff}
+.vc-sdots{display:flex;gap:6px}.vc-sdots i{width:7px;height:7px;border-radius:50%;background:#5a3f66}.vc-sdots i.on{background:#ff7eb3;box-shadow:0 0 6px #ff7eb3}
+.vc-hello{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-style:italic;font-weight:700;font-size:34px;line-height:1;color:#e58cff;text-shadow:0 0 10px rgba(229,140,255,.5)}
+.vc-hello em{font-style:normal;font-size:20px;color:#ff7eb3;vertical-align:top}
+.vc-sub{font-weight:800;font-size:15px;letter-spacing:1px;color:#c9a3dd}
+.vc-name-in{width:86%;height:44px;border-radius:12px;border:2px solid #b26bd6;background:#14101a;color:#fff;font-size:20px;font-weight:800;text-align:center;letter-spacing:1px;outline:none}
+.vc-name-in:focus{border-color:#ff7eb3;box-shadow:0 0 10px rgba(255,126,179,.5)}
+.vc-go{min-width:170px;height:44px;border-radius:14px;border:2px solid #d48bff;background:linear-gradient(180deg,#9b4fc4,#6d2e94);color:#fff;font-weight:900;font-size:17px;letter-spacing:.5px;box-shadow:0 0 14px rgba(214,110,255,.55);cursor:pointer}
+.vc-go:active{transform:scale(.97)}
+.vc-back{border:0;background:none;color:#a98bb8;font-size:12px;cursor:pointer;padding:2px 8px}
+.vc-langs{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.vc-lang,.vc-gtab{display:flex;align-items:center;justify-content:center;gap:6px;height:42px;border-radius:12px;border:2px solid #5a3f66;background:#24182b;color:#f3e6ff;font-weight:800;font-size:14px;cursor:pointer}
+.vc-lang span,.vc-gtab span{font-size:18px}
+.vc-lang.on,.vc-gtab.on{border-color:#ff7eb3;background:#3d2247;box-shadow:0 0 10px rgba(255,126,179,.45)}
+.vc-gtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.vc-avs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
+.vc-av{position:relative;aspect-ratio:1;border-radius:16px;border:2px solid #5a3f66;background:radial-gradient(circle at 50% 35%,#4a3156,#1b1220);overflow:hidden;cursor:pointer;padding:0}
+.vc-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.vc-av span{font-size:30px;opacity:.55}
+.vc-av.on{border-color:#ff7eb3;box-shadow:0 0 12px rgba(255,126,179,.6)}

@@ -387,6 +387,46 @@
     }
   }
 
+
+  // ---- First-run setup (Fix 69): language → name → avatar. Saved in localStorage vc_profile. ----
+  const LANGS = [["en", "🇬🇧", "English"], ["ru", "🇷🇺", "Русский"], ["es", "🇪🇸", "Español"], ["my", "🇲🇲", "မြန်မာ"]];
+  const GENDERS = [["m", "♂", "Male"], ["f", "♀", "Female"], ["g", "🏳️‍🌈", "Gay"]];
+  const AV_PER = 4; // avatar slots per group: city-assets/avatars/{m,f,g}{1..4}.webp (user's pictures go here)
+  function getProfile() { try { return JSON.parse(localStorage.getItem("vc_profile") || "null"); } catch { return null; } }
+  function setupFlow(done) {
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+    const pf = Object.assign({ lang: localStorage.getItem("hub_lang") || "en", name: (tgUser.first_name || "").slice(0, 16), gender: "m", avatar: 1 }, getProfile() || {});
+    const el = document.createElement("div"); el.className = "vc-setup"; root.appendChild(el);
+    const esc2 = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const step = (n) => {
+      if (n === 1) el.innerHTML = `<div class="vc-sbox"><div class="vc-sdots"><i class="on"></i><i></i><i></i></div><h3>Choose your language</h3>
+        <div class="vc-langs">${LANGS.map(([id, f, t]) => `<button class="vc-lang${pf.lang === id ? " on" : ""}" data-l="${id}"><span>${f}</span>${t}</button>`).join("")}</div>
+        <button class="vc-go" data-next>NEXT</button></div>`;
+      if (n === 2) el.innerHTML = `<div class="vc-sbox"><div class="vc-sdots"><i></i><i class="on"></i><i></i></div><div class="vc-hello">Hello... <em>♡</em></div><div class="vc-sub">MY NAME IS...</div>
+        <input class="vc-name-in" maxlength="16" placeholder="Your name" value="${esc2(pf.name)}"><button class="vc-go" data-next>LET'S GO!</button><button class="vc-back" data-back>← Back</button></div>`;
+      if (n === 3) el.innerHTML = `<div class="vc-sbox wide"><div class="vc-sdots"><i></i><i></i><i class="on"></i></div><h3>Choose your avatar</h3>
+        <div class="vc-gtabs">${GENDERS.map(([id, ic, t]) => `<button class="vc-gtab${pf.gender === id ? " on" : ""}" data-g="${id}"><span>${ic}</span>${t}</button>`).join("")}</div>
+        <div class="vc-avs">${Array.from({ length: AV_PER }, (_, i) => `<button class="vc-av${pf.avatar === i + 1 ? " on" : ""}" data-a="${i + 1}"><img src="${ASSET}avatars/${pf.gender}${i + 1}.webp" alt="" onerror="this.remove()"><span>👤</span></button>`).join("")}</div>
+        <button class="vc-go" data-next>START</button><button class="vc-back" data-back>← Back</button></div>`;
+      el.dataset.step = n;
+      const inp = el.querySelector(".vc-name-in"); if (inp) setTimeout(() => inp.focus(), 50);
+    };
+    el.addEventListener("click", (e) => {
+      const n = Number(el.dataset.step);
+      const l = e.target.closest("[data-l]"); if (l) { pf.lang = l.dataset.l; step(1); return; }
+      const g = e.target.closest("[data-g]"); if (g) { pf.gender = g.dataset.g; pf.avatar = 1; step(3); return; }
+      const a = e.target.closest("[data-a]"); if (a) { pf.avatar = Number(a.dataset.a); step(3); return; }
+      if (e.target.closest("[data-back]")) { if (n === 2) pf.name = el.querySelector(".vc-name-in").value.trim(); step(n - 1); return; }
+      if (!e.target.closest("[data-next]")) return;
+      if (n === 1) { try { localStorage.setItem("hub_lang", pf.lang); } catch {} step(2); return; }
+      if (n === 2) { const v = el.querySelector(".vc-name-in").value.trim().slice(0, 16); if (!v) { toast("✍️ Please type your name."); return; } pf.name = v; step(3); return; }
+      try { localStorage.setItem("vc_profile", JSON.stringify(pf)); } catch {}
+      el.remove(); toast(`👋 Welcome to VIP City, ${pf.name}!`); done && done(pf);
+    });
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter" && el.dataset.step === "2") el.querySelector("[data-next]").click(); });
+    step(1);
+  }
+
   function open(o) {
     opts = o; data = o; oriLocked = false;
     const tg = window.Telegram?.WebApp;
@@ -417,13 +457,14 @@
     root.querySelector("#vc-daypill").addEventListener("click", () => { const t = tod(); toast(`${t.name} · Day ${dayNo()}`); });
     try { const tg = window.Telegram?.WebApp; if (!tgHooked && tg?.onEvent) { tgHooked = true; ["fullscreenChanged", "contentSafeAreaChanged", "safeAreaChanged"].forEach((ev) => tg.onEvent(ev, () => root && orient())); } } catch {}
     setTimeout(focusMine, 30);
-    if (data.me == null) setTimeout(() => toast("🏡 Buy an empty lot to get your own house!"), 600);
+    const hint = () => { if (data.me == null) setTimeout(() => toast("🏡 Buy an empty lot to get your own house!"), 600); };
+    if (!getProfile()) setupFlow(hint); else hint();
     root.querySelector("#vc-home").addEventListener("click", () => { if (room) { leaveRoom(); return; } if (data.me == null) toast("🏷️ Pick an empty lot to buy your house."); focusMine(); });
     root.querySelector("#vc-love").addEventListener("click", () => toast("❤️ Love meter — coming soon"));
     root.querySelector("#vc-gift").addEventListener("click", () => toast("🎁 Gifts — coming soon"));
     root.querySelector("#vc-cash").addEventListener("click", openCash);
     root.querySelector(".vc-pill2.cash").addEventListener("click", (e) => { if (e.target.id !== "vc-cash") openCash(); });
-    root.querySelector("#vc-set").addEventListener("click", () => card(`<b>⚙️ Settings</b><p>More options are coming soon.</p><button class="vc-btn gold" data-exit>🚪 Exit VIP City</button>`));
+    root.querySelector("#vc-set").addEventListener("click", () => card(`<b>⚙️ Settings</b><p>More options are coming soon.</p><button class="vc-btn" data-profile>👤 Edit profile</button><button class="vc-btn gold" data-exit>🚪 Exit VIP City</button>`));
     root.querySelector("#vc-room").addEventListener("click", onRoomTap);
     Object.values(ROOMS).forEach((x) => preload(x.img));
     root.querySelector("#vc-x").addEventListener("click", close);
@@ -433,7 +474,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;
@@ -472,5 +513,5 @@
     await load(null);
   }
 
-  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS };
+  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS, getProfile };
 })();
