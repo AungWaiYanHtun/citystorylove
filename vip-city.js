@@ -1,5 +1,5 @@
 /*
-  VIP City (Fix 56). One painted town map (city-assets/map4.webp, 2752x1536) with player houses on top.
+  VIP City (Fix 57: enter your own house — living room + bedroom, new icon HUD). One painted town map (city-assets/map4.webp, 2752x1536) with player houses on top.
   - Every Telegram player owns one plot. A house (home.webp) is drawn on its plot with the player's name.
   - Auto landscape: requestFullscreen + lockOrientation; if the phone is upright the game is rotated 90° with CSS.
   - Data: GET /api/city/map -> { me, district, districts, myDistrict, houses: [{ id, name, plot }] }  (plot 0..11)
@@ -30,7 +30,7 @@
   const hue = (id) => { let h = 0; String(id).split("").forEach((ch) => (h = (h * 31 + ch.charCodeAt(0)) % 360)); return h; };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
-  let root = null, world = null, view = { x: 0, y: 0, z: 1 }, data = null, opts = null;
+  let room = null, root = null, world = null, view = { x: 0, y: 0, z: 1 }, data = null, opts = null;
 
   const box = () => {
     const r = root.querySelector(".vc-stage").getBoundingClientRect();
@@ -83,11 +83,54 @@
       const house = data.houses.find((x) => String(x.id) === h.dataset.h); if (!house) return;
       const me = String(house.id) === String(data.me);
       card(`<b>${me ? "👑 " : "🏠 "}${esc(house.name)}${me ? " (You)" : ""}</b><p>${me ? "This is your house. Decorate it and invite friends." : "A neighbour from Telegram."}</p>` +
-        (me ? `<button class="vc-btn gold">🚪 Enter my house</button>` : `<button class="vc-btn gold">👋 Say hi</button><button class="vc-btn">🚪 Visit</button>`));
+        (me ? `<button class="vc-btn gold" data-enter>🚪 Enter my house</button>` : `<button class="vc-btn gold">👋 Say hi</button><button class="vc-btn">🚪 Visit</button>`));
     } else if (l) {
       const lm = LAND.find((x) => x.name === l.dataset.land);
       card(`<b>${lm.locked ? "🔒 " : "📍 "}${esc(lm.name)}</b><p>${lm.locked ? "Unlocks later in the story." : "Go here to meet characters and start a scene."}</p>${lm.locked ? "" : `<button class="vc-btn gold">▶ Go</button>`}`);
     }
+  }
+
+
+  // ---- Inside your own house (Fix 57). Arrow spots are in image % (x, y) on the 1376x768 room art. ----
+  const RW = 1376, RH = 768;
+  const ROOMS = {
+    living: { img: "room_living.webp", name: "Living room", arrows: [
+      { x: 54, y: 57, dir: "up", act: "soon", label: "Kitchen" },
+      { x: 96, y: 66, dir: "right", go: "bed", label: "Bedroom" },
+      { x: 50, y: 93, dir: "down", act: "out", label: "Go out" } ] },
+    bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
+      { x: 92, y: 56, dir: "right", go: "living", label: "Living room" } ] }
+  };
+  function layoutRoom() {
+    const el = root?.querySelector("#vc-room"); if (!el || !room) return;
+    const { W, H } = box(), k = Math.max(W / RW, H / RH), w = RW * k, h = RH * k, ox = (W - w) / 2, oy = (H - h) / 2;
+    const rb = el.querySelector(".vc-rbox"); rb.style.cssText = `width:${w}px;height:${h}px;left:${ox}px;top:${oy}px`;
+    el.querySelectorAll(".vc-arrow").forEach((a) => {
+      const x = Math.min(W - 40, Math.max(40, ox + w * a.dataset.x / 100)), y = Math.min(H - 42, Math.max(90, oy + h * a.dataset.y / 100));
+      a.style.left = x + "px"; a.style.top = y + "px";
+    });
+  }
+  function enterRoom(id) {
+    const r = ROOMS[id]; if (!r || !root) return;
+    room = id;
+    const el = root.querySelector("#vc-room");
+    el.classList.remove("hidden"); el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade");
+    el.querySelector(".vc-rimg").src = ASSET + r.img;
+    el.querySelector(".vc-arrows").innerHTML = r.arrows.map((a, i) =>
+      `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(a.label)}"><span></span><em>${esc(a.label)}</em></button>`).join("");
+    root.classList.add("in-room");
+    root.querySelector("#vc-card").classList.add("hidden");
+    layoutRoom();
+  }
+  function leaveRoom() {
+    room = null; root?.classList.remove("in-room");
+    root?.querySelector("#vc-room")?.classList.add("hidden");
+    focusMine();
+  }
+  function onRoomTap(e) {
+    const b = e.target.closest(".vc-arrow"); if (!b || !room) return;
+    const a = ROOMS[room].arrows[Number(b.dataset.i)];
+    if (a.go) enterRoom(a.go); else if (a.act === "out") leaveRoom(); else toast("🍳 " + a.label + " — coming soon");
   }
 
   function enableDrag() {
@@ -134,11 +177,18 @@
     root = document.createElement("div");
     root.className = "vc";
     root.innerHTML = `<div class="vc-stage"><div class="vc-world"></div></div>
+      <div class="vc-room hidden" id="vc-room"><div class="vc-rbox"><img class="vc-rimg" alt="" draggable="false"></div><div class="vc-arrows"></div></div>
       <div class="vc-hud">
-        <span class="vc-pill">☀️ Day 1</span><span class="vc-pill">💵 $0</span><span class="vc-pill" id="vc-count"></span>
+        <span class="vc-pill2 day"><img src="${ASSET}hud/sun.webp" alt=""><b>▶▶ DAY 1</b></span>
+        <span class="vc-pill2 cash"><img src="${ASSET}hud/cash.webp" alt=""><b>$0</b><button class="vc-plus" id="vc-cash">+</button></span>
+        <span class="vc-pill sm" id="vc-count"></span>
         <span class="vc-sp-fill"></span>
         <span class="vc-dist hidden"><button class="vc-ic sm" id="vc-prev">◀</button><span class="vc-pill" id="vc-dname"></span><button class="vc-ic sm" id="vc-next">▶</button></span>
-        <button class="vc-ic" id="vc-home" title="My house">🏠</button><button class="vc-ic">❤️</button><button class="vc-ic">🎁</button><button class="vc-ic" id="vc-x" title="Close">✕</button>
+        <button class="vc-icon" id="vc-home" title="Map"><img src="${ASSET}hud/map.webp" alt=""></button>
+        <button class="vc-icon" id="vc-love" title="Love"><img src="${ASSET}hud/heart.webp" alt=""></button>
+        <button class="vc-icon" id="vc-gift" title="Gifts"><img src="${ASSET}hud/gift.webp" alt=""></button>
+        <button class="vc-icon" id="vc-set" title="Settings"><img src="${ASSET}hud/gear.webp" alt=""></button>
+        <button class="vc-ic sm x" id="vc-x" title="Close">✕</button>
       </div>
       <div class="vc-card hidden" id="vc-card"></div>`;
     document.body.appendChild(root);
@@ -146,7 +196,12 @@
     world.style.width = MW + "px"; world.style.height = MH + "px";
     orient(); render(); enableDrag();
     setTimeout(focusMine, 30);
-    root.querySelector("#vc-home").addEventListener("click", () => { if (data.me == null && opts.load) opts.load(data.myDistrict); else focusMine(); });
+    root.querySelector("#vc-home").addEventListener("click", () => { if (room) { leaveRoom(); return; } if (data.me == null && opts.load) opts.load(data.myDistrict); else focusMine(); });
+    root.querySelector("#vc-love").addEventListener("click", () => toast("❤️ Love meter — coming soon"));
+    root.querySelector("#vc-gift").addEventListener("click", () => toast("🎁 Gifts — coming soon"));
+    root.querySelector("#vc-cash").addEventListener("click", () => toast("💵 Earn money in the story — coming soon"));
+    root.querySelector("#vc-set").addEventListener("click", () => card(`<b>⚙️ Settings</b><p>More options are coming soon.</p><button class="vc-btn gold" data-exit>🚪 Exit VIP City</button>`));
+    root.querySelector("#vc-room").addEventListener("click", onRoomTap);
     root.querySelector("#vc-x").addEventListener("click", close);
     if (opts.load && data.districts > 1) {
       root.querySelector(".vc-dist").classList.remove("hidden");
@@ -154,13 +209,13 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); });
-    if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); } }); }
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
+    if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false;
 
   function close() {
-    root?.remove(); root = null;
+    room = null; root?.remove(); root = null;
     const tg = window.Telegram?.WebApp;
     try { tg?.unlockOrientation?.(); if (!document.querySelector(".vn")) tg?.exitFullscreen?.(); } catch {}
   }
@@ -191,5 +246,5 @@
     await load(null);
   }
 
-  window.VipCity = { open, play, close, PLOTS };
+  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS };
 })();
