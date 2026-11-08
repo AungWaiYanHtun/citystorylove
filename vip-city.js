@@ -222,8 +222,16 @@
       // Free spots (no shop): tap a lounger to sit.
       spots: [ { id: "lounger1", free: true, x: 60, y: 62, w: 20, h: 14, icon: "🏖️", name: "Sun lounger", info: "Lie back and enjoy the sun by the pool." },
         { id: "lounger2", free: true, x: 70, y: 72, w: 26, h: 16, icon: "🏖️", name: "Sun lounger", info: "Lie back and enjoy the sun by the pool." } ] },
+    // Hallway (Fix 68): between the bedroom and the living room.
+    hall: { img: "room_hall.webp", name: "Hallway", arrows: [
+      { x: 18, y: 62, dir: "left", go: "living", label: "Living room" },
+      { x: 50, y: 50, dir: "up", act: "out", label: "Outside" },
+      { x: 68, y: 52, dir: "right", go: "bath", label: "Bathroom" },
+      { x: 85, y: 55, dir: "right", go: "bed", label: "My room" } ] },
+    bath: { img: "room_bath.webp", name: "Bathroom", arrows: [
+      { x: 6, y: 58, dir: "left", go: "hall", label: "Hallway" } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
-      { x: 93, y: 50, dir: "right", go: "living", label: "Living room" } ],
+      { x: 93, y: 50, dir: "right", go: "hall", label: "Hallway" } ],
       // Tappable furniture (box in image %). Items must be bought before use.
       spots: [ { id: "pc", x: 62, y: 51, w: 25, h: 31, icon: "💻", name: "Computer", shop: "tech",
         info: "You don't have a computer yet. Buy one at the 📱 Tech Shop in town, then use it here." } ] }
