@@ -46,11 +46,13 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-room.fade{animation:vcFade .35s ease}
 @keyframes vcFade{from{opacity:0}to{opacity:1}}
 .vc-rbox{position:absolute}.vc-rimg{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
-.vc-arrow{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;padding:0;border:0;background:none;cursor:pointer;animation:vcPulse 1.2s ease-in-out infinite}
-.vc-arrow span{position:absolute;inset:0;background:#2a0f28;clip-path:polygon(30% 0,70% 0,70% 50%,100% 50%,50% 100%,0 50%,30% 50%)}
-.vc-arrow span::after{content:"";position:absolute;inset:5px;background:linear-gradient(#ff8ad8,#e94bb8);clip-path:polygon(30% 0,70% 0,70% 50%,100% 50%,50% 100%,0 50%,30% 50%)}
+.vc-arrow{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;padding:0;border:0;background:none;cursor:pointer;opacity:.6;animation:vcPulse 2.4s ease-in-out infinite;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.vc-arrow::before{content:"";position:absolute;inset:-10px}
+.vc-arrow span{position:absolute;inset:0;background:rgba(40,25,30,.55);clip-path:polygon(32% 0,68% 0,68% 48%,92% 48%,50% 100%,8% 48%,32% 48%)}
+.vc-arrow span::after{content:"";position:absolute;inset:3px;background:rgba(255,240,245,.92);clip-path:polygon(32% 0,68% 0,68% 48%,92% 48%,50% 100%,8% 48%,32% 48%)}
 .vc-arrow.up span{transform:rotate(180deg)}.vc-arrow.right span{transform:rotate(-90deg)}.vc-arrow.left span{transform:rotate(90deg)}
-.vc-arrow em{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;font-style:normal;font-weight:800;font-size:11px;white-space:nowrap;background:rgba(26,18,10,.75);color:#fff;padding:1px 7px;border-radius:999px}
-.vc-arrow.down em{top:auto;bottom:100%;margin:0 0 2px}
+.vc-arrow em{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:1px;font-style:normal;font-weight:700;font-size:9px;white-space:nowrap;background:rgba(26,18,10,.45);color:rgba(255,255,255,.9);padding:0 5px;border-radius:999px}
+.vc-arrow.down em{top:auto;bottom:100%;margin:0 0 1px}
 .vc-arrow.right em{left:auto;right:0;transform:none}
-@keyframes vcPulse{50%{transform:scale(1.12)}}
+.vc-arrow:active{opacity:1}
+@keyframes vcPulse{50%{opacity:.85}}
