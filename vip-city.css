@@ -57,3 +57,12 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-arrow.right em{left:auto;right:0;transform:none}
 .vc-arrow:active{opacity:1}
 @keyframes vcPulse{50%{opacity:.85}}
+
+.vc-spot{position:absolute;z-index:1;background:transparent;border:0;padding:0;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vc-spot:active{background:rgba(255,236,190,.18)}
+.vc-spot i{position:absolute;left:50%;top:6%;transform:translateX(-50%);font-style:normal;font-size:13px;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:rgba(26,18,10,.55);border:1.5px solid rgba(255,236,190,.7);animation:vcSpotPulse 2.4s ease-in-out infinite;pointer-events:none}
+@keyframes vcSpotPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,236,190,.0)}50%{box-shadow:0 0 0 6px rgba(255,236,190,.25)}}
+.vc-shop{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto}
+.vc-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(240,185,58,.35);border-radius:12px;padding:6px 8px}
+.vc-item .ic{font-size:24px;width:30px;text-align:center}.vc-item .nm{flex:1;font-weight:800;font-size:14px;display:flex;flex-direction:column}.vc-item small{color:#ffe08a;font-size:12px;font-weight:700}
+.vc-btn.sm{height:34px;padding:0 14px;font-size:13px}.vc-item .own{color:#7be38a;font-weight:800;font-size:13px}

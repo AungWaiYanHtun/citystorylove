@@ -24,6 +24,7 @@
     { x: 1850, y: 600, name: "Ⓜ️ Metro", locked: true },
     { x: 750, y: 70, name: "Hospital", locked: true },
     { x: 1590, y: 1165, name: "Stadium", locked: true },
+    { x: 1278, y: 1150, name: "📱 Tech Shop", shop: "tech" },
     { x: 150, y: 590, name: "Lighthouse", locked: true }
   ];
   const TINTS = [0, -14, 14, -26, 26, -7, 7]; // small hue shifts keep the roof warm and the lawn green
@@ -61,6 +62,32 @@
     root.querySelector("#vc-count").textContent = `🏠 ${houses.length}`;
   }
 
+  // Shops in town. Items are bought here, then used at home.
+  const SHOPS = {
+    tech: { name: "📱 Tech Shop", info: "Computers, phones and gadgets.", items: [
+      { id: "pc", icon: "💻", name: "Computer", price: 500 },
+      { id: "phone", icon: "📱", name: "Phone", price: 300 },
+      { id: "tablet", icon: "📲", name: "Tablet", price: 250 },
+      { id: "headphones", icon: "🎧", name: "Headphones", price: 80 } ] }
+  };
+  function focusAt(x, y) {
+    const { W, H } = box();
+    view.z = Math.max(minZ() * 1.35, 0.9);
+    view.x = W / 2 - x * view.z; view.y = H / 2 - y * view.z;
+    apply();
+  }
+  function openShop(id) {
+    const sh = SHOPS[id]; if (!sh) return;
+    const own = owned();
+    card(`<b>${esc(sh.name)}</b><p>${esc(sh.info)} · You have <b>$0</b></p><div class="vc-shop">` +
+      sh.items.map((it) => `<div class="vc-item"><span class="ic">${it.icon}</span><span class="nm">${esc(it.name)}<small>$${it.price}</small></span>` +
+        (own[it.id] ? `<span class="own">✓ Owned</span>` : `<button class="vc-btn gold sm" data-buy="${it.id}">Buy</button>`) + `</div>`).join("") + `</div>`);
+  }
+  function goShop(id) {
+    const lm = LAND.find((x) => x.shop === id); if (!lm) return;
+    if (room) { switching = false; leaveRoom(); }
+    focusAt(lm.x, lm.y); openShop(id);
+  }
   function focusMine() {
     const houses = data.houses || [];
     const mine = houses.find((h) => String(h.id) === String(data.me));
@@ -86,6 +113,7 @@
         (me ? `<button class="vc-btn gold" data-enter>🚪 Enter my house</button>` : `<button class="vc-btn gold">👋 Say hi</button><button class="vc-btn">🚪 Visit</button>`));
     } else if (l) {
       const lm = LAND.find((x) => x.name === l.dataset.land);
+      if (lm.shop) { openShop(lm.shop); return; }
       card(`<b>${lm.locked ? "🔒 " : "📍 "}${esc(lm.name)}</b><p>${lm.locked ? "Unlocks later in the story." : "Go here to meet characters and start a scene."}</p>${lm.locked ? "" : `<button class="vc-btn gold">▶ Go</button>`}`);
     }
   }
@@ -99,7 +127,10 @@
       { x: 88, y: 62, dir: "right", go: "bed", label: "Bedroom" },
       { x: 42, y: 84, dir: "down", act: "out", label: "Go out" } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
-      { x: 86, y: 58, dir: "right", go: "living", label: "Living room" } ] }
+      { x: 93, y: 50, dir: "right", go: "living", label: "Living room" } ],
+      // Tappable furniture (box in image %). Items must be bought before use.
+      spots: [ { id: "pc", x: 62, y: 51, w: 25, h: 31, icon: "💻", name: "Computer", shop: "tech",
+        info: "You don't have a computer yet. Buy one at the 📱 Tech Shop in town, then use it here." } ] }
   };
   // Keep arrows away from the screen edges (phone gesture bar, notch) so taps always land.
   const SAFE = 72;
@@ -135,6 +166,14 @@
     if (first) { el.classList.remove("hidden"); root.classList.add("in-room"); }
     arrows.innerHTML = r.arrows.map((a, i) =>
       `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(a.label)}"><span></span><em>${esc(a.label)}</em></button>`).join("");
+    rb.querySelectorAll(".vc-spot").forEach((x) => x.remove());
+    (r.spots || []).forEach((sp, i) => {
+      const b = document.createElement("button");
+      b.className = "vc-spot"; b.dataset.s = i; b.title = sp.name;
+      b.style.cssText = `left:${sp.x}%;top:${sp.y}%;width:${sp.w}%;height:${sp.h}%`;
+      b.innerHTML = `<i>🔒</i>`;
+      rb.appendChild(b);
+    });
     layoutRoom();
     requestAnimationFrame(() => requestAnimationFrame(() => img.classList.remove("in")));
     setTimeout(() => {
@@ -145,12 +184,21 @@
   }
   function leaveRoom() {
     if (switching) return;
-    room = null; root?.classList.remove("in-room");
+    room = null; root?.classList.remove("in-room"); root?.querySelector("#vc-card")?.classList.add("hidden");
     const el = root?.querySelector("#vc-room");
     if (el) { el.classList.add("hidden"); el.querySelector(".vc-rbox").innerHTML = ""; el.querySelector(".vc-arrows").innerHTML = ""; }
     focusMine();
   }
+  const owned = () => { try { return JSON.parse(localStorage.getItem("vc_items") || "{}"); } catch { return {}; } };
   function onRoomTap(e) {
+    const sp = e.target.closest(".vc-spot");
+    if (sp && room && !switching) {
+      const it = ROOMS[room].spots[Number(sp.dataset.s)];
+      if (owned()[it.id]) { toast(it.icon + " " + it.name + " — coming soon"); return; }
+      card(`<b>${it.icon} ${esc(it.name)} 🔒</b><p>${esc(it.info)}</p>` +
+        `<button class="vc-btn gold" data-shop="${it.shop}">🗺️ Go to Tech Shop</button>`);
+      return;
+    }
     const b = e.target.closest(".vc-arrow"); if (!b || !room) return;
     const a = ROOMS[room].arrows[Number(b.dataset.i)];
     if (a.go) enterRoom(a.go); else if (a.act === "out") leaveRoom(); else toast("🍳 " + a.label + " — coming soon");
@@ -233,7 +281,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Not enough money — earn money in the story (coming soon)"); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false;
