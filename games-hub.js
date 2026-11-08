@@ -93,3 +93,28 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wireVip); else wireVip();
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
 })();
+
+// Fix 73: language picker in the top bar (EN / RU / ES / MY). Saves hub_lang and reloads.
+(function () {
+  const LG = [["en", "🇬🇧", "English"], ["ru", "🇷🇺", "Русский"], ["es", "🇪🇸", "Español"], ["my", "🇲🇲", "မြန်မာ"]];
+  function add() {
+    const bar = document.querySelector(".topbar"); if (!bar || document.getElementById("lang-pick")) return;
+    let cur = "en"; try { cur = localStorage.getItem("hub_lang") || "en"; } catch {}
+    const c = LG.find((x) => x[0] === cur) || LG[0];
+    const w = document.createElement("div"); w.id = "lang-pick"; w.className = "lang-pick";
+    w.innerHTML = `<button type="button" class="lang-btn">🌐 ${c[0].toUpperCase()} ▾</button><div class="lang-menu hidden">${LG.map(([id, f, t]) => `<button type="button" data-lg="${id}" class="${id === cur ? "on" : ""}">${f} ${t}</button>`).join("")}</div>`;
+    bar.appendChild(w);
+    const menu = w.querySelector(".lang-menu");
+    w.querySelector(".lang-btn").addEventListener("click", (e) => { e.stopPropagation(); menu.classList.toggle("hidden"); });
+    menu.addEventListener("click", (e) => { const b = e.target.closest("[data-lg]"); if (!b) return; try { localStorage.setItem("hub_lang", b.dataset.lg); localStorage.setItem("csl_lang_fix72", "1"); } catch {} location.reload(); });
+    document.addEventListener("click", () => menu.classList.add("hidden"));
+    const st = document.createElement("style");
+    st.textContent = `.topbar{position:relative}.lang-pick{position:absolute;right:16px;top:50%;transform:translateY(-50%);z-index:50}
+.lang-btn{height:38px;padding:0 14px;border-radius:19px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:700;font-size:14px}
+.lang-menu{position:absolute;right:0;top:44px;min-width:150px;display:flex;flex-direction:column;padding:6px;border-radius:14px;background:#1e1e22;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 24px rgba(0,0,0,.5)}
+.lang-menu.hidden{display:none}.lang-menu button{height:40px;text-align:left;padding:0 12px;border:0;border-radius:10px;background:none;color:#fff;font-size:15px}
+.lang-menu button.on{background:rgba(240,185,58,.2);color:#f0b93a;font-weight:800}`;
+    document.head.appendChild(st);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", add); else add();
+})();
