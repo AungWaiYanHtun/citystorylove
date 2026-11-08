@@ -94,3 +94,12 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-pack b{font-size:16px;color:#7be38a}.vc-pack span{font-size:12px;font-weight:800;color:#ffe08a}
 .vc-btn[disabled]{opacity:.5}
 .vc-pill2.cash{cursor:pointer}
+
+.vc-rotblock{position:fixed;inset:0;z-index:20070;background:radial-gradient(circle at 50% 40%,#3a2a14,#120c06 75%);display:flex;align-items:center;justify-content:center;padding:24px;font-family:"DM Sans",system-ui,sans-serif;color:#fff;text-align:center}
+.vc-rb-card{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:300px}
+.vc-rb-ico{font-size:64px;animation:vcTurn 1.6s ease-in-out infinite}
+.vc-rb-card b{font-size:21px;color:#ffd77a}
+.vc-rb-card p{margin:0;font-size:17px;line-height:1.8}
+.vc-rb-card small{opacity:.7;font-size:13px}
+#vc-rb-x{position:absolute;top:calc(14px + var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px));right:calc(14px + var(--tg-safe-area-inset-right,0px));width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.35);font:700 20px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.vc.rot{display:none}

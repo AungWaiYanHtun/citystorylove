@@ -347,15 +347,19 @@
     if (b) b.textContent = "Day " + dayNo();
     root.dataset.tod = t.id;
   }
+  // Portrait = the game is blocked by a full-screen "turn your phone" card (only Exit works).
   function rotHint(show) {
     let h = document.getElementById("vc-rothint");
     if (!show) { h?.remove(); return; }
-    if (!h) { h = document.createElement("div"); h.id = "vc-rothint"; h.className = "vc-rothint"; h.innerHTML = `<span>📱↻</span> Turn your phone sideways`; document.body.appendChild(h); }
-    clearTimeout(hintT); hintT = setTimeout(() => h?.remove(), 4500);
+    if (h) return;
+    h = document.createElement("div"); h.id = "vc-rothint"; h.className = "vc-rotblock";
+    h.innerHTML = `<div class="vc-rb-card"><div class="vc-rb-ico">📱</div><b>Turn your phone sideways</b><small>Turn on auto-rotate if the screen doesn't turn.</small></div><button type="button" id="vc-rb-x" aria-label="Close">✕</button>`;
+    h.querySelector("#vc-rb-x").onclick = () => { try { close(); } catch {} };
+    document.body.appendChild(h);
   }
   function orient() {
     const port = window.innerHeight > window.innerWidth;
-    root.classList.toggle("rot", port);
+    root.classList.remove("rot");
     // In Telegram fullscreen landscape the HUD sits in Telegram's own top bar, between Close and the menu buttons.
     const ct = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--tg-content-safe-area-inset-top")) || 0;
     root.classList.toggle("tgbar", !port && ct > 20);
