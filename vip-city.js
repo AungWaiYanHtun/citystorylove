@@ -215,7 +215,13 @@
       { x: 88, y: 62, dir: "right", go: "bed", label: "Bedroom" },
       { x: 42, y: 84, dir: "down", act: "out", label: "Go out" } ] },
     kitchen: { img: "room_kitchen.webp", name: "Kitchen", arrows: [
-      { x: 50, y: 88, dir: "down", go: "living", label: "Living room" } ] },
+      { x: 50, y: 88, dir: "down", go: "living", label: "Living room" },
+      { x: 49, y: 58, dir: "up", go: "pool", label: "Pool" } ] },
+    pool: { img: "room_pool.webp", name: "Pool", arrows: [
+      { x: 6, y: 55, dir: "left", go: "kitchen", label: "Kitchen" } ],
+      // Free spots (no shop): tap a lounger to sit.
+      spots: [ { id: "lounger1", free: true, x: 60, y: 62, w: 20, h: 14, icon: "🏖️", name: "Sun lounger", info: "Lie back and enjoy the sun by the pool." },
+        { id: "lounger2", free: true, x: 70, y: 72, w: 26, h: 16, icon: "🏖️", name: "Sun lounger", info: "Lie back and enjoy the sun by the pool." } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
       { x: 93, y: 50, dir: "right", go: "living", label: "Living room" } ],
       // Tappable furniture (box in image %). Items must be bought before use.
@@ -261,7 +267,7 @@
       const b = document.createElement("button");
       b.className = "vc-spot"; b.dataset.s = i; b.title = sp.name;
       b.style.cssText = `left:${sp.x}%;top:${sp.y}%;width:${sp.w}%;height:${sp.h}%`;
-      b.innerHTML = `<i>🔒</i>`;
+      b.innerHTML = `<i>${sp.free ? sp.icon : "🔒"}</i>`; if (sp.free) b.classList.add("free");
       rb.appendChild(b);
     });
     layoutRoom();
@@ -284,6 +290,7 @@
     const sp = e.target.closest(".vc-spot");
     if (sp && room && !switching) {
       const it = ROOMS[room].spots[Number(sp.dataset.s)];
+      if (it.free) { card(`<b>${it.icon} ${esc(it.name)}</b><p>${esc(it.info)}</p><button class="vc-btn gold" data-sit="${esc(it.id)}">😌 Sit &amp; relax</button>`); return; }
       if (owned()[it.id]) { toast(it.icon + " " + it.name + " — coming soon"); return; }
       card(`<b>${it.icon} ${esc(it.name)} 🔒</b><p>${esc(it.info)}</p>` +
         `<button class="vc-btn gold" data-shop="${it.shop}">🗺️ Go to Tech Shop</button>`);
@@ -418,7 +425,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;

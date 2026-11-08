@@ -103,3 +103,4 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-rb-card small{opacity:.7;font-size:13px}
 #vc-rb-x{position:absolute;top:calc(14px + var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px));right:calc(14px + var(--tg-safe-area-inset-right,0px));width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.35);font:700 20px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .vc.rot{display:none}
+.vc-spot.free i{top:35%;font-size:15px;width:30px;height:30px;line-height:30px}
