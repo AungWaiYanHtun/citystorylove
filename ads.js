@@ -63,12 +63,12 @@
     // Up to 4 tries: the player already watched, so a short network drop must not lose the bonus.
     for (let k = 0; k < 4; k++) {
       try {
-        const resp = await fetch(API + "/api/ads/reward", {
+        const resp = await fetch(API + (game === "city" ? "/api/city/ad-cash" : "/api/ads/reward"), {
           method: "POST", cache: "no-store",
           headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData },
           body: JSON.stringify({ game })
         });
-        if (resp.ok) { const d = await resp.json().catch(() => ({})); return { ok: true, bonus: Number(d.bonus) || 5 }; }
+        if (resp.ok) { const d = await resp.json().catch(() => ({})); return { ok: true, bonus: Number(d.bonus) || 5, cash: d.cash, left: d.left }; }
         if (resp.status === 429 || resp.status === 401) return { ok: false, status: resp.status };
       } catch { /* network: retry */ }
       await new Promise((r) => setTimeout(r, 1500 * (k + 1)));
@@ -82,7 +82,7 @@
     if (!p || !tg?.initData || !API || Date.now() - p.ts > 6 * 3600 * 1000) { try { localStorage.removeItem(PEND); } catch {} return; }
     const r = await credit(p.game, tg, API);
     if (r.ok || !r.net) try { localStorage.removeItem(PEND); } catch {}
-    if (r.ok) document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game: p.game, bonus: r.bonus } }));
+    if (r.ok) document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game: p.game, bonus: r.bonus, cash: r.cash, left: r.left } }));
   }
   setTimeout(() => { flushPending().catch(() => {}); }, 3000);
 
@@ -118,9 +118,9 @@
       if (c.ok || !c.net) try { localStorage.removeItem(PEND); } catch {}
       if (c.status === 429) { toast(t(lang).max); return false; }
       if (!c.ok) { toast(c.net ? net(lang) : t(lang).none); return false; }
-      toast(t(lang).ok.replace("+5", "+" + c.bonus).replace("+၅", "+" + c.bonus));
+      if (game !== "city") toast(t(lang).ok.replace("+5", "+" + c.bonus).replace("+၅", "+" + c.bonus));
       try { tg.HapticFeedback?.notificationOccurred?.("success"); } catch {}
-      document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game, bonus: c.bonus } }));
+      document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game, bonus: c.bonus, cash: c.cash, left: c.left } }));
       return true;
     } catch { toast(net(lang)); return false; }
     finally {

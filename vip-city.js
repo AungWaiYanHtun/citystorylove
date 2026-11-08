@@ -9,7 +9,7 @@
   const MW = 2752, MH = 1536, OX = 688, OY = 384; // map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
-  const PLOTS = [[1394,853,83],[1470,820,83],[1318,888,87],[1471,894,85],[1316,770,106],[1546,859,82],[1396,930,85],[1542,788,83],[1206,822,105],[1222,722,101],[1617,826,81],[1114,773,100]]; // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
+  const PLOTS = [[1394,853,83],[1470,820,83],[1318,888,87],[1471,894,85],[1316,770,106],[1546,859,82],[1396,930,85],[1542,788,83],[1206,822,105],[1222,722,101],[1617,826,81],[1114,773,100],[2336,108,130],[2572,120,130],[2468,176,130],[2440,56,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
   const LAND = [
     { x: 918, y: 554, name: "🎓 University" },
@@ -58,9 +58,96 @@
       html += `<img class="vc-house ${me ? "me" : ""}" data-h="${esc(h.id)}" src="${ASSET}home.webp" alt="" draggable="false" style="left:${x - HOUSE_W / 2}px;top:${y - HOUSE_W * 0.52}px;width:${HOUSE_W}px;z-index:${y};filter:hue-rotate(${me ? 0 : TINTS[hue(h.id) % TINTS.length]}deg) drop-shadow(0 3px 3px rgba(0,0,0,.3))${me ? " drop-shadow(0 0 8px #ffd166)" : ""}">`;
       html += `<button class="vc-name ${me ? "me" : ""}" data-h="${esc(h.id)}" style="left:${x}px;top:${y - HOUSE_W * 0.5}px;z-index:${y + 1000}">${me ? "👑 " : ""}${esc(h.name)}</button>`;
     });
+    // Fix 63: empty lots are for sale until you own a house.
+    if (data.me == null) {
+      const taken = new Set(houses.map((h) => Number(h.plot)));
+      PLOTS.forEach((p, i) => {
+        if (taken.has(i)) return;
+        const pr = price(i), big = i >= BIG_FROM;
+        html += `<button class="vc-sale ${big ? "big" : ""}" data-plot="${i}" style="left:${p[0]}px;top:${p[1]}px;z-index:${p[1] + 900}">🏷️ $${pr}${big ? " · Big" : ""}</button>`;
+      });
+    }
     world.innerHTML = html;
     root.querySelector("#vc-count").textContent = `🏠 ${houses.length}`;
+    showCash();
   }
+
+  const BIG_FROM = 12;
+  const price = (i) => Number((data.prices || [])[i]) || (i >= BIG_FROM ? 150 : 130);
+  function showCash() { const b = root?.querySelector("#vc-cashv"); if (b) b.textContent = "$" + (Number(data.cash) || 0); }
+  const API = () => ((window.VIDEOSPACE_CONFIG || {}).VIP_API_URL || "").replace(/\/$/, "");
+  async function api(path, body) {
+    const tg = window.Telegram?.WebApp;
+    const r = await fetch(API() + path, { method: body ? "POST" : "GET", cache: "no-store",
+      headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg?.initData || "" }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    return { ok: r.ok, status: r.status, j };
+  }
+  async function refresh() {
+    if (!opts?.load) return;
+    try { const r = await api("/api/city/map"); if (r.ok) { Object.assign(data, r.j); render(); } } catch {}
+  }
+  function lotCard(i) {
+    const pr = price(i), cash = Number(data.cash) || 0, big = i >= BIG_FROM;
+    if (data.me != null) { card(`<b>🏡 Lot for sale</b><p>You already have a house.</p>`); return; }
+    card(`<b>🏡 ${big ? "Big house lot" : "House lot"}</b><p>${big ? "A wide lawn by the river. " : ""}Price <b>$${pr}</b> · You have <b>$${cash}</b></p>` +
+      (cash >= pr ? `<button class="vc-btn gold" data-lot="${i}">🔑 Buy house · $${pr}</button>`
+        : `<p class="vc-need">You need $${pr - cash} more.</p><button class="vc-btn gold" data-getcash>💵 Get money</button>`));
+  }
+  let buying = false;
+  async function buyLot(i) {
+    if (buying) return; buying = true;
+    try {
+      if (!opts?.load) { // demo / mock data
+        if ((Number(data.cash) || 0) < price(i)) { lotCard(i); return; }
+        data.cash -= price(i); data.me = "demo"; data.houses = [...(data.houses || []), { id: "demo", name: "You", plot: i }];
+      } else {
+        const r = await api("/api/city/buy", { plot: i });
+        if (!r.ok) {
+          if (r.status === 402) { data.cash = price(i) - (r.j.need || 0); lotCard(i); }
+          else if (r.j.error === "TAKEN") { toast("Someone just bought this lot. Pick another one."); await refresh(); root.querySelector("#vc-card").classList.add("hidden"); }
+          else toast(r.j.error === "HAS_HOUSE" ? "You already have a house." : "Buying failed. Try again.");
+          return;
+        }
+        Object.assign(data, r.j);
+      }
+      root.querySelector("#vc-card").classList.add("hidden");
+      render(); focusMine();
+      try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.("success"); } catch {}
+      toast("🎉 Your new house! Tap it to go inside.");
+    } catch { toast("📡 Network error. Check your internet."); }
+    finally { buying = false; }
+  }
+  let packs = null;
+  async function openCash() {
+    const cash = Number(data.cash) || 0, left = data.adLeft ?? 10, ad = data.adCash || 5;
+    card(`<b>💵 Get money</b><p>You have <b>$${cash}</b>. Money is used for houses and items.</p>
+      <button class="vc-btn gold" data-adcash ${left <= 0 ? "disabled" : ""}>📺 Watch ad: +$${ad} (free)${left <= 0 ? " · come back tomorrow" : ` · ${left} left today`}</button>
+      <div class="vc-packs" id="vc-packs"><span class="vc-dots">…</span></div>`);
+    if (!packs) { try { const r = await api("/api/city/cash-packs"); packs = r.ok && Array.isArray(r.j.packs) ? r.j.packs : []; } catch { packs = []; } }
+    const box = root?.querySelector("#vc-packs"); if (!box) return;
+    box.innerHTML = packs.map((p) => `<button class="vc-pack" data-pack="${esc(p.id)}"><b>$${p.cash}</b><span>${p.stars} ⭐</span></button>`).join("") || "";
+  }
+  async function buyPack(id) {
+    const tg = window.Telegram?.WebApp;
+    if (!tg?.openInvoice) { toast("Payment not available here."); return; }
+    try {
+      const r = await api("/api/city/cash-checkout", { packId: id });
+      if (!r.ok || !r.j.invoiceLink) { toast("Payment not completed."); return; }
+      tg.openInvoice(r.j.invoiceLink, (status) => {
+        if (status === "paid") {
+          toast("💵 Money added!"); root?.querySelector("#vc-card")?.classList.add("hidden");
+          setTimeout(refresh, 1500); setTimeout(refresh, 4500);
+        } else if (status === "failed") toast("Payment not completed.");
+      });
+    } catch { toast("📡 Network error. Check your internet."); }
+  }
+  document.addEventListener("csl-ad-reward", (e) => {
+    const d = e.detail || {}; if (d.game !== "city" || !root) return;
+    if (d.cash != null) data.cash = Number(d.cash); else data.cash = (Number(data.cash) || 0) + (Number(d.bonus) || 5);
+    if (d.left != null) data.adLeft = Number(d.left);
+    showCash(); toast(`💵 +$${d.bonus || 5}! You have $${data.cash}.`);
+  });
 
   // Shops in town. Items are bought here, then used at home.
   const SHOPS = {
@@ -79,7 +166,7 @@
   function openShop(id) {
     const sh = SHOPS[id]; if (!sh) return;
     const own = owned();
-    card(`<b>${esc(sh.name)}</b><p>${esc(sh.info)} · You have <b>$0</b></p><div class="vc-shop">` +
+    card(`<b>${esc(sh.name)}</b><p>${esc(sh.info)} · You have <b>$${Number(data.cash) || 0}</b></p><div class="vc-shop">` +
       sh.items.map((it) => `<div class="vc-item"><span class="ic">${it.icon}</span><span class="nm">${esc(it.name)}<small>$${it.price}</small></span>` +
         (own[it.id] ? `<span class="own">✓ Owned</span>` : `<button class="vc-btn gold sm" data-buy="${it.id}">Buy</button>`) + `</div>`).join("") + `</div>`);
   }
@@ -105,7 +192,8 @@
     el.classList.remove("hidden");
   }
   function onTap(e) {
-    const h = e.target.closest?.("[data-h]"), l = e.target.closest?.("[data-land]");
+    const h = e.target.closest?.("[data-h]"), l = e.target.closest?.("[data-land]"), lot = e.target.closest?.("[data-plot]");
+    if (lot) { lotCard(Number(lot.dataset.plot)); return; }
     if (h) {
       const house = data.houses.find((x) => String(x.id) === h.dataset.h); if (!house) return;
       const me = String(house.id) === String(data.me);
@@ -289,7 +377,7 @@
       <div class="vc-room hidden" id="vc-room"><div class="vc-rbox"></div><div class="vc-arrows"></div></div>
       <div class="vc-hud">
         <span class="vc-pill2 day" id="vc-daypill"><img id="vc-tod" src="${ASSET}tod/${tod().id}.webp" alt=""><b id="vc-day">Day ${dayNo()}</b></span>
-        <span class="vc-pill2 cash"><img src="${ASSET}hud/cash.webp" alt=""><b>$0</b><button class="vc-plus" id="vc-cash">+</button></span>
+        <span class="vc-pill2 cash"><img src="${ASSET}hud/cash.webp" alt=""><b id="vc-cashv">$0</b><button class="vc-plus" id="vc-cash">+</button></span>
         <span class="vc-pill sm" id="vc-count"></span>
         <span class="vc-sp-fill"></span>
         <span class="vc-dist hidden"><button class="vc-ic sm" id="vc-prev">◀</button><span class="vc-pill" id="vc-dname"></span><button class="vc-ic sm" id="vc-next">▶</button></span>
@@ -308,10 +396,12 @@
     root.querySelector("#vc-daypill").addEventListener("click", () => { const t = tod(); toast(`${t.name} · Day ${dayNo()}`); });
     try { const tg = window.Telegram?.WebApp; if (!tgHooked && tg?.onEvent) { tgHooked = true; ["fullscreenChanged", "contentSafeAreaChanged", "safeAreaChanged"].forEach((ev) => tg.onEvent(ev, () => root && orient())); } } catch {}
     setTimeout(focusMine, 30);
-    root.querySelector("#vc-home").addEventListener("click", () => { if (room) { leaveRoom(); return; } if (data.me == null && opts.load) opts.load(data.myDistrict); else focusMine(); });
+    if (data.me == null) setTimeout(() => toast("🏡 Buy an empty lot to get your own house!"), 600);
+    root.querySelector("#vc-home").addEventListener("click", () => { if (room) { leaveRoom(); return; } if (data.me == null) toast("🏷️ Pick an empty lot to buy your house."); focusMine(); });
     root.querySelector("#vc-love").addEventListener("click", () => toast("❤️ Love meter — coming soon"));
     root.querySelector("#vc-gift").addEventListener("click", () => toast("🎁 Gifts — coming soon"));
-    root.querySelector("#vc-cash").addEventListener("click", () => toast("💵 Earn money in the story — coming soon"));
+    root.querySelector("#vc-cash").addEventListener("click", openCash);
+    root.querySelector(".vc-pill2.cash").addEventListener("click", (e) => { if (e.target.id !== "vc-cash") openCash(); });
     root.querySelector("#vc-set").addEventListener("click", () => card(`<b>⚙️ Settings</b><p>More options are coming soon.</p><button class="vc-btn gold" data-exit>🚪 Exit VIP City</button>`));
     root.querySelector("#vc-room").addEventListener("click", onRoomTap);
     Object.values(ROOMS).forEach((x) => preload(x.img));
@@ -322,7 +412,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Not enough money — earn money in the story (coming soon)"); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;

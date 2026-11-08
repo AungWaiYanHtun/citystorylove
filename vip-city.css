@@ -83,3 +83,14 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-hud .vc-ic.sm.x{width:28px;height:28px;font-size:14px}
 .vc-hud .vc-pill.sm{height:24px;font-size:11px}
 .vc.tgbar .vc-hud{top:calc(var(--tg-safe-area-inset-top,0px) + (var(--tg-content-safe-area-inset-top,0px) - 34px) / 2);left:calc(var(--tg-safe-area-inset-left,0px) + 104px);right:calc(var(--tg-safe-area-inset-right,0px) + 96px);height:34px}
+
+/* Fix 63: lots for sale + money sheet */
+.vc-sale{position:absolute;transform:translate(-50%,-50%);border:2px solid #fff;background:linear-gradient(135deg,#3ccf6a,#178a3c);color:#fff;font-weight:900;font-size:12px;padding:3px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 3px 6px rgba(0,0,0,.35);cursor:pointer;animation:vcSale 2.2s ease-in-out infinite}
+.vc-sale.big{background:linear-gradient(135deg,#ffcf4a,#e08a12);color:#2a1700;font-size:13px}
+@keyframes vcSale{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
+.vc-need{color:#ff9db0!important;font-weight:800}
+.vc-packs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vc-pack{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:12px;border:2px solid #3ccf6a;background:rgba(60,207,106,.12);color:#fff;cursor:pointer}
+.vc-pack b{font-size:16px;color:#7be38a}.vc-pack span{font-size:12px;font-weight:800;color:#ffe08a}
+.vc-btn[disabled]{opacity:.5}
+.vc-pill2.cash{cursor:pointer}
