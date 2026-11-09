@@ -6,28 +6,28 @@
   - window.VipCity.open({ me, houses }) takes mock data (demo); VipCity.play() loads the real map.
 */
 (function () {
-  const MW = 2752, MH = 1536, OX = 688, OY = 384; // map4 = map3 with bigger lawns, no railway (metro), seam fixed
+  const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=78"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=79"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
-  const PLOTS = [[1394,853,83],[1470,820,83],[1318,888,87],[1471,894,85],[1316,770,106],[1546,859,82],[1396,930,85],[1542,788,83],[1206,822,105],[1222,722,101],[1617,826,81],[1114,773,100],[2336,108,130],[2572,120,130],[2468,176,130],[2440,56,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
+  const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
   const LAND = [
-    { x: 918, y: 554, name: "🎓 University" },
-    { x: 1858, y: 984, name: "⛲ Park" },
-    { x: 420, y: 860, name: "🏖️ Beach" },
-    { x: 2670, y: 640, name: "🎡 Fun Park" },
-    { x: 1900, y: 100, name: "🏕️ Lake" },
-    { x: 1448, y: 584, name: "Villa", locked: true },
-    { x: 988, y: 774, name: "Mall", locked: true },
-    { x: 1738, y: 846, name: "Hotel", locked: true },
-    { x: 1943, y: 714, name: "Gym", locked: true },
-    { x: 1850, y: 600, name: "Ⓜ️ Metro", locked: true },
-    { x: 750, y: 70, name: "Hospital", locked: true },
-    { x: 1590, y: 1165, name: "Stadium", locked: true },
-    { x: 1278, y: 1150, name: "📱 Tech Shop", shop: "tech" },
-    { x: 150, y: 590, name: "Lighthouse", locked: true },
-    { x: 425, y: 478, name: "🎣 Fishing Pier", fish: true } // Fix 77
+    { x: 918, y: 938, name: "🎓 University" },
+    { x: 1858, y: 1368, name: "⛲ Park" },
+    { x: 420, y: 1244, name: "🏖️ Beach" },
+    { x: 2670, y: 1024, name: "🎡 Fun Park" },
+    { x: 1900, y: 484, name: "🏕️ Lake" },
+    { x: 1448, y: 968, name: "Villa", locked: true },
+    { x: 988, y: 1158, name: "Mall", locked: true },
+    { x: 1738, y: 1230, name: "Hotel", locked: true },
+    { x: 1943, y: 1098, name: "Gym", locked: true },
+    { x: 1850, y: 984, name: "Ⓜ️ Metro", locked: true },
+    { x: 750, y: 454, name: "Hospital", locked: true },
+    { x: 1590, y: 1549, name: "Stadium", locked: true },
+    { x: 1278, y: 1534, name: "📱 Tech Shop", shop: "tech" },
+    { x: 150, y: 974, name: "Lighthouse", locked: true },
+    { x: 425, y: 862, name: "🎣 Fishing Pier", fish: true } // Fix 77
   ];
   const TINTS = [0, -14, 14, -26, 26, -7, 7]; // small hue shifts keep the roof warm and the lawn green
   const hue = (id) => { let h = 0; String(id).split("").forEach((ch) => (h = (h * 31 + ch.charCodeAt(0)) % 360)); return h; };
@@ -51,7 +51,7 @@
 
   function render() {
     const houses = data.houses || [];
-    let html = `<img class="vc-map" src="${ASSET}map4.webp${AV}" alt="" draggable="false">`;
+    let html = `<img class="vc-map" src="${ASSET}map5.webp${AV}" alt="" draggable="false">`;
     LAND.forEach((l) => {
       html += `<button class="vc-tag ${l.locked ? "locked" : ""}" data-land="${esc(l.name)}" style="left:${l.x}px;top:${l.y}px">${l.locked ? "🔒 " : ""}${esc(l.name)}</button>`;
     });
