@@ -235,7 +235,9 @@
       { x: 93, y: 50, dir: "right", go: "hall", label: "Hallway" } ],
       // Tappable furniture (box in image %). Items must be bought before use.
       spots: [ { id: "pc", x: 62, y: 51, w: 25, h: 31, icon: "💻", name: "Computer", shop: "tech",
-        info: "You don't have a computer yet. Buy one at the 📱 Tech Shop in town, then use it here." } ] }
+        info: "You don't have a computer yet. Buy one at the 📱 Tech Shop in town, then use it here." },
+        // Fix 76: wardrobe = your storage. Items you buy are kept here.
+        { id: "wardrobe", x: 20.5, y: 25, w: 16.5, h: 39, icon: "🚪", name: "Wardrobe", storage: true, info: "Your wardrobe." } ] }
   };
   // Keep arrows away from the screen edges (phone gesture bar, notch) so taps always land.
   const SAFE = 72;
@@ -278,7 +280,7 @@
       const b = document.createElement("button");
       b.className = "vc-spot"; b.dataset.s = i; b.title = sp.name;
       b.style.cssText = `left:${sp.x}%;top:${sp.y}%;width:${sp.w}%;height:${sp.h}%`;
-      b.innerHTML = `<i>${sp.free || visiting ? sp.icon : "🔒"}</i>`; if (sp.free) b.classList.add("free");
+      b.innerHTML = `<i>${sp.free || sp.storage || visiting ? sp.icon : "🔒"}</i>`; if (sp.free || sp.storage) b.classList.add("free");
       rb.appendChild(b);
     });
     layoutRoom();
@@ -297,12 +299,23 @@
     if (el) { el.classList.add("hidden"); el.querySelector(".vc-rbox").innerHTML = ""; el.querySelector(".vc-arrows").innerHTML = ""; el.querySelector(".vc-visit")?.remove(); }
     focusMine(); if (was) toast("👋 You left " + was.name + "'s house.");
   }
+  // Fix 76: wardrobe card — shows every item you own (from shops) in 8 slots.
+  function wardrobeCard() {
+    const own = owned(), all = Object.values(SHOPS).flatMap((sh) => sh.items || []);
+    const have = all.filter((it) => own[it.id]);
+    const slots = [];
+    const n = Math.max(12, Math.ceil((have.length + 1) / 4) * 4); // grows as you buy more, from any store
+    for (let i = 0; i < n; i++) { const it = have[i]; slots.push(it ? `<div class="vc-wslot on" title="${esc(it.name)}"><i>${it.icon || "📦"}</i><small>${esc(it.name)}</small></div>` : `<div class="vc-wslot"><i>＋</i></div>`); }
+    card(`<b>🚪 Wardrobe</b><p>${have.length ? "Your items are kept here." : "Empty. Buy clothes and items at shops in town — they are kept here."}</p><div class="vc-wgrid">${slots.join("")}</div>` +
+      (have.length ? "" : `<button class="vc-btn gold" data-town>🗺️ Go shopping in town</button>`));
+  }
   const owned = () => { try { return JSON.parse(localStorage.getItem("vc_items") || "{}"); } catch { return {}; } };
   function onRoomTap(e) {
     const sp = e.target.closest(".vc-spot");
     if (sp && room && !switching) {
       const it = ROOMS[room].spots[Number(sp.dataset.s)];
       if (visiting && !it.free) { toast(it.icon + " This is " + visiting.name + "'s " + it.name.toLowerCase() + "."); return; }
+      if (it.storage) { wardrobeCard(); return; }
       if (it.free) { card(`<b>${it.icon} ${esc(it.name)}</b><p>${esc(it.info)}</p><button class="vc-btn gold" data-sit="${esc(it.id)}">😌 Sit &amp; relax</button>`); return; }
       if (owned()[it.id]) { toast(it.icon + " " + it.name + " — coming soon"); return; }
       card(`<b>${it.icon} ${esc(it.name)} 🔒</b><p>${esc(it.info)}</p>` +
@@ -518,7 +531,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;
