@@ -8,7 +8,7 @@
 (function () {
   const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=87"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=88"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
@@ -525,7 +525,7 @@
     leo: { sleep: [62, 50, 16, 18], cook: [68, 26, 13, 58], tv: [74, 42, 15, 40], pool: [66, 45, 29, 32], eat: [27, 56, 13, 36] },
     kai: { sleep: [62, 54, 16, 16], cook: [46, 24, 22, 74], tv: [76, 50, 14, 34], pool: [66, 45, 29, 36], eat: [27, 55, 13, 36] } };
   function sceneFor(id) { if (visiting) return null; const a = mateAt(); return SCENE_ROOM[a] === id ? a : null; }
-  function roomSrc(id) { const sc = sceneFor(id); return sc ? "mate/" + mateOf().id + "_" + sc + ".webp" : ROOMS[id].img; }
+  function roomSrc(id) { const sc = sceneFor(id); return sc ? "npc/mate/" + mateOf().id + "_" + sc + ".webp" : ROOMS[id].img; }
   function baseRoom(on) { const im = root && root.querySelector(".vc-rimg"); if (!im || !room) return; im.src = ASSET + (on ? ROOMS[room].img : roomSrc(room)) + AV; }
   const mateOf = () => MATE[(getProfile() || {}).gender] || MATE.m;
   // Daily talks per player gender. {me} = player's name. Each has a sweet (+5 extra) and a plain choice.
