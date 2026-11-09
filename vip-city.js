@@ -31,6 +31,7 @@
   const hue = (id) => { let h = 0; String(id).split("").forEach((ch) => (h = (h * 31 + ch.charCodeAt(0)) % 360)); return h; };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
+  let visiting = null; // Fix 75: {id,name} while inside a neighbour's house
   let room = null, root = null, world = null, view = { x: 0, y: 0, z: 1 }, data = null, opts = null;
 
   const box = () => {
@@ -198,7 +199,7 @@
       const house = data.houses.find((x) => String(x.id) === h.dataset.h); if (!house) return;
       const me = String(house.id) === String(data.me);
       card(`<b>${me ? "👑 " : "🏠 "}${esc(house.name)}${me ? " (You)" : ""}</b><p>${me ? "This is your house. Decorate it and invite friends." : "A neighbour from Telegram."}</p>` +
-        (me ? `<button class="vc-btn gold" data-enter>🚪 Enter my house</button>` : `<button class="vc-btn gold">👋 Say hi</button><button class="vc-btn">🚪 Visit</button>`));
+        (me ? `<button class="vc-btn gold" data-enter>🚪 Enter my house</button>` : `<button class="vc-btn gold" data-hi="${esc(house.name)}">👋 Say hi</button><button class="vc-btn" data-visit="${esc(house.id)}">🚪 Visit</button>`));
     } else if (l) {
       const lm = LAND.find((x) => x.name === l.dataset.land);
       if (lm.shop) { openShop(lm.shop); return; }
@@ -268,14 +269,16 @@
     img.className = "vc-rimg in"; img.alt = ""; img.draggable = false; img.src = ASSET + r.img;
     rb.appendChild(img);
     if (first) { el.classList.remove("hidden"); root.classList.add("in-room"); }
+    const lab = (a) => visiting && a.label === "My room" ? "Bedroom" : a.label;
     arrows.innerHTML = r.arrows.map((a, i) =>
-      `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(a.label)}"><span></span><em>${esc(a.label)}</em></button>`).join("");
+      `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(lab(a))}"><span></span><em>${esc(lab(a))}</em></button>`).join("");
+    let vb = el.querySelector(".vc-visit"); if (visiting) { if (!vb) { vb = document.createElement("div"); vb.className = "vc-visit"; el.appendChild(vb); } vb.textContent = "🚪 Visiting " + visiting.name + "'s house"; } else vb?.remove();
     rb.querySelectorAll(".vc-spot").forEach((x) => x.remove());
     (r.spots || []).forEach((sp, i) => {
       const b = document.createElement("button");
       b.className = "vc-spot"; b.dataset.s = i; b.title = sp.name;
       b.style.cssText = `left:${sp.x}%;top:${sp.y}%;width:${sp.w}%;height:${sp.h}%`;
-      b.innerHTML = `<i>${sp.free ? sp.icon : "🔒"}</i>`; if (sp.free) b.classList.add("free");
+      b.innerHTML = `<i>${sp.free || visiting ? sp.icon : "🔒"}</i>`; if (sp.free) b.classList.add("free");
       rb.appendChild(b);
     });
     layoutRoom();
@@ -288,16 +291,18 @@
   }
   function leaveRoom() {
     if (switching) return;
+    const was = visiting; visiting = null;
     room = null; root?.classList.remove("in-room"); root?.querySelector("#vc-card")?.classList.add("hidden");
     const el = root?.querySelector("#vc-room");
-    if (el) { el.classList.add("hidden"); el.querySelector(".vc-rbox").innerHTML = ""; el.querySelector(".vc-arrows").innerHTML = ""; }
-    focusMine();
+    if (el) { el.classList.add("hidden"); el.querySelector(".vc-rbox").innerHTML = ""; el.querySelector(".vc-arrows").innerHTML = ""; el.querySelector(".vc-visit")?.remove(); }
+    focusMine(); if (was) toast("👋 You left " + was.name + "'s house.");
   }
   const owned = () => { try { return JSON.parse(localStorage.getItem("vc_items") || "{}"); } catch { return {}; } };
   function onRoomTap(e) {
     const sp = e.target.closest(".vc-spot");
     if (sp && room && !switching) {
       const it = ROOMS[room].spots[Number(sp.dataset.s)];
+      if (visiting && !it.free) { toast(it.icon + " This is " + visiting.name + "'s " + it.name.toLowerCase() + "."); return; }
       if (it.free) { card(`<b>${it.icon} ${esc(it.name)}</b><p>${esc(it.info)}</p><button class="vc-btn gold" data-sit="${esc(it.id)}">😌 Sit &amp; relax</button>`); return; }
       if (owned()[it.id]) { toast(it.icon + " " + it.name + " — coming soon"); return; }
       card(`<b>${it.icon} ${esc(it.name)} 🔒</b><p>${esc(it.info)}</p>` +
@@ -513,7 +518,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;

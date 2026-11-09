@@ -148,3 +148,6 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 .vc-tc{min-height:38px;border-radius:12px;border:2px solid #b26bd6;background:linear-gradient(180deg,#5b2f74,#3a1c4c);color:#fff;font-weight:800;font-size:15px;text-align:left;padding:6px 14px;cursor:pointer}
 .vc-tc:active{transform:scale(.98)}
 .vc.in-talk .vc-arrows,.vc.in-talk .vc-spot{opacity:0;pointer-events:none}
+
+/* Fix 75: visiting a neighbour */
+.vc-visit{position:absolute;left:50%;top:max(74px,calc(var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px) + 8px));transform:translateX(-50%);z-index:6;padding:7px 16px;border-radius:18px;background:rgba(30,20,30,.72);border:1px solid rgba(255,190,220,.5);color:#ffe3f0;font:700 13px/1.2 system-ui,sans-serif;white-space:nowrap;pointer-events:none}
