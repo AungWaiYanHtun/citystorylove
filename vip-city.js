@@ -8,6 +8,7 @@
 (function () {
   const MW = 2752, MH = 1536, OX = 688, OY = 384; // map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
+  const AV = "?v=78"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,853,83],[1470,820,83],[1318,888,87],[1471,894,85],[1316,770,106],[1546,859,82],[1396,930,85],[1542,788,83],[1206,822,105],[1222,722,101],[1617,826,81],[1114,773,100],[2336,108,130],[2572,120,130],[2468,176,130],[2440,56,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
@@ -25,7 +26,8 @@
     { x: 750, y: 70, name: "Hospital", locked: true },
     { x: 1590, y: 1165, name: "Stadium", locked: true },
     { x: 1278, y: 1150, name: "📱 Tech Shop", shop: "tech" },
-    { x: 150, y: 590, name: "Lighthouse", locked: true }
+    { x: 150, y: 590, name: "Lighthouse", locked: true },
+    { x: 425, y: 478, name: "🎣 Fishing Pier", fish: true } // Fix 77
   ];
   const TINTS = [0, -14, 14, -26, 26, -7, 7]; // small hue shifts keep the roof warm and the lawn green
   const hue = (id) => { let h = 0; String(id).split("").forEach((ch) => (h = (h * 31 + ch.charCodeAt(0)) % 360)); return h; };
@@ -49,7 +51,7 @@
 
   function render() {
     const houses = data.houses || [];
-    let html = `<img class="vc-map" src="${ASSET}map4.webp" alt="" draggable="false">`;
+    let html = `<img class="vc-map" src="${ASSET}map4.webp${AV}" alt="" draggable="false">`;
     LAND.forEach((l) => {
       html += `<button class="vc-tag ${l.locked ? "locked" : ""}" data-land="${esc(l.name)}" style="left:${l.x}px;top:${l.y}px">${l.locked ? "🔒 " : ""}${esc(l.name)}</button>`;
     });
@@ -203,6 +205,7 @@
     } else if (l) {
       const lm = LAND.find((x) => x.name === l.dataset.land);
       if (lm.shop) { openShop(lm.shop); return; }
+      if (lm.fish) { card(`<b>🎣 Fishing Pier</b><p>Cast your line from the wooden pier and catch fish. Rare fish sell for more $.</p><button class="vc-btn gold" data-fish>🎣 Go fishing</button>`); return; }
       card(`<b>${lm.locked ? "🔒 " : "📍 "}${esc(lm.name)}</b><p>${lm.locked ? "Unlocks later in the story." : "Go here to meet characters and start a scene."}</p>${lm.locked ? "" : `<button class="vc-btn gold">▶ Go</button>`}`);
     }
   }
@@ -243,7 +246,7 @@
   const SAFE = 72;
   const imgCache = {};
   function preload(name) {
-    if (!imgCache[name]) { const im = new Image(); im.src = ASSET + name; imgCache[name] = im.decode ? im.decode().catch(() => {}) : Promise.resolve(); }
+    if (!imgCache[name]) { const im = new Image(); im.src = ASSET + name + AV; imgCache[name] = im.decode ? im.decode().catch(() => {}) : Promise.resolve(); }
     return imgCache[name];
   }
   function layoutRoom() {
@@ -268,7 +271,7 @@
     room = id;
     // Cross-fade: the new picture fades in on top of the old one, so the city map never shows through.
     const img = document.createElement("img");
-    img.className = "vc-rimg in"; img.alt = ""; img.draggable = false; img.src = ASSET + r.img;
+    img.className = "vc-rimg in"; img.alt = ""; img.draggable = false; img.src = ASSET + r.img + AV;
     rb.appendChild(img);
     if (first) { el.classList.remove("hidden"); root.classList.add("in-room"); }
     const lab = (a) => visiting && a.label === "My room" ? "Bedroom" : a.label;
@@ -531,7 +534,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;
