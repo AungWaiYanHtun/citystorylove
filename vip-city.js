@@ -8,7 +8,7 @@
 (function () {
   const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=86"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=87"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
@@ -329,9 +329,9 @@
     rb.querySelectorAll(".vc-spot,.vc-mate").forEach((x) => x.remove());
     const sc = sceneFor(id), here = !visiting && mateAt() === "room";
     if (sc) { const z = SCENE_SPOT[mateOf().id][sc], b = document.createElement("button"); b.className = "vc-spot mate"; b.dataset.m = sc; b.title = mateOf().name;
-      b.style.cssText = `left:${z[0]}%;top:${z[1]}%;width:${z[2]}%;height:${z[3]}%`; b.innerHTML = `<i>${sc === "sleep" ? "💤" : sc === "tv" ? "📺" : "💬"}</i>`; rb.appendChild(b); }
+      b.style.cssText = `left:${z[0]}%;top:${z[1]}%;width:${z[2]}%;height:${z[3]}%`; b.innerHTML = `<i>${({ sleep: "💤", tv: "📺", eat: "🍽️", pool: "🌴" })[sc] || "💬"}</i>`; rb.appendChild(b); }
     if (!visiting && id === "bath" && mateAt() === "bath") setTimeout(() => toast("🚿 " + mateOf().name + " is taking a shower. The door is closed."), 400);
-    if (!visiting && id === "mate" && !here && !sc) setTimeout(() => toast("🚪 " + mateOf().name + " is not here. " + mateOf().she + " is " + ({ bath: "in the bathroom", cook: "in the kitchen", tv: "watching TV in the living room" })[mateAt()] + "."), 400);
+    if (!visiting && id === "mate" && !here && !sc) setTimeout(() => toast("🚪 " + mateOf().name + " is not here. " + mateOf().she + " is " + ({ bath: "in the bathroom", cook: "in the kitchen", tv: "watching TV in the living room", eat: "having " + mealName() + " in the kitchen", pool: "relaxing by the pool" })[mateAt()] + "."), 400);
     if (id === "mate" && here) { const mi = document.createElement("img"); mi.className = "vc-mate"; mi.alt = ""; mi.draggable = false; mi.src = ASSET + "npc/mate_" + mateOf().key + ".webp" + AV; rb.appendChild(mi); }
     (r.spots || []).forEach((sp, i) => {
       if (sp.mate && !here) return;
@@ -516,12 +516,14 @@
     g: { key: "gay", id: "kai", name: "Kai", them: "him", she: "He" } };
   // Fix 86: daily routine by local hour. sleep (mate room) / bath / room / cook (kitchen) / tv (living).
   function mateAt() { const h = new Date().getHours();
-    return h < 6 || h >= 23 ? "sleep" : h < 8 ? "bath" : h < 12 ? "room" : h < 14 ? "cook" : h < 18 ? "room" : h < 20 ? "cook" : "tv"; }
-  const SCENE_ROOM = { sleep: "mate", cook: "kitchen", tv: "living" };
+    // Fix 87 timetable (no overlaps): 23-6 sleep, 6-7 shower, 7-8 breakfast, 8-12 room, 12-13 cook, 13-14 lunch, 14-16 pool, 16-18 room, 18-19 cook, 19-20 dinner, 20-23 TV.
+    return h < 6 || h >= 23 ? "sleep" : h < 7 ? "bath" : h < 8 ? "eat" : h < 12 ? "room" : h < 13 ? "cook" : h < 14 ? "eat" : h < 16 ? "pool" : h < 18 ? "room" : h < 19 ? "cook" : h < 20 ? "eat" : "tv"; }
+  function mealName() { const h = new Date().getHours(); return h < 10 ? "breakfast" : h < 16 ? "lunch" : "dinner"; }
+  const SCENE_ROOM = { sleep: "mate", cook: "kitchen", tv: "living", eat: "kitchen", pool: "pool" };
   const SCENE_SPOT = {
-    mia: { sleep: [60, 50, 18, 22], cook: [72, 36, 12, 48], tv: [73, 36, 15, 30] },
-    leo: { sleep: [62, 50, 16, 18], cook: [68, 26, 13, 58], tv: [74, 42, 15, 40] },
-    kai: { sleep: [62, 54, 16, 16], cook: [46, 24, 22, 74], tv: [76, 50, 14, 34] } };
+    mia: { sleep: [60, 50, 18, 22], cook: [72, 36, 12, 48], tv: [73, 36, 15, 30], pool: [57, 36, 23, 38], eat: [25, 55, 13, 36] },
+    leo: { sleep: [62, 50, 16, 18], cook: [68, 26, 13, 58], tv: [74, 42, 15, 40], pool: [66, 45, 29, 32], eat: [27, 56, 13, 36] },
+    kai: { sleep: [62, 54, 16, 16], cook: [46, 24, 22, 74], tv: [76, 50, 14, 34], pool: [66, 45, 29, 36], eat: [27, 55, 13, 36] } };
   function sceneFor(id) { if (visiting) return null; const a = mateAt(); return SCENE_ROOM[a] === id ? a : null; }
   function roomSrc(id) { const sc = sceneFor(id); return sc ? "mate/" + mateOf().id + "_" + sc + ".webp" : ROOMS[id].img; }
   function baseRoom(on) { const im = root && root.querySelector(".vc-rimg"); if (!im || !room) return; im.src = ASSET + (on ? ROOMS[room].img : roomSrc(room)) + AV; }
@@ -578,6 +580,8 @@
     const mt = mateOf(), s = mateLoad(), talked = s.day === today(), tvd = s.tv === today();
     const pct = Math.min(100, s.love);
     card(`<b>💞 ${mt.name}</b><div class="vc-love"><i style="width:${pct}%"></i><span>❤️ ${s.love} / 100</span></div>` +
+      (sc === "eat" ? `<button class="vc-btn gold" data-mact="eat" ${s.meal === today() + mealName() ? "disabled" : ""}>🍽️ ${s.meal === today() + mealName() ? "Ate " + mealName() + " together" : "Eat " + mealName() + " together (+5 ❤️)"}</button>` : "") +
+      (sc === "pool" ? `<button class="vc-btn gold" data-mact="pool" ${s.pool === today() ? "disabled" : ""}>🌴 ${s.pool === today() ? "Relaxed together today" : "Relax together (+5 ❤️)"}</button>` : "") +
       (sc === "tv" ? `<button class="vc-btn gold" data-mtv ${tvd ? "disabled" : ""}>📺 ${tvd ? "Watched TV together today" : "Watch TV together (+5 ❤️)"}</button>` : "") +
       `<button class="vc-btn gold" data-mtalk ${talked ? "disabled" : ""}>💬 ${talked ? "Talked today — come back tomorrow" : "Talk (+5 ❤️)"}</button>` +
       `<button class="vc-btn" data-mhug ${s.love < 30 ? "disabled" : ""}>🤗 Hug ${s.love < 30 ? "🔒 30 ❤️" : s.hug ? "" : "— Mission"}</button>` +
@@ -596,6 +600,28 @@
           choices: [{ text: "Smooth. Mine too.", love: 5, reply: ["*laughs and leans on you* Stop, I'm melting."] }, { text: "The one in red.", love: 0, reply: ["Wow. Okay. Rude."] }] },
         { lines: ["This old movie always makes me cry.", "*he dabs his eyes* Don't look at me like that.", "Can I lean on you for the ending?"],
           choices: [{ text: "Always. Come here.", love: 5, reply: ["*rests his head on your shoulder* ...Thank you, {me}."] }, { text: "You're such a softie.", love: 0, reply: ["And proud of it."] }] }] };
+  const ACT = {
+    eat: { m: ["I made your favourite, {me}. Sit with me?", "*she pushes a plate towards you* Try it. Is it good?"],
+           f: ["Food's ready! Come eat with me, {me}.", "*he pulls out a chair for you* Ladies first."],
+           g: ["Darling, the table is set! Don't make me eat alone.", "*he pours you a glass of juice* Cheers to us."],
+           ch: { m: [["It's delicious. Like you.", 5, "*giggles* Eat, you flirt!"], ["It's fine.", 0, "Just fine? I'll try harder next time."]],
+                 f: [["Best meal ever, chef.", 5, "*grins* I'll cook for you forever, then."], ["A bit salty.", 0, "Noted... I'll fix it."]],
+                 g: [["Five stars, Chef Kai!", 5, "*bows dramatically* Thank you, thank you!"], ["It's okay.", 0, "Okay?! The audacity."]] } },
+    pool: { m: ["The water looks so nice today. Sit with me in the sun, {me}?", "*she offers you a glass of juice*"],
+            f: ["Perfect weather, right? Come relax with me.", "*he slides over to make room on the lounger*"],
+            g: ["Sunglasses on, drinks ready. Join me, darling!", "*he hands you a fruity drink with a tiny umbrella*"],
+            ch: { m: [["Only if you sit close to me.", 5, "*moves closer* Like this?"], ["It's too hot.", 0, "Then sit under the umbrella, silly."]],
+                  f: [["Nowhere I'd rather be.", 5, "*smiles and closes his eyes* Me too."], ["Just a minute.", 0, "Okay, just a minute."]],
+                  g: [["Cheers to sunny days with you.", 5, "*clinks glasses* The sunniest, with you here."], ["I'll burn.", 0, "Sunscreen exists, you know!"]] } } };
+  function mateAct(kind) {
+    const g = (getProfile() || {}).gender || "m", mt = mateOf(), s = mateLoad(), a = ACT[kind];
+    const stamp = kind === "eat" ? today() + mealName() : today(), key = kind === "eat" ? "meal" : "pool";
+    if (s[key] === stamp) { toast("❤️ Already done — come back later."); return; }
+    talk({ npc: "mate_" + mt.key, name: mt.name, lines: a[g].map((x) => ({ who: "npc", text: fill(x) })),
+      choices: a.ch[g].map((c) => ({ text: fill(c[0]), love: c[1], reply: [fill(c[2])] })),
+      onChoice: (c) => { const s2 = mateLoad(); s2.love = Math.min(100, s2.love + 5 + (c.love || 0)); s2[key] = stamp; mateSave(s2); },
+      onEnd: () => toast("❤️ " + mt.name + ": " + mateLoad().love + " / 100") });
+  }
   function mateTV() {
     const g = (getProfile() || {}).gender || "m", mt = mateOf(), s = mateLoad();
     if (s.tv === today()) { toast("📺 You already watched TV with " + mt.name + " today."); return; }
@@ -711,7 +737,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const fb = e.target.closest("[data-farmbuy]"); if (fb) { buyFarm(Number(fb.dataset.farmbuy)); return; } if (e.target.closest("[data-mtv]")) { e.currentTarget.classList.add("hidden"); mateTV(); return; } if (e.target.closest("[data-mtalk]")) { e.currentTarget.classList.add("hidden"); mateTalk(); return; } if (e.target.closest("[data-mhug]")) { e.currentTarget.classList.add("hidden"); mateHug(); return; } if (e.target.closest("[data-mkiss]")) { e.currentTarget.classList.add("hidden"); mateKiss(); return; } if (e.target.closest("[data-plant]")) { e.currentTarget.classList.add("hidden"); toast("🌱 Planting is coming next!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const fb = e.target.closest("[data-farmbuy]"); if (fb) { buyFarm(Number(fb.dataset.farmbuy)); return; } const ma = e.target.closest("[data-mact]"); if (ma) { e.currentTarget.classList.add("hidden"); mateAct(ma.dataset.mact); return; } if (e.target.closest("[data-mtv]")) { e.currentTarget.classList.add("hidden"); mateTV(); return; } if (e.target.closest("[data-mtalk]")) { e.currentTarget.classList.add("hidden"); mateTalk(); return; } if (e.target.closest("[data-mhug]")) { e.currentTarget.classList.add("hidden"); mateHug(); return; } if (e.target.closest("[data-mkiss]")) { e.currentTarget.classList.add("hidden"); mateKiss(); return; } if (e.target.closest("[data-plant]")) { e.currentTarget.classList.add("hidden"); toast("🌱 Planting is coming next!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;
