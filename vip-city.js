@@ -8,7 +8,7 @@
 (function () {
   const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=82"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=83"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
@@ -273,9 +273,12 @@
     // Hallway (Fix 68): between the bedroom and the living room.
     hall: { img: "room_hall.webp", name: "Hallway", arrows: [
       { x: 18, y: 62, dir: "left", go: "living", label: "Living room" },
-      { x: 50, y: 50, dir: "up", act: "out", label: "Outside" },
+      { x: 50, y: 50, dir: "up", go: "mate", label: "Mate" }, // Fix 83: housemate's room (was Outside)
       { x: 68, y: 52, dir: "right", go: "bath", label: "Bathroom" },
       { x: 85, y: 55, dir: "right", go: "bed", label: "My room" } ] },
+    // Fix 83: housemate's room behind the hallway's centre door. Male player -> girl's room, female -> boy's room, gay -> gay room.
+    mate: { get img() { const g = (getProfile() || {}).gender; return g === "f" ? "room_boy.webp" : g === "g" ? "room_gay.webp" : "room_girl.webp"; },
+      get name() { return mateLabel(); }, arrows: [ { x: 8, y: 55, dir: "left", go: "hall", label: "Hallway" } ] },
     bath: { img: "room_bath.webp", name: "Bathroom", arrows: [
       { x: 6, y: 58, dir: "left", go: "hall", label: "Hallway" } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
@@ -318,7 +321,7 @@
     img.className = "vc-rimg in"; img.alt = ""; img.draggable = false; img.src = ASSET + r.img + AV;
     rb.appendChild(img);
     if (first) { el.classList.remove("hidden"); root.classList.add("in-room"); }
-    const lab = (a) => visiting && a.label === "My room" ? "Bedroom" : a.label;
+    const lab = (a) => a.go === "mate" ? mateLabel() : visiting && a.label === "My room" ? "Bedroom" : a.label;
     arrows.innerHTML = r.arrows.map((a, i) =>
       `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(lab(a))}"><span></span><em>${esc(lab(a))}</em></button>`).join("");
     let vb = el.querySelector(".vc-visit"); if (visiting) { if (!vb) { vb = document.createElement("div"); vb.className = "vc-visit"; el.appendChild(vb); } vb.textContent = "🚪 Visiting " + visiting.name + "'s house"; } else vb?.remove();
@@ -459,6 +462,7 @@
   const LANGS = [["en", "🇬🇧", "English"], ["ru", "🇷🇺", "Русский"], ["es", "🇪🇸", "Español"], ["my", "🇲🇲", "မြန်မာ"]];
   const GENDERS = [["m", "♂", "Male"], ["f", "♀", "Female"], ["g", "🏳️‍🌈", "Gay"]];
   const AV_PER = 4; // avatar slots per group: city-assets/avatars/{m,f,g}{1..4}.webp (user's pictures go here)
+  function mateLabel() { return (getProfile() || {}).gender === "m" || !(getProfile() || {}).gender ? "Her room" : "His room"; }
   function getProfile() { try { return JSON.parse(localStorage.getItem("vc_profile") || "null"); } catch { return null; } }
   function setupFlow(done) {
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
