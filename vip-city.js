@@ -8,7 +8,7 @@
 (function () {
   const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=79"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=80"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
