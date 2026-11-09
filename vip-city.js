@@ -8,7 +8,7 @@
 (function () {
   const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=83"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=85"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
@@ -278,7 +278,8 @@
       { x: 85, y: 55, dir: "right", go: "bed", label: "My room" } ] },
     // Fix 83: housemate's room behind the hallway's centre door. Male player -> girl's room, female -> boy's room, gay -> gay room.
     mate: { get img() { const g = (getProfile() || {}).gender; return g === "f" ? "room_boy.webp" : g === "g" ? "room_gay.webp" : "room_girl.webp"; },
-      get name() { return mateLabel(); }, arrows: [ { x: 8, y: 55, dir: "left", go: "hall", label: "Hallway" } ] },
+      get name() { return mateLabel(); }, arrows: [ { x: 8, y: 55, dir: "left", go: "hall", label: "Hallway" } ],
+      spots: [ { id: "mate", mate: true, x: 49, y: 12, w: 18, h: 84, icon: "💬", name: "housemate", info: "" } ] },
     bath: { img: "room_bath.webp", name: "Bathroom", arrows: [
       { x: 6, y: 58, dir: "left", go: "hall", label: "Hallway" } ] },
     bed: { img: "room_bed.webp", name: "Bedroom", arrows: [
@@ -325,12 +326,13 @@
     arrows.innerHTML = r.arrows.map((a, i) =>
       `<button class="vc-arrow ${a.dir}" data-i="${i}" data-x="${a.x}" data-y="${a.y}" title="${esc(lab(a))}"><span></span><em>${esc(lab(a))}</em></button>`).join("");
     let vb = el.querySelector(".vc-visit"); if (visiting) { if (!vb) { vb = document.createElement("div"); vb.className = "vc-visit"; el.appendChild(vb); } vb.textContent = "🚪 Visiting " + visiting.name + "'s house"; } else vb?.remove();
-    rb.querySelectorAll(".vc-spot").forEach((x) => x.remove());
+    rb.querySelectorAll(".vc-spot,.vc-mate").forEach((x) => x.remove());
+    if (id === "mate") { const mi = document.createElement("img"); mi.className = "vc-mate"; mi.alt = ""; mi.draggable = false; mi.src = ASSET + "npc/mate_" + mateOf().key + ".webp" + AV; rb.appendChild(mi); }
     (r.spots || []).forEach((sp, i) => {
       const b = document.createElement("button");
       b.className = "vc-spot"; b.dataset.s = i; b.title = sp.name;
       b.style.cssText = `left:${sp.x}%;top:${sp.y}%;width:${sp.w}%;height:${sp.h}%`;
-      b.innerHTML = `<i>${sp.free || sp.storage || visiting ? sp.icon : "🔒"}</i>`; if (sp.free || sp.storage) b.classList.add("free");
+      b.innerHTML = `<i>${sp.free || sp.storage || sp.mate || visiting ? sp.icon : "🔒"}</i>`; if (sp.free || sp.storage) b.classList.add("free"); if (sp.mate) b.classList.add("mate");
       rb.appendChild(b);
     });
     layoutRoom();
@@ -366,6 +368,7 @@
       const it = ROOMS[room].spots[Number(sp.dataset.s)];
       if (visiting && !it.free) { toast(it.icon + " This is " + visiting.name + "'s " + it.name.toLowerCase() + "."); return; }
       if (it.storage) { wardrobeCard(); return; }
+      if (it.mate) { mateCard(); return; }
       if (it.free) { card(`<b>${it.icon} ${esc(it.name)}</b><p>${esc(it.info)}</p><button class="vc-btn gold" data-sit="${esc(it.id)}">😌 Sit &amp; relax</button>`); return; }
       if (owned()[it.id]) { toast(it.icon + " " + it.name + " — coming soon"); return; }
       card(`<b>${it.icon} ${esc(it.name)} 🔒</b><p>${esc(it.info)}</p>` +
@@ -499,6 +502,91 @@
   }
 
 
+  // ---- Fix 85: housemate (Mia / Leo / Kai) with love points, daily talks, hug and kiss missions. ----
+  const MATE = {
+    m: { key: "girl", name: "Mia", them: "her" },
+    f: { key: "boy", name: "Leo", them: "him" },
+    g: { key: "gay", name: "Kai", them: "him" } };
+  const mateOf = () => MATE[(getProfile() || {}).gender] || MATE.m;
+  // Daily talks per player gender. {me} = player's name. Each has a sweet (+5 extra) and a plain choice.
+  const TALKS = {
+    m: [
+      { lines: ["Oh, {me}! You're home. I was just thinking about you.", "Do you ever feel like this house is warmer when we're both here?"],
+        choices: [{ text: "It is. Because you're here.", love: 5, reply: ["*blushes* You always know what to say..."] }, { text: "Maybe it's the heater.", love: 0, reply: ["Haha... you're impossible, {me}."] }] },
+      { lines: ["I made too much coffee this morning. Want some?", "I like the way you smile when you take the first sip."],
+        choices: [{ text: "I only smile like that around you.", love: 5, reply: ["Stop it... my heart is racing now."] }, { text: "Thanks, I'm good.", love: 0, reply: ["Oh... okay. Maybe next time."] }] },
+      { lines: ["Can I tell you a secret?", "When you're late, I keep looking at the door."],
+        choices: [{ text: "Then I'll come home earlier for you.", love: 5, reply: ["Promise? ...I'll wait for you, {me}."] }, { text: "Traffic was bad.", love: 0, reply: ["Mm. I see."] }] },
+      { lines: ["Look, the city lights are so pretty tonight.", "Do you think we could watch them together sometime?"],
+        choices: [{ text: "Every night, if you want.", love: 5, reply: ["*smiles softly* I'd like that more than anything."] }, { text: "Sure, sometime.", love: 0, reply: ["Okay... sometime."] }] },
+      { lines: ["I had a dream about you last night.", "We were walking on the beach, holding hands."],
+        choices: [{ text: "Let's make that dream real.", love: 5, reply: ["You mean it? Then... it's a date, {me}."] }, { text: "Weird dream.", love: 0, reply: ["Hmph. Forget I said anything."] }] } ],
+    f: [
+      { lines: ["Hey, {me}. You look really nice today.", "I mean... you always do. I just never say it."],
+        choices: [{ text: "Say it more often, then.", love: 5, reply: ["*laughs* Okay. You're beautiful, {me}."] }, { text: "Thanks, Leo.", love: 0, reply: ["Yeah... no problem."] }] },
+      { lines: ["I'm trying to learn a love song on my guitar.", "Want to be the first one to hear it?"],
+        choices: [{ text: "Only if it's about me.", love: 5, reply: ["Maybe it is... *grins*"] }, { text: "Maybe later.", love: 0, reply: ["Oh. Sure, later."] }] },
+      { lines: ["You worked hard today. Sit, I'll cook dinner for you.", "I like taking care of you."],
+        choices: [{ text: "I like being taken care of by you.", love: 5, reply: ["Then let me do it every day."] }, { text: "I can cook myself.", love: 0, reply: ["Right... of course you can."] }] },
+      { lines: ["I beat my high score, but it's not fun without you watching.", "You're my lucky charm, you know?"],
+        choices: [{ text: "Then I'll always cheer for you.", love: 5, reply: ["With you here, I can't lose."] }, { text: "Games are boring.", love: 0, reply: ["Ouch. Okay."] }] },
+      { lines: ["Can I be honest? I get a little jealous when other guys talk to you.", "Is that silly?"],
+        choices: [{ text: "Not silly. You're the only one I want.", love: 5, reply: ["*his face turns red* ...Really?"] }, { text: "A bit silly.", love: 0, reply: ["Yeah. Forget it."] }] } ],
+    g: [
+      { lines: ["{me}! Finally, you're home. I picked out a new shirt, rate it?", "Be honest... do I look good?"],
+        choices: [{ text: "You look amazing. As always.", love: 5, reply: ["Oh stop, you're making me blush, darling."] }, { text: "It's okay.", love: 0, reply: ["Just okay?! Rude. *pouts*"] }] },
+      { lines: ["I put a new record on. It's our kind of song.", "Dance with me for a minute?"],
+        choices: [{ text: "Only if you lead.", love: 5, reply: ["*takes your hand* Happily."] }, { text: "I can't dance.", love: 0, reply: ["Everyone can dance, silly."] }] },
+      { lines: ["You know what I love about living with you?", "I can just be myself. No masks."],
+        choices: [{ text: "I love the real you.", love: 5, reply: ["*soft smile* ...That means everything to me."] }, { text: "Same here.", love: 0, reply: ["Good, good."] }] },
+      { lines: ["I keep a little playlist called '{me}'.", "Every song reminds me of you."],
+        choices: [{ text: "Play me the first song.", love: 5, reply: ["Close your eyes and listen... this one's my favourite."] }, { text: "That's a bit much.", love: 0, reply: ["Oh... okay. Noted."] }] },
+      { lines: ["Can I ask you something?", "If I held your hand on the street... would you mind?"],
+        choices: [{ text: "I'd hold it tighter.", love: 5, reply: ["*eyes sparkle* You're the best thing that happened to me."] }, { text: "Let's not rush.", love: 0, reply: ["Sure. No rush."] }] } ] };
+  const HUG = {
+    m: ["Hey {me}... I had a rough day.", "Could you... just hold me for a moment?"],
+    f: ["You look tired, {me}.", "Come here. Let me give you a hug."],
+    g: ["Ugh, today was a mess.", "I need a big hug from my favourite person. Now. *opens arms*"] };
+  const HUG_END = { m: ["*you wrap your arms around her*", "...Thank you. I feel safe with you."], f: ["*he pulls you into a warm hug*", "Better? I'm always here for you."], g: ["*you hug him tight*", "Mmm. Okay, now I'm happy again."] };
+  const KISS = {
+    m: ["{me}... we've been living together for a while now.", "I don't want to just be your housemate anymore.", "*she steps closer, looking into your eyes*"],
+    f: ["{me}, I have to tell you something.", "I think I'm falling for you.", "*he gently brushes your hair away from your face*"],
+    g: ["Okay, I'm just going to say it.", "I like you, {me}. Like, really like you.", "*he leans closer with a nervous smile*"] };
+  const today = () => new Date(Date.now() + 6.5 * 3600e3).toISOString().slice(0, 10);
+  function mateSave(s) { localStorage.setItem("vc_mate", JSON.stringify(s)); }
+  function mateLoad() { let s; try { s = JSON.parse(localStorage.getItem("vc_mate") || "null"); } catch {} return Object.assign({ love: 0, day: "", n: 0, hug: false, kiss: false }, s || {}); }
+  const fill = (t) => t.replace(/\{me\}/g, (getProfile() || {}).name || "You");
+  function mateCard() {
+    const mt = mateOf(), s = mateLoad(), talked = s.day === today();
+    const pct = Math.min(100, s.love);
+    card(`<b>💞 ${mt.name}</b><div class="vc-love"><i style="width:${pct}%"></i><span>❤️ ${s.love} / 100</span></div>` +
+      `<button class="vc-btn gold" data-mtalk ${talked ? "disabled" : ""}>💬 ${talked ? "Talked today — come back tomorrow" : "Talk (+5 ❤️)"}</button>` +
+      `<button class="vc-btn" data-mhug ${s.love < 30 ? "disabled" : ""}>🤗 Hug ${s.love < 30 ? "🔒 30 ❤️" : s.hug ? "" : "— Mission"}</button>` +
+      `<button class="vc-btn" data-mkiss ${s.love < 60 ? "disabled" : ""}>💋 Kiss ${s.love < 60 ? "🔒 60 ❤️" : s.kiss ? "" : "— Mission"}</button>`);
+  }
+  function mateTalk() {
+    const g = (getProfile() || {}).gender || "m", mt = mateOf(), s = mateLoad();
+    if (s.day === today()) { toast("💬 You already talked with " + mt.name + " today."); return; }
+    const list = TALKS[g] || TALKS.m, tk = list[s.n % list.length];
+    talk({ npc: "mate_" + mt.key, name: mt.name, lines: tk.lines.map((x) => ({ who: "npc", text: fill(x) })),
+      choices: tk.choices.map((c) => ({ text: fill(c.text), reply: c.reply.map(fill), love: c.love })),
+      onChoice: (c) => { const s2 = mateLoad(); s2.love = Math.min(100, s2.love + 5 + (c.love || 0)); s2.day = today(); s2.n++; mateSave(s2); },
+      onEnd: () => toast("❤️ " + mt.name + ": " + mateLoad().love + " / 100") });
+  }
+  function mateHug() {
+    const g = (getProfile() || {}).gender || "m", mt = mateOf(), s = mateLoad(); if (s.love < 30) return;
+    talk({ npc: "mate_" + mt.key, name: mt.name, lines: HUG[g].map((x) => ({ who: "npc", text: fill(x) })).concat(HUG_END[g].map((x, i) => ({ who: i ? "npc" : "me", text: fill(x) }))),
+      onEnd: () => { const s2 = mateLoad(); if (!s2.hug) { s2.hug = true; s2.love = Math.min(100, s2.love + 10); mateSave(s2); toast("🎉 Mission complete: Hug " + mt.name + "! +10 ❤️"); } } });
+  }
+  function mateKiss() {
+    const g = (getProfile() || {}).gender || "m", mt = mateOf(), s = mateLoad(); if (s.love < 60) return;
+    talk({ npc: "mate_" + mt.key, name: mt.name, lines: KISS[g].map((x) => ({ who: "npc", text: fill(x) })),
+      choices: [{ text: "Kiss " + mt.them, reply: [] }, { text: "Not yet...", reply: ["It's okay. I'll wait for you."], no: true }],
+      onChoice: (c) => { if (c.no) return; const f = document.createElement("div"); f.className = "vc-fade"; f.innerHTML = "<span>💋</span><p>" + esc(fill("{me} and " + mt.name + " share a soft kiss...")) + "</p>"; root.appendChild(f);
+        setTimeout(() => { f.classList.add("out"); setTimeout(() => f.remove(), 700); }, 2600);
+        const s2 = mateLoad(); if (!s2.kiss) { s2.kiss = true; s2.love = Math.min(100, s2.love + 15); mateSave(s2); setTimeout(() => toast("🎉 Mission complete: Kiss " + mt.name + "! +15 ❤️"), 2800); } } });
+  }
+
   // ---- Talk scene (Fix 71): player on the left, girl on the right, dialogue box at the bottom. ----
   // talk({ npc:"mia", name:"Mia", lines:[{who:"npc"|"me", text}], choices:[{text, reply}] })
   function talk(t) {
@@ -529,7 +617,7 @@
     };
     el.addEventListener("click", (e) => {
       const c = e.target.closest("[data-c]");
-      if (c) { const ch = t.choices[Number(c.dataset.c)]; el.classList.remove("choosing"); el.classList.add("done"); el.querySelector(".vc-tch").innerHTML = ""; lines.push({ who: "me", text: ch.text }); (ch.reply || []).forEach((r) => lines.push({ who: "npc", text: r })); step(); return; }
+      if (c) { const ch = t.choices[Number(c.dataset.c)]; t.onChoice && t.onChoice(ch); el.classList.remove("choosing"); el.classList.add("done"); el.querySelector(".vc-tch").innerHTML = ""; lines.push({ who: "me", text: ch.text }); (ch.reply || []).forEach((r) => lines.push({ who: "npc", text: r })); step(); return; }
       if (!el.classList.contains("choosing")) step();
     });
     step();
@@ -582,7 +670,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const fb = e.target.closest("[data-farmbuy]"); if (fb) { buyFarm(Number(fb.dataset.farmbuy)); return; } if (e.target.closest("[data-plant]")) { e.currentTarget.classList.add("hidden"); toast("🌱 Planting is coming next!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const fb = e.target.closest("[data-farmbuy]"); if (fb) { buyFarm(Number(fb.dataset.farmbuy)); return; } if (e.target.closest("[data-mtalk]")) { e.currentTarget.classList.add("hidden"); mateTalk(); return; } if (e.target.closest("[data-mhug]")) { e.currentTarget.classList.add("hidden"); mateHug(); return; } if (e.target.closest("[data-mkiss]")) { e.currentTarget.classList.add("hidden"); mateKiss(); return; } if (e.target.closest("[data-plant]")) { e.currentTarget.classList.add("hidden"); toast("🌱 Planting is coming next!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;

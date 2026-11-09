@@ -161,3 +161,12 @@ body.vc-loading::after{content:"";position:fixed;left:50%;top:50%;width:44px;hei
 
 .vc-sale.farm{background:linear-gradient(135deg,#c98a3c,#7a4a14)}
 .vc-name.farm{background:rgba(90,55,15,.85)}
+
+/* Fix 85: housemate */
+.vc-mate{position:absolute;left:58%;bottom:1.5%;height:86%;transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.35))}
+.vc-spot.mate{border-color:transparent;background:transparent}.vc-spot.mate i{position:absolute;top:-6px;left:50%;transform:translateX(-50%)}
+.vc-love{position:relative;height:22px;border-radius:11px;background:rgba(255,255,255,.15);overflow:hidden;margin:8px 0 10px}.vc-love i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff6fa5,#ff2d6f)}.vc-love span{position:relative;display:block;text-align:center;font-weight:800;font-size:13px;line-height:22px;color:#fff}
+.vc-btn[disabled]{opacity:.5;pointer-events:none}
+.vc-fade{position:absolute;inset:0;z-index:40;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;animation:vcFin .7s ease}.vc-fade span{font-size:54px}.vc-fade p{font-size:18px;font-weight:700;margin:10px 20px;text-align:center}.vc-fade.out{opacity:0;transition:opacity .7s}
+@keyframes vcFin{from{opacity:0}}
+.vc.in-talk .vc-mate{opacity:0}
