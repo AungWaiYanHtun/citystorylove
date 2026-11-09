@@ -8,7 +8,7 @@
 (function () {
   const MW = 3440, MH = 2688, OX = 688, OY = 768; // Fix 78: map5 = map4 extended +384 top, +384 bottom city + 384 open sea, +688 right (old coords +384 y). map4 = map3 with bigger lawns, no railway (metro), seam fixed
   const ASSET = (window.VIP_CITY_ASSETS || "city-assets/");
-  const AV = "?v=81"; // Fix 78: cache-bust changed art (map, rooms)
+  const AV = "?v=82"; // Fix 78: cache-bust changed art (map, rooms)
   // Plot order = closest to the neighbourhood centre first (same order as before, so saved plots keep their lawn).
   const PLOTS = [[1394,1237,83],[1470,1204,83],[1318,1272,87],[1471,1278,85],[1316,1154,106],[1546,1243,82],[1396,1314,85],[1542,1172,83],[1206,1206,105],[1222,1106,101],[1617,1210,81],[1114,1157,100],[2336,492,130],[2572,504,130],[2468,560,130],[2440,440,128]]; // Fix 63: plots 12-15 are the 4 big lawns (top right) // [x, y, house width]: centre of each enlarged fenced lawn on map4 (map px); width = 85% of the lawn so the house sits inside the fence
   // Landmarks painted on the map: tag position (x, y) above the building.
@@ -70,12 +70,55 @@
         html += `<button class="vc-sale ${big ? "big" : ""}" data-plot="${i}" style="left:${p[0]}px;top:${p[1]}px;z-index:${p[1] + 900}">🏷️ $${pr}${big ? " · Big" : ""}</button>`;
       });
     }
+    // Fix 82: farms — owned fields show the owner, empty ones are for sale until you own one.
+    FARMS.forEach((p, i) => {
+      const f = (data.farms || []).find((x) => Number(x.farm) === i), mine = f && String(data.myFarm) === String(i);
+      if (f) html += `<button class="vc-name farm ${mine ? "me" : ""}" data-farm="${i}" style="left:${p[0]}px;top:${p[1]}px;z-index:${p[1] + 1000}">${mine ? "👑 🌾 My farm" : "🌾 " + esc(f.name)}</button>`;
+      else if (data.myFarm == null) html += `<button class="vc-sale farm" data-farm="${i}" style="left:${p[0]}px;top:${p[1]}px;z-index:${p[1] + 900}">🌾 $${farmPrice()}</button>`;
+    });
     world.innerHTML = html;
     root.querySelector("#vc-count").textContent = `🏠 ${houses.length}`;
     showCash();
   }
 
   const BIG_FROM = 12;
+  // Fix 82: 6 farm fields on map5 (map px, centre of each fenced field). Order must match the server (CITY_FARMS).
+  const FARMS = [[2485,262],[2650,382],[1675,668],[1952,788],[2507,720],[2650,848]];
+  const farmPrice = () => Number(data.farmPrice) || 200;
+  function farmCard(i) {
+    const f = (data.farms || []).find((x) => Number(x.farm) === i), cash = Number(data.cash) || 0, pr = farmPrice();
+    if (f) {
+      if (String(data.myFarm) === String(i)) { card(`<b>🌾 My farm</b><p>Your own field. Plant wheat, rice, carrots, potatoes, grapes, mangoes and apples, then harvest and sell them for $.</p><button class="vc-btn gold" data-plant>🌱 Plant</button>`); return; }
+      card(`<b>🌾 ${esc(f.name)}'s farm</b><p>This field belongs to ${esc(f.name)}.</p>`); return;
+    }
+    if (data.myFarm != null) { card(`<b>🌾 Farm for sale</b><p>You already have a farm.</p>`); return; }
+    card(`<b>🌾 Farm field</b><p>Buy this field, then plant and harvest crops yourself. Price <b>$${pr}</b> · You have <b>$${cash}</b></p>` +
+      (cash >= pr ? `<button class="vc-btn gold" data-farmbuy="${i}">🔑 Buy farm · $${pr}</button>`
+        : `<p class="vc-need">You need $${pr - cash} more.</p><button class="vc-btn gold" data-getcash>💵 Get money</button>`));
+  }
+  async function buyFarm(i) {
+    if (buying) return; buying = true;
+    try {
+      if (!opts?.load) {
+        if ((Number(data.cash) || 0) < farmPrice()) { farmCard(i); return; }
+        data.cash -= farmPrice(); data.myFarm = i; data.farms = [...(data.farms || []), { farm: i, name: "You" }];
+      } else {
+        const r = await api("/api/city/farm-buy", { farm: i });
+        if (!r.ok) {
+          if (r.status === 402) { data.cash = farmPrice() - (r.j.need || 0); farmCard(i); }
+          else if (r.j.error === "TAKEN") { toast("Someone just bought this farm. Pick another one."); await refresh(); root.querySelector("#vc-card").classList.add("hidden"); }
+          else toast(r.j.error === "HAS_FARM" ? "You already have a farm." : "Buying failed. Try again.");
+          return;
+        }
+        Object.assign(data, r.j);
+      }
+      root.querySelector("#vc-card").classList.add("hidden");
+      render();
+      try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.("success"); } catch {}
+      toast("🎉 Your new farm! Tap it to plant.");
+    } catch { toast("📡 Network error. Check your internet."); }
+    finally { buying = false; }
+  }
   const price = (i) => Number((data.prices || [])[i]) || (i >= BIG_FROM ? 150 : 130);
   function showCash() { const b = root?.querySelector("#vc-cashv"); if (b) b.textContent = "$" + (Number(data.cash) || 0); }
   const API = () => ((window.VIDEOSPACE_CONFIG || {}).VIP_API_URL || "").replace(/\/$/, "");
@@ -195,7 +238,8 @@
     el.classList.remove("hidden");
   }
   function onTap(e) {
-    const h = e.target.closest?.("[data-h]"), l = e.target.closest?.("[data-land]"), lot = e.target.closest?.("[data-plot]");
+    const h = e.target.closest?.("[data-h]"), l = e.target.closest?.("[data-land]"), lot = e.target.closest?.("[data-plot]"), fm = e.target.closest?.("[data-farm]");
+    if (fm) { farmCard(Number(fm.dataset.farm)); return; }
     if (lot) { lotCard(Number(lot.dataset.plot)); return; }
     if (h) {
       const house = data.houses.find((x) => String(x.id) === h.dataset.h); if (!house) return;
@@ -534,7 +578,7 @@
       root.querySelector("#vc-prev").addEventListener("click", () => opts.load((data.district - 1 + data.districts) % data.districts));
       root.querySelector("#vc-next").addEventListener("click", () => opts.load((data.district + 1) % data.districts));
     }
-    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
+    root.querySelector("#vc-card").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) e.currentTarget.classList.add("hidden"); if (e.target.closest("[data-exit]")) close(); if (e.target.closest("[data-profile]")) { e.currentTarget.classList.add("hidden"); setupFlow(); return; } const gs = e.target.closest("[data-shop]"); if (gs) { goShop(gs.dataset.shop); return; } if (e.target.closest("[data-fish]")) { e.currentTarget.classList.add("hidden"); toast("🎣 Fishing is coming soon!"); return; } if (e.target.closest("[data-town]")) { e.currentTarget.classList.add("hidden"); leaveRoom(); return; } if (e.target.closest("[data-buy]")) { toast("💵 Items can be bought soon."); return; } if (e.target.closest("[data-sit]")) { e.currentTarget.classList.add("hidden"); toast("☀️ You relax on the sun lounger. More pool fun coming soon!"); return; } const fb = e.target.closest("[data-farmbuy]"); if (fb) { buyFarm(Number(fb.dataset.farmbuy)); return; } if (e.target.closest("[data-plant]")) { e.currentTarget.classList.add("hidden"); toast("🌱 Planting is coming next!"); return; } const lt = e.target.closest("[data-lot]"); if (lt) { buyLot(Number(lt.dataset.lot)); return; } if (e.target.closest("[data-getcash]")) { openCash(); return; } const ac = e.target.closest("[data-adcash]"); if (ac && !ac.disabled) { e.currentTarget.classList.add("hidden"); window.CSLAds?.reward ? window.CSLAds.reward("city", "en") : toast("No ad available right now."); return; } const pk = e.target.closest("[data-pack]"); if (pk) { buyPack(pk.dataset.pack); return; } if (e.target.closest("[data-enter]")) { e.currentTarget.classList.add("hidden"); visiting = null; enterRoom("living"); return; } const hi = e.target.closest("[data-hi]"); if (hi) { e.currentTarget.classList.add("hidden"); toast("👋 You waved at " + hi.dataset.hi + "!"); return; } const vs = e.target.closest("[data-visit]"); if (vs) { const hs = data?.houses?.find((x) => String(x.id) === vs.dataset.visit); e.currentTarget.classList.add("hidden"); visiting = { id: vs.dataset.visit, name: hs ? hs.name : "Neighbour" }; enterRoom("living"); } });
     if (!resizeHooked) { resizeHooked = true; window.addEventListener("resize", () => { if (root) { orient(); focusMine(); if (room) layoutRoom(); } }); }
   }
   let resizeHooked = false, tgHooked = false;
@@ -573,5 +617,5 @@
     await load(null);
   }
 
-  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS, getProfile, talk };
+  window.VipCity = { open, play, close, enterRoom, leaveRoom, PLOTS, FARMS, getProfile, talk };
 })();
