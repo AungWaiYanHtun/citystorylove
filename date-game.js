@@ -17,7 +17,7 @@
     female: { partner: "leo", name: "Leo", avatars: [4, 5, 6], icon: "👩" },
     gay: { partner: "ren", name: "Ren", avatars: [1, 2, 3], icon: "🏳️‍🌈" }
   };
-  const SCENES = { sakura: "bg_sakura.webp", sunset: "bg_sunset.webp", rooftop: "bg_rooftop.webp", home: "bg_rainy_home.webp" };
+  const SCENES = { sakura: "bg_sakura.webp", sunset: "bg_sunset.webp", rooftop: "bg_rooftop.webp", home: "bg_rainy_home.webp", bedroom: "bg_bedroom.webp" };
   const KIND_ICON = { sweet: "💗", fun: "😄", bold: "🔥" };
 
   const TX = {
@@ -25,11 +25,11 @@
       card: ["💘 Sweet Date", "Date, hug, kiss · your love story"], eyebrow: "AI DATING GAME", h: '💘 Sweet <span class="gold-text">Date</span>',
       route: "Who are you?", routes: { male: ["👨 Male", "Date Mya"], female: ["👩 Female", "Date Leo"], gay: ["🏳️‍🌈 Gay", "Date Ren"] },
       avatar: "Pick your avatar", name: "Your name", namePh: "e.g. Alex", lang: "Language",
-      mature: "💋 Romantic kiss scenes. I confirm I am 18 or older.",
+      mature: "💋 Romantic kisses & a night-together bedroom scene (cuddling, non-explicit). I confirm I am 18 or older.",
       start: "💘 Start dating", cont: "▶ Continue date", newGame: "↺ New story", confirmNew: "Delete this love story and start again?",
       pickRoute: "Choose who you are first.", writing: (n) => `${n} is thinking…`, tapNext: "Tap to continue ▸",
       love: "Affection", hugAt: "🤗 Hug", kissAt: "💋 Kiss", locked: "Locked", memories: "🎞 Memories", noMem: "No memories yet. Raise affection to unlock hugs and kisses!",
-      firstHug: "🤗 First hug!", firstKiss: "💋 First kiss!", hugM: "🤗 A warm hug", kissM: "💋 A sweet kiss", replay: "↻ Replay", close: "Continue ▶", skip: "Skip ▸",
+      firstHug: "🤗 First hug!", firstKiss: "💋 First kiss!", hugM: "🤗 A warm hug", kissM: "💋 A sweet kiss", nightAt: "🌙 Night together", firstNight: "🌙 Your first night together", nightM: "🌙 Asleep in each other's arms", replay: "↻ Replay", close: "Continue ▶", skip: "Skip ▸",
       up: (d) => `💗 +${d}`, down: (d) => `💔 ${d}`,
       vip: "👑 VIP · Unlimited", left: (r) => `${r} turns left`, soon: "Coming soon", more: "⚡ More turns", retry: "↻ Try again",
       LIMIT: "You've used today's free turns. 👑 Get VIP or ⚡ energy to keep dating.", BUSY: "The AI is busy. Try again in a moment.",
@@ -40,11 +40,11 @@
       card: ["💘 Sweet Date", "ချိန်းတွေ့၊ ဖက်၊ နမ်း · ကိုယ့်အချစ်ဇာတ်လမ်း"], eyebrow: "AI ချိန်းတွေ့ဂိမ်း", h: '💘 Sweet <span class="gold-text">Date</span>',
       route: "သင် ဘယ်သူလဲ?", routes: { male: ["👨 ယောက်ျား", "Mya နဲ့ ချိန်းတွေ့"], female: ["👩 မိန်းမ", "Leo နဲ့ ချိန်းတွေ့"], gay: ["🏳️‍🌈 Gay", "Ren နဲ့ ချိန်းတွေ့"] },
       avatar: "ကိုယ့် Avatar ရွေးပါ", name: "ကိုယ့်နာမည်", namePh: "ဥပမာ - မောင်မောင်", lang: "ဘာသာစကား",
-      mature: "💋 နမ်းတဲ့ ရင်ခုန်ဇာတ်ဝင်ခန်းများ ပါမယ်။ ကျွန်ုပ်အသက် ၁၈ နှစ်ပြည့်ပါပြီ။",
+      mature: "💋 နမ်းတဲ့ခန်းနဲ့ 🌙 အိပ်ခန်းထဲ အတူအိပ်တဲ့ခန်း (ဖက်ပြီးအိပ်၊ မညစ်ညမ်း) ပါမယ်။ ကျွန်ုပ်အသက် ၁၈ နှစ်ပြည့်ပါပြီ။",
       start: "💘 ချိန်းတွေ့မယ်", cont: "▶ ဆက်ချိန်းမယ်", newGame: "↺ အသစ်စမယ်", confirmNew: "ဒီအချစ်ဇာတ်လမ်းကို ဖျက်ပြီး အသစ်စမလား?",
       pickRoute: "သင် ဘယ်သူလဲ ဆိုတာ အရင်ရွေးပါ။", writing: (n) => `${n} စဉ်းစားနေတယ်…`, tapNext: "ဆက်ဖတ်ရန် နှိပ်ပါ ▸",
       love: "ချစ်ခြင်း", hugAt: "🤗 ဖက်", kissAt: "💋 နမ်း", locked: "မဖွင့်ရသေး", memories: "🎞 အမှတ်တရ", noMem: "အမှတ်တရ မရှိသေးပါ။ ချစ်ခြင်းတိုးရင် ဖက်တာ၊ နမ်းတာ ဖွင့်ပါမယ်!",
-      firstHug: "🤗 ပထမဆုံး ဖက်လိုက်ပြီ!", firstKiss: "💋 ပထမဆုံး အနမ်း!", hugM: "🤗 နွေးထွေးတဲ့ အဖက်", kissM: "💋 ချိုမြိန်တဲ့ အနမ်း", replay: "↻ ပြန်ကြည့်", close: "ဆက်မယ် ▶", skip: "ကျော်မယ် ▸",
+      firstHug: "🤗 ပထမဆုံး ဖက်လိုက်ပြီ!", firstKiss: "💋 ပထမဆုံး အနမ်း!", hugM: "🤗 နွေးထွေးတဲ့ အဖက်", kissM: "💋 ချိုမြိန်တဲ့ အနမ်း", nightAt: "🌙 အတူအိပ်", firstNight: "🌙 ပထမဆုံး အတူအိပ်တဲ့ည", nightM: "🌙 ဖက်ပြီး အတူအိပ်ပျော်", replay: "↻ ပြန်ကြည့်", close: "ဆက်မယ် ▶", skip: "ကျော်မယ် ▸",
       up: (d) => `💗 +${d}`, down: (d) => `💔 ${d}`,
       vip: "👑 VIP · အကန့်အသတ်မရှိ", left: (r) => `${r} ကြိမ်ကျန်`, soon: "မကြာခင်ဖွင့်ပါမယ်", more: "⚡ ဆော့ခွင့်ထပ်ယူ", retry: "↻ ထပ်စမ်းမယ်",
       LIMIT: "ဒီနေ့ အခမဲ့အကြိမ် ကုန်ပါပြီ။ 👑 VIP (သို့) ⚡ ယူပြီး ဆက်ချိန်းပါ။", BUSY: "AI အလုပ်များနေပါတယ်။ ခဏနေ ထပ်နှိပ်ပါ။",
@@ -55,11 +55,11 @@
       card: ["💘 Sweet Date", "Свидания, объятия, поцелуи"], eyebrow: "ИИ-СВИДАНИЯ", h: '💘 Sweet <span class="gold-text">Date</span>',
       route: "Кто вы?", routes: { male: ["👨 Парень", "Свидание с Мьей"], female: ["👩 Девушка", "Свидание с Лео"], gay: ["🏳️‍🌈 Гей", "Свидание с Реном"] },
       avatar: "Выберите аватар", name: "Ваше имя", namePh: "например, Саша", lang: "Язык",
-      mature: "💋 Романтические поцелуи. Подтверждаю, что мне есть 18 лет.",
+      mature: "💋 Поцелуи и ночь вместе в спальне (объятия, без откровенного). Подтверждаю, что мне есть 18 лет.",
       start: "💘 Начать", cont: "▶ Продолжить", newGame: "↺ Заново", confirmNew: "Удалить эту историю и начать заново?",
       pickRoute: "Сначала выберите, кто вы.", writing: (n) => `${n} думает…`, tapNext: "Нажмите, чтобы продолжить ▸",
       love: "Симпатия", hugAt: "🤗 Объятие", kissAt: "💋 Поцелуй", locked: "Закрыто", memories: "🎞 Воспоминания", noMem: "Пока пусто. Повышайте симпатию!",
-      firstHug: "🤗 Первое объятие!", firstKiss: "💋 Первый поцелуй!", hugM: "🤗 Тёплое объятие", kissM: "💋 Нежный поцелуй", replay: "↻ Повтор", close: "Дальше ▶", skip: "Пропустить ▸",
+      firstHug: "🤗 Первое объятие!", firstKiss: "💋 Первый поцелуй!", hugM: "🤗 Тёплое объятие", kissM: "💋 Нежный поцелуй", nightAt: "🌙 Ночь вместе", firstNight: "🌙 Первая ночь вместе", nightM: "🌙 Уснули в объятиях", replay: "↻ Повтор", close: "Дальше ▶", skip: "Пропустить ▸",
       up: (d) => `💗 +${d}`, down: (d) => `💔 ${d}`,
       vip: "👑 VIP · Без ограничений", left: (r) => `Осталось ${r}`, soon: "Скоро", more: "⚡ Ещё ходы", retry: "↻ Ещё раз",
       LIMIT: "Бесплатные ходы закончились. 👑 VIP или ⚡ энергия — и продолжайте.", BUSY: "ИИ занят. Попробуйте позже.",
@@ -69,11 +69,11 @@
       card: ["💘 Sweet Date", "Citas, abrazos, besos"], eyebrow: "JUEGO DE CITAS IA", h: '💘 Sweet <span class="gold-text">Date</span>',
       route: "¿Quién eres?", routes: { male: ["👨 Chico", "Cita con Mya"], female: ["👩 Chica", "Cita con Leo"], gay: ["🏳️‍🌈 Gay", "Cita con Ren"] },
       avatar: "Elige tu avatar", name: "Tu nombre", namePh: "p. ej. Alex", lang: "Idioma",
-      mature: "💋 Escenas de besos románticos. Confirmo que tengo 18 años o más.",
+      mature: "💋 Besos y una noche juntos en el dormitorio (abrazos, nada explícito). Confirmo que tengo 18 años o más.",
       start: "💘 Empezar", cont: "▶ Continuar", newGame: "↺ Nueva historia", confirmNew: "¿Borrar esta historia y empezar otra?",
       pickRoute: "Primero elige quién eres.", writing: (n) => `${n} está pensando…`, tapNext: "Toca para continuar ▸",
       love: "Cariño", hugAt: "🤗 Abrazo", kissAt: "💋 Beso", locked: "Bloqueado", memories: "🎞 Recuerdos", noMem: "Aún no hay recuerdos. ¡Sube el cariño!",
-      firstHug: "🤗 ¡Primer abrazo!", firstKiss: "💋 ¡Primer beso!", hugM: "🤗 Un abrazo cálido", kissM: "💋 Un beso dulce", replay: "↻ Repetir", close: "Seguir ▶", skip: "Saltar ▸",
+      firstHug: "🤗 ¡Primer abrazo!", firstKiss: "💋 ¡Primer beso!", hugM: "🤗 Un abrazo cálido", kissM: "💋 Un beso dulce", nightAt: "🌙 Noche juntos", firstNight: "🌙 Primera noche juntos", nightM: "🌙 Dormidos abrazados", replay: "↻ Repetir", close: "Seguir ▶", skip: "Saltar ▸",
       up: (d) => `💗 +${d}`, down: (d) => `💔 ${d}`,
       vip: "👑 VIP · Sin límites", left: (r) => `Quedan ${r}`, soon: "Pronto", more: "⚡ Más turnos", retry: "↻ Reintentar",
       LIMIT: "Usaste los turnos gratis. 👑 VIP o ⚡ energía para seguir.", BUSY: "La IA está ocupada. Inténtalo luego.",
@@ -191,7 +191,7 @@
         <button type="button" class="sd-x" data-x="close">✕</button>
         <div class="sd-me"><img src="${A}av${state.avatar}.webp" alt=""><span>${esc(state.name)}</span></div>
         <div class="sd-meter"><div class="sd-meter-row"><span>💗 ${t.love}</span><b id="sd-love">${state.love}</b></div>
-          <div class="sd-bar"><i id="sd-fill"></i><em style="left:${state.hugAt || 30}%" title="${t.hugAt}">🤗</em><em style="left:${state.kissAt || 60}%" title="${t.kissAt}">💋</em></div></div>
+          <div class="sd-bar"><i id="sd-fill"></i><em style="left:${state.hugAt || 30}%" title="${t.hugAt}">🤗</em><em style="left:${state.kissAt || 60}%" title="${t.kissAt}">💋</em>${state.mature ? `<em style="left:${state.nightAt || 85}%" title="${t.nightAt}">🌙</em>` : ""}</div></div>
         <button type="button" class="sd-mem-btn" data-x="mem">🎞</button>
       </div>
       <div class="sd-float" id="sd-float"></div>
@@ -296,7 +296,7 @@
   function playMoment(kind, first, done) {
     const t = T();
     $("sd-video")?.remove();
-    const label = kind === "kiss" ? (first ? t.firstKiss : t.kissM) : (first ? t.firstHug : t.hugM);
+    const label = kind === "night" ? (first ? t.firstNight : t.nightM) : kind === "kiss" ? (first ? t.firstKiss : t.kissM) : (first ? t.firstHug : t.hugM);
     const v = document.createElement("div");
     v.id = "sd-video"; v.className = "sd-video";
     v.innerHTML = `<video playsinline webkit-playsinline muted autoplay preload="auto" poster="${clipFor(kind)}.webp" src="${clipFor(kind)}.mp4"></video>
@@ -317,10 +317,12 @@
     const m = state.memories || {};
     const el = document.createElement("div");
     el.id = "sd-memo"; el.className = "csl-shop";
-    const items = ["hug", "kiss"].map((k) => m[k]
-      ? `<button type="button" class="sd-mem" data-k="${k}" style="background-image:url('${clipFor(k)}.webp')"><span>▶ ${k === "kiss" ? t.kissM : t.hugM}</span></button>`
-      : `<div class="sd-mem locked"><span>🔒 ${k === "kiss" ? t.kissAt : t.hugAt} · ${t.locked}</span></div>`).join("");
-    el.innerHTML = `<div class="csl-shop-card"><h3>${t.memories}</h3>${m.hug || m.kiss ? "" : `<p>${t.noMem}</p>`}<div class="sd-mems">${items}</div><button type="button" class="csl-shop-close" data-x="c">${t.close}</button></div>`;
+    const kinds = state.mature ? ["hug", "kiss", "night"] : ["hug", "kiss"];
+    const lab = (k) => k === "night" ? t.nightM : k === "kiss" ? t.kissM : t.hugM, at = (k) => k === "night" ? t.nightAt : k === "kiss" ? t.kissAt : t.hugAt;
+    const items = kinds.map((k) => m[k]
+      ? `<button type="button" class="sd-mem" data-k="${k}" style="background-image:url('${clipFor(k)}.webp')"><span>▶ ${lab(k)}</span></button>`
+      : `<div class="sd-mem locked"><span>🔒 ${at(k)} · ${t.locked}</span></div>`).join("");
+    el.innerHTML = `<div class="csl-shop-card"><h3>${t.memories}</h3>${m.hug || m.kiss || m.night ? "" : `<p>${t.noMem}</p>`}<div class="sd-mems">${items}</div><button type="button" class="csl-shop-close" data-x="c">${t.close}</button></div>`;
     document.body.appendChild(el);
     el.addEventListener("click", (e) => { if (e.target === el) el.remove(); });
     el.querySelector('[data-x="c"]').addEventListener("click", () => el.remove());
@@ -350,7 +352,7 @@
   }
   function applyTurn(d, choice) {
     const delta = d.love - state.love;
-    state.love = d.love; state.token = d.token; state.hugAt = d.hugAt; state.kissAt = d.kissAt;
+    state.love = d.love; state.token = d.token; state.hugAt = d.hugAt; state.kissAt = d.kissAt; state.nightAt = d.nightAt || 85;
     state.title = d.title || state.title;
     state.history = state.history || [];
     if (choice) state.history.push({ role: "user", text: "The player chooses: " + choice });
