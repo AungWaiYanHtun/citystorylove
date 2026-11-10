@@ -133,7 +133,7 @@
   function bannerHTML() {
     const t = T();
     return `<button type="button" class="lg-banner" id="hub-gacha"><span class="lg-bimg" style="background-image:url('${A}banner.webp')"></span>
-      <span class="lg-btxt"><span class="lg-btag">${t.tag}</span><b>${t.title}</b><small>${esc(t.sub)}</small><em>${t.go}</em></span></button>`;
+      <span class="lg-btxt"><span class="lg-btag">${t.tag}</span><b>${t.title}</b><small>${esc(t.sub)}</small></span></button>`;
   }
 
   // ---------- game screen ----------
