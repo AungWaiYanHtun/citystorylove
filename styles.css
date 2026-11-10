@@ -499,3 +499,16 @@ html.vn-open,html.vn-open body{overflow:hidden}
 .vn-q.joined+.vn-ad::before,.vn-q.joined+.vn-ad::after{content:"";position:absolute;left:50%;top:50%;background:#1b1406;border-radius:2px;transform:translate(-50%,-50%)}
 .vn-q.joined+.vn-ad::before{width:12px;height:2.6px}
 .vn-q.joined+.vn-ad::after{width:2.6px;height:12px}
+/* Story Games: swipe left/right carousel */
+.games-section .cg-library{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 11% 6px;margin:0 -16px;scroll-padding:0 11%}
+.games-section .cg-library::-webkit-scrollbar{display:none}
+.games-section .cg-card{flex:0 0 78%;scroll-snap-align:center;transition:transform .25s,opacity .25s;transform:scale(.93);opacity:.65}
+.games-section .cg-card.on{transform:scale(1);opacity:1}
+.games-section .cg-card-img{height:300px}
+.games-section .cg-card-img img{height:285px;right:50%;transform:translateX(50%)}
+.games-section .cg-card-img::after{content:"";position:absolute;inset:auto 0 0 0;height:45%;background:linear-gradient(transparent,rgba(20,18,24,.95))}
+.games-section .cg-card-body{align-items:center;text-align:center;margin-top:-58px;position:relative;z-index:1}
+.games-section .cg-card-play{align-self:center;padding:9px 26px;font-size:14px}
+.cg-dots{display:flex;justify-content:center;gap:7px;margin-top:12px}
+.cg-dots i{width:7px;height:7px;border-radius:9px;background:rgba(255,255,255,.3);transition:all .25s}
+.cg-dots i.on{width:22px;background:linear-gradient(135deg,#ffe08a,#f0b93a)}

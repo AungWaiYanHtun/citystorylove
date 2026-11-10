@@ -60,7 +60,7 @@
     if ($("date-tab-btn")) cards.push(card("hub-date", "date-assets/bg_rooftop.webp", "date-assets/mya_smile.webp", "NEW", t.date, t.play));
     if ($("detective-tab-btn")) cards.push(card("hub-det", "detective-assets/bg_party.webp", "detective-assets/mira.webp", "AI", t.det, t.play));
     if ($("story-tab-btn")) cards.push(card("hub-story", "story-assets/bg_cafe.webp", "story-assets/lin_smile.webp", "AI", t.story, t.play));
-    sec.innerHTML = `<div class="cg-library" id="cg-lib">${cards.join("")}</div><div class="cg-dots" id="cg-dots">${cards.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>`;
+    sec.innerHTML = `<div class="section-heading"><div><span class="eyebrow">${t.eyebrow}</span><h2>${t.h}</h2></div><span class="result-count">${t.pick}</span></div><div class="cg-library" id="cg-lib">${cards.join("")}</div><div class="cg-dots" id="cg-dots">${cards.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>`;
     carousel();
     $("hub-det")?.addEventListener("click", () => openGame("detective-tab-btn", "detective-section"));
     $("hub-story")?.addEventListener("click", () => openGame("story-tab-btn", "story-section"));
