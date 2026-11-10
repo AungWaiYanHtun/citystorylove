@@ -118,7 +118,7 @@
       if (c.ok || !c.net) try { localStorage.removeItem(PEND); } catch {}
       if (c.status === 429) { toast(t(lang).max); return false; }
       if (!c.ok) { toast(c.net ? net(lang) : t(lang).none); return false; }
-      if (game !== "city") toast(t(lang).ok.replace("+5", "+" + c.bonus).replace("+၅", "+" + c.bonus));
+      if (game !== "city" && game !== "gacha") toast(t(lang).ok.replace("+5", "+" + c.bonus).replace("+၅", "+" + c.bonus));
       try { tg.HapticFeedback?.notificationOccurred?.("success"); } catch {}
       document.dispatchEvent(new CustomEvent("csl-ad-reward", { detail: { game, bonus: c.bonus, cash: c.cash, left: c.left } }));
       return true;
