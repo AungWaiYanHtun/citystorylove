@@ -60,10 +60,27 @@
     if ($("date-tab-btn")) cards.push(card("hub-date", "date-assets/bg_rooftop.webp", "date-assets/mya_smile.webp", "NEW", t.date, t.play));
     if ($("detective-tab-btn")) cards.push(card("hub-det", "detective-assets/bg_party.webp", "detective-assets/mira.webp", "AI", t.det, t.play));
     if ($("story-tab-btn")) cards.push(card("hub-story", "story-assets/bg_cafe.webp", "story-assets/lin_smile.webp", "AI", t.story, t.play));
-    sec.innerHTML = `<div class="section-heading"><div><span class="eyebrow">${t.eyebrow}</span><h2>${t.h}</h2></div><span class="result-count">${t.pick}</span></div><div class="cg-library">${cards.join("")}</div>`;
+    sec.innerHTML = `<div class="cg-library" id="cg-lib">${cards.join("")}</div><div class="cg-dots" id="cg-dots">${cards.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>`;
+    carousel();
     $("hub-det")?.addEventListener("click", () => openGame("detective-tab-btn", "detective-section"));
     $("hub-story")?.addEventListener("click", () => openGame("story-tab-btn", "story-section"));
     $("hub-date")?.addEventListener("click", () => openGame("date-tab-btn", "date-section"));
+  }
+  function carousel() {
+    const lib = $("cg-lib"), dots = $("cg-dots"); if (!lib) return;
+    const cs = [...lib.querySelectorAll(".cg-card")];
+    const mark = () => {
+      const mid = lib.scrollLeft + lib.clientWidth / 2;
+      let best = 0, bd = 1e9;
+      cs.forEach((c, i) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < bd) { bd = d; best = i; } });
+      cs.forEach((c, i) => c.classList.toggle("on", i === best));
+      dots?.querySelectorAll("i").forEach((d, i) => d.classList.toggle("on", i === best));
+    };
+    lib.addEventListener("scroll", () => requestAnimationFrame(mark), { passive: true });
+    dots?.querySelectorAll("i").forEach((d, i) => d.addEventListener("click", () => cs[i]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })));
+    // a side card that is not centered scrolls to the center first instead of opening
+    cs.forEach((c) => c.addEventListener("click", (e) => { if (!c.classList.contains("on")) { e.stopImmediatePropagation(); c.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); } }, true));
+    mark();
   }
   function card(id, bg, pic, tag, txt, play) {
     return `<button type="button" class="cg-card" id="${id}"><div class="cg-card-img" style="background-image:url('${bg}')"><img src="${pic}" alt=""><span class="cg-card-tag">${tag}</span></div><div class="cg-card-body"><b>${txt[0]}</b><small>${txt[1]}</small><span class="cg-card-play">${play}</span></div></button>`;
