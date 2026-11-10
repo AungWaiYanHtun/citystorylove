@@ -34,7 +34,7 @@ body.sl-lock{overflow:hidden}
 .sl-sbox b{display:block;font-size:24px;margin:2px 0 10px}
 .sl-sbox input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;font-size:16px;text-align:center}
 .sl-gal{max-height:86vh;overflow-y:auto;text-align:left}.sl-gal h3{text-align:center;margin:0 0 10px}.sl-gal b{display:block;margin:10px 0 6px}
-.sl-ggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sl-ggrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .sl-ggrid>*{aspect-ratio:9/16;border-radius:12px;background-size:cover;background-position:center;border:1.5px solid #ffcf6b}
 .sl-ggrid span{display:grid;place-items:center;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);font-size:22px}
 .sl-view{position:fixed;inset:0;z-index:1000;background:#000;display:grid;place-items:center}.sl-view img{max-width:100%;max-height:100%}
@@ -63,6 +63,9 @@ body.sl-lock{overflow:hidden}
 .sl-title.out{opacity:0;transition:opacity .4s}
 .sl-cg{position:absolute;inset:0;z-index:8;background:#000;opacity:0;transition:opacity .45s;overflow:hidden}
 .sl-cg.on{opacity:1}
+.sl-cg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl-replay{position:absolute;z-index:3;right:14px;top:60px;width:42px;height:42px;border-radius:50%;border:1px solid #fff8;background:rgba(0,0,0,.45);color:#fff;font-size:16px}
+.sl-view video{max-width:100%;max-height:100%}
 .sl-cg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:slKen 9s ease-out forwards}
 .sl-cg.k-night img{animation:slKen 9s ease-out forwards,slDim 9s forwards}
 .sl-cg::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(0,0,0,.85))}

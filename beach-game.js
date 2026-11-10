@@ -17,22 +17,22 @@
     en: { title: "🏖️ Summer Love", sub: "Beach, swimsuits & a hotel romance", tag: "NEW · BEACH", back: "‹ Back", gate: "Summer Love has romantic hugs, kisses and a cuddle night at a beach hotel (no nudity). I confirm I am 18 or older.", ok: "Enter 🏖️",
       mature: "Show the 🌙 night scene (fade to black)", pick: "Who do you fall for?", r: { male: "I'm a guy · meet Mya", female: "I'm a girl · meet Leo", gay: "I'm a guy · meet Ren" },
       name: "Your name", start: "▶ Start", cont: "▶ Continue", restart: "↺ New story", tap: "Tap to continue", you: "You", gallery: "🖼 Gallery", locked: "🔒",
-      cg: { hug: "🤗 Hug unlocked", kiss: "💋 Kiss unlocked", night: "🌙 Night unlocked" }, again: "↺ Play again", other: "💞 Other routes", ending: "THE END",
+      cg: { hug: "🤗 Hug unlocked", kiss: "💋 Kiss unlocked", neck: "💋 Neck kiss unlocked", night: "🌙 Night unlocked" }, again: "↺ Play again", other: "💞 Other routes", ending: "THE END",
       miss: "The moment passes… Maybe next time you'll be a little braver. 💭", night0: "You talk until the sky turns pale pink, wrapped in one blanket. A perfect, quiet night. 🌅", love: "Love" },
     my: { title: "🏖️ Summer Love", sub: "ကမ်းခြေ၊ ရေကူးဝတ်စုံနဲ့ ဟော်တယ်အချစ်", tag: "အသစ် · ကမ်းခြေ", back: "‹ ပြန်မယ်", gate: "Summer Love မှာ ကမ်းခြေဟော်တယ်က ဖက်တာ၊ နမ်းတာ၊ ဖက်အိပ်တဲ့ည ရင်ခုန်ခန်းတွေ ပါပါတယ် (ညစ်ညမ်းမှုမပါ)။ ကျွန်ုပ်အသက် ၁၈ နှစ်ပြည့်ပါပြီ။", ok: "ဝင်မယ် 🏖️",
       mature: "🌙 ညအခန်း (fade to black) ပြပါ", pick: "ဘယ်သူနဲ့ ချစ်ကြိုက်မလဲ?", r: { male: "ယောက်ျားလေး · Mya နဲ့တွေ့မယ်", female: "မိန်းကလေး · Leo နဲ့တွေ့မယ်", gay: "ယောက်ျားလေး · Ren နဲ့တွေ့မယ်" },
       name: "ကိုယ့်နာမည်", start: "▶ စမယ်", cont: "▶ ဆက်ဆော့မယ်", restart: "↺ အသစ်ပြန်စမယ်", tap: "နှိပ်ပြီး ဆက်ပါ", you: "ကိုယ်", gallery: "🖼 Gallery", locked: "🔒",
-      cg: { hug: "🤗 အဖက် ရပြီ", kiss: "💋 အနမ်း ရပြီ", night: "🌙 ညအခန်း ရပြီ" }, again: "↺ ပြန်ကစားမယ်", other: "💞 တခြား route", ending: "ပြီးပါပြီ",
+      cg: { hug: "🤗 အဖက် ရပြီ", kiss: "💋 အနမ်း ရပြီ", neck: "💋 လည်ပင်းအနမ်း ရပြီ", night: "🌙 ညအခန်း ရပြီ" }, again: "↺ ပြန်ကစားမယ်", other: "💞 တခြား route", ending: "ပြီးပါပြီ",
       miss: "အခွင့်အရေး လွတ်သွားတယ်… နောက်တစ်ခါ နည်းနည်းပိုရဲရဲလေး ဖြစ်ကြည့်ပါ။ 💭", night0: "စောင်တစ်ထည်တည်းခြုံပြီး ကောင်းကင် ပန်းရောင်ပြောင်းတဲ့အထိ စကားပြောနေကြတယ်။ တိတ်ဆိတ်ပြီး ပြီးပြည့်စုံတဲ့ည။ 🌅", love: "အချစ်" },
     ru: { title: "🏖️ Summer Love", sub: "Пляж, купальники и роман в отеле", tag: "НОВОЕ · ПЛЯЖ", back: "‹ Назад", gate: "В Summer Love есть объятия, поцелуи и ночь в обнимку в пляжном отеле (без откровенного). Мне есть 18 лет.", ok: "Войти 🏖️",
       mature: "Показывать 🌙 ночную сцену (затемнение)", pick: "В кого вы влюбитесь?", r: { male: "Я парень · Мья", female: "Я девушка · Лео", gay: "Я парень · Рен" },
       name: "Ваше имя", start: "▶ Начать", cont: "▶ Продолжить", restart: "↺ Заново", tap: "Нажмите, чтобы продолжить", you: "Вы", gallery: "🖼 Галерея", locked: "🔒",
-      cg: { hug: "🤗 Объятие открыто", kiss: "💋 Поцелуй открыт", night: "🌙 Ночь открыта" }, again: "↺ Ещё раз", other: "💞 Другие пути", ending: "КОНЕЦ",
+      cg: { hug: "🤗 Объятие открыто", kiss: "💋 Поцелуй открыт", neck: "💋 Поцелуй в шею открыт", night: "🌙 Ночь открыта" }, again: "↺ Ещё раз", other: "💞 Другие пути", ending: "КОНЕЦ",
       miss: "Момент упущен… Может, в следующий раз будьте смелее. 💭", night0: "Вы говорите до рассвета под одним пледом. Тихая, идеальная ночь. 🌅", love: "Любовь" },
     es: { title: "🏖️ Summer Love", sub: "Playa, trajes de baño y romance en el hotel", tag: "NUEVO · PLAYA", back: "‹ Volver", gate: "Summer Love tiene abrazos, besos y una noche abrazados en un hotel de playa (sin desnudos). Confirmo que tengo 18 años o más.", ok: "Entrar 🏖️",
       mature: "Mostrar la escena 🌙 de noche (fundido)", pick: "¿De quién te enamoras?", r: { male: "Soy chico · Mya", female: "Soy chica · Leo", gay: "Soy chico · Ren" },
       name: "Tu nombre", start: "▶ Empezar", cont: "▶ Continuar", restart: "↺ Nueva historia", tap: "Toca para continuar", you: "Tú", gallery: "🖼 Galería", locked: "🔒",
-      cg: { hug: "🤗 Abrazo desbloqueado", kiss: "💋 Beso desbloqueado", night: "🌙 Noche desbloqueada" }, again: "↺ Jugar otra vez", other: "💞 Otras rutas", ending: "FIN",
+      cg: { hug: "🤗 Abrazo desbloqueado", kiss: "💋 Beso desbloqueado", neck: "💋 Beso en el cuello", night: "🌙 Noche desbloqueada" }, again: "↺ Jugar otra vez", other: "💞 Otras rutas", ending: "FIN",
       miss: "El momento pasa… Quizás la próxima vez seas más valiente. 💭", night0: "Hablan hasta que el cielo se vuelve rosa, bajo una sola manta. Una noche perfecta. 🌅", love: "Amor" }
   };
   const lang = () => { try { return localStorage.getItem("hub_lang") || "en"; } catch { return "en"; } };
@@ -199,9 +199,11 @@
     try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch {}
     return new Promise((res) => {
       const d = document.createElement("div"); d.className = "sl-cg k-" + kind;
-      d.innerHTML = `<img src="${A}cg_${id}.webp" alt=""><div class="sl-hearts">${"<i>💗</i>".repeat(10)}</div><span class="sl-badge">${T().cg[kind]}</span><p>${esc(text)}</p><small>${T().tap} ▾</small>`;
+      d.innerHTML = `${kind === "night" ? `<img src="${A}cg_${id}.webp" alt="">` : `<video src="${A}v_${id}.mp4" poster="${A}cg_${id}.webp" playsinline webkit-playsinline muted autoplay preload="auto"></video><button type="button" class="sl-replay">▶</button>`}<div class="sl-hearts">${"<i>💗</i>".repeat(10)}</div><span class="sl-badge">${T().cg[kind]}</span><p>${esc(text)}</p><small>${T().tap} ▾</small>`;
       $("sl-play").appendChild(d); requestAnimationFrame(() => d.classList.add("on"));
-      setTimeout(() => (onTap = () => { d.classList.remove("on"); setTimeout(() => d.remove(), 450); res(); }), 900);
+      const v = d.querySelector("video"); if (v) { v.play().catch(() => {});
+      d.querySelector(".sl-replay").onclick = (e) => { e.stopPropagation(); v.currentTime = 0; v.play().catch(() => {}); }; }
+      setTimeout(() => (onTap = () => { d.classList.remove("on"); setTimeout(() => d.remove(), 450); res(); }), 2500);
     });
   }
   function ending() {
@@ -219,7 +221,7 @@
       else if (a === "other") { S.cur = null; save(); menu(); } else gallery(); };
   }
   function gallery() {
-    const t = T(), ks = ["hug", "kiss", "night"];
+    const t = T(), ks = ["hug", "kiss", "neck", "night"];
     const d = document.createElement("div"); d.className = "sl-sheet";
     d.innerHTML = `<div class="sl-gal"><h3>${t.gallery}</h3>${Object.values(ROUTES).map((R) => `<b>${R.name}</b><div class="sl-ggrid">${ks.map((k) => S.gallery[R.p + "_" + k]
       ? `<button type="button" data-g="${R.p}_${k}" style="background-image:url('${A}cg_${R.p}_${k}.webp')"></button>` : `<span>${t.locked}</span>`).join("")}</div>`).join("")}
@@ -227,7 +229,7 @@
     $("sl-root").appendChild(d);
     d.onclick = (e) => {
       const g = e.target.closest("[data-g]")?.dataset.g;
-      if (g) { const v = document.createElement("div"); v.className = "sl-view"; v.innerHTML = `<img src="${A}cg_${g}.webp" alt="">`; v.onclick = () => v.remove(); document.body.appendChild(v); return; }
+      if (g) { const v = document.createElement("div"); v.className = "sl-view"; v.innerHTML = g.endsWith("_night") ? `<img src="${A}cg_${g}.webp" alt="">` : `<video src="${A}v_${g}.mp4" poster="${A}cg_${g}.webp" playsinline webkit-playsinline muted autoplay loop></video>`; v.querySelector("video")?.play().catch(() => {}); v.onclick = () => v.remove(); document.body.appendChild(v); return; }
       if (e.target.closest("[data-a]") || e.target === d) d.remove();
     };
   }

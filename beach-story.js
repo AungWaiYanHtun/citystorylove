@@ -108,6 +108,11 @@ window.CSL_BEACH_STORY = [
         ["Say goodnight and go to your room.", -5, ["…Goodnight, {me}.", "…ကောင်းသောညပါ {me}။"]]],
     cm: [["နေခဲ့မယ်၊ စောင်လေးနဲ့ နှစ်ယောက်လုံး ခြုံထားမယ်။"], ["နေခဲ့မယ်၊ ဒါပေမဲ့ တစ်ခွက်ပဲနော်။"], ["ကောင်းသောညပြောပြီး ကိုယ့်အခန်း ပြန်မယ်။"]] },
   { w: "p", ex: "h", t: ["I talked to my editor today. Iceland can wait a week. I'm not ready to say goodbye to you.", "ဒီနေ့ editor နဲ့ ပြောပြီးပြီ။ Iceland က တစ်ပတ်စောင့်လို့ရတယ်။ မင်းကို နှုတ်ဆက်ဖို့ ငါ အဆင်သင့်မဖြစ်သေးဘူး။"], need: 60 },
+  { w: "n", ex: "", need: 75, t: ["{He} steps behind you at the railing and wraps {his} arms around your waist. The sea breeze is cool; {his} warmth is not.", "ဝရန်တာလက်ရန်းမှာ ရပ်နေတုန်း သူက နောက်ကနေ ခါးလေးကို သိုင်းဖက်လာတယ်။ ပင်လယ်လေက အေးပေမဲ့ သူ့ရဲ့အနွေးဓာတ်က မအေးဘူး။"] },
+  { w: "p", ex: "", need: 75, t: ["Close your eyes, {me}…", "မျက်လုံးလေး မှိတ်ထားနော် {me}…"],
+    c: [["Close your eyes and lean back into {him}.", 8], ["Tilt your head and smile.", 8], ["Laugh: 'That tickles!'", 3]],
+    cm: [["မျက်လုံးမှိတ်ပြီး သူ့ရင်ခွင်ထဲ နောက်မှီလိုက်မယ်။"], ["ခေါင်းလေးစောင်းပြီး ပြုံးမယ်။"], ["ရယ်မယ်: 'ယားတယ်!'"]], pick: [0, 1] },
+  { cg: "neck", need: 75, t: ["A soft kiss on the side of your neck, then another. Your heart races. {He} whispers, 'I think I'm falling for you.'", "လည်ပင်းဘေးလေးကို ညင်ညင်သာသာ နမ်းတယ်၊ ပြီးတော့ နောက်တစ်ချက်။ နှလုံးခုန်သံ မြန်လာတယ်။ သူက တိုးတိုးလေး 'မင်းကို ချစ်မိသွားပြီ ထင်တယ်' တဲ့။"] },
   { cg: "night", need: 85, mature: true, t: ["{He} rests {his} head on your shoulder. The sea hums below. Somewhere between the stars and the waves, you both fall asleep in each other's arms…", "သူက ကိုယ့်ပခုံးပေါ် ခေါင်းမှီထားတယ်။ အောက်မှာ ပင်လယ်က တဖြည်းဖြည်း ညည်းနေတယ်။ ကြယ်တွေနဲ့ လှိုင်းတွေကြားမှာ တစ်ယောက်ကိုတစ်ယောက် ဖက်ရင်း အိပ်ပျော်သွားကြတယ်…"] },
   { end: true }
 ];
