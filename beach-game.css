@@ -93,3 +93,6 @@ body.sl-lock{overflow:hidden}
 @keyframes slDim{0%,60%{filter:none}100%{filter:brightness(.35)}}
 @keyframes slRise{0%{transform:translateY(0);opacity:0}10%{opacity:.9}100%{transform:translateY(-110vh);opacity:0}}
 /* hub banner (games-hub card uses .cg-card) */
+.sl-tix{display:inline-block;margin:6px 0 2px;padding:6px 12px;border-radius:999px;background:rgba(0,30,60,.55);border:1px solid rgba(255,255,255,.3);font-size:13px;font-weight:800}
+.sl-adgate{z-index:20}.sl-adgate .sl-sbox{text-align:center}.sl-adgate p{font-size:14px;line-height:1.45;opacity:.92;margin:8px 0 6px}
+.sl-gico{font-size:46px;line-height:1;margin-bottom:6px}
