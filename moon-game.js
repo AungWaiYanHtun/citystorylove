@@ -7,12 +7,12 @@
   const $ = (id) => document.getElementById(id);
   const A = "moon-assets/", KEY = "csl_moon_v1";
   const tg = window.Telegram?.WebApp, API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
-  const P = { K: { name: "Kael", col: "#78beff", pic: "c_kael_heal" }, L: { name: "Lyra", col: "#c4a0ff", pic: "c_lyra_heal" }, V: { name: "Malzar", col: "#ff5a5a" } };
+  const P = { K: { name: "Kael", col: "#78beff", pic: "c_kael_heal" }, L: { name: "Lyra", col: "#c4a0ff", pic: "c_lyra_heal" }, V: { name: "Malzar", col: "#ff5a5a" }, S: { name: "Sylvara", col: "#7ee0a0" } };
   const t = {
     title: "✨ The Moon Crystal", sub: "Magic, battles & a forbidden love", tag: "NEW · FANTASY",
     gate: "The Moon Crystal is a fantasy romance with battles, hugs and kisses (no nudity). I confirm I am 18 or older.", ok: "Enter ✨", back: "‹ Back",
     pick: "Who will you play?", rK: "Play as Kael · the knight ⚔️", rL: "Play as Lyra · the mage 🔮", start: "▶ Start", cont: "▶ Continue", restart: "↺ New story",
-    tap: "Tap to continue", voice: "🔊 Voice", tix: (n) => `🎟️ ${n} free chapters left today`, vipOn: "👑 VIP · unlimited",
+    tap: "Tap to continue", voice: "🔊 Voice", subs: "💬 Text", tix: (n) => `🎟️ ${n} free chapters left today`, vipOn: "👑 VIP · unlimited",
     gateT: "🎟️ Out of free chapters", gateP: "You get 3 free chapters every day (chapters 1–2 are always free). Watch a short ad to unlock 2 more, or get VIP for unlimited play with no ads.",
     adBtn: "📺 Watch ad: +2 chapters", vipBtn: "👑 VIP: unlimited, no ads", later: "Come back tomorrow", got: "🎟️ +2 chapters unlocked!",
     cg: { hug: "🤗 Hug unlocked", kiss: "💋 Kiss unlocked" }, miss: "The moment passes… maybe next time you'll be braver. 💭",
@@ -79,10 +79,11 @@
       return `<button type="button" class="sl-route" data-r="${k}"><span class="sl-rimg" style="background-image:url('${A}${k === "K" ? "s04" : "s02"}.webp');background-size:cover;background-position:center"></span>
         <b>${P[k].name}</b><small>${esc(k === "K" ? t.rK : t.rL)}</small>${r ? `<i class="sl-prog"><em style="width:${pct}%"></em></i>` : ""}</button>`; }).join("");
     el.innerHTML = `<div class="sl-menu" style="background-image:url('${A}s01.webp')"><div class="sl-top"><button type="button" class="sl-pill" id="mn-x">${t.back}</button>
-      <button type="button" class="sl-pill" id="mn-voice">${t.voice} ${S.voice ? "ON" : "OFF"}</button></div>
+      <span><button type="button" class="sl-pill" id="mn-voice">${t.voice} ${S.voice ? "ON" : "OFF"}</button> <button type="button" class="sl-pill" id="mn-subs">${t.subs} ${S.subs ? "ON" : "OFF"}</button></span></div>
       <h1>${t.title}</h1><p class="sl-sub">${esc(t.sub)}</p><p class="sl-tix" id="mn-tix">${VIP ? t.vipOn : t.tix(left())}</p><h3>${esc(t.pick)}</h3><div class="sl-routes">${routes}</div></div>`;
     $("mn-x").onclick = close;
     $("mn-voice").onclick = () => { S.voice = !S.voice; save(); menu(); };
+    $("mn-subs").onclick = () => { S.subs = !S.subs; save(); menu(); };
     el.querySelectorAll("[data-r]").forEach((b) => (b.onclick = () => routeSheet(b.dataset.r)));
   }
   function routeSheet(k) {
@@ -140,11 +141,11 @@
   }
   function stopVoice() { if (audio) { try { audio.pause(); } catch {} audio = null; } clearInterval(flap); flap = null; const c = $("mn-cu"); if (c?.dataset.k) c.style.backgroundImage = `url('${A}c_${c.dataset.k}.webp')`; }
   // closed-mouth image: c_ for most, o_ for kael_heal (its c_ is a smile with open mouth)
-  const OPEN_IS_C = { kael_heal: true };
+  const OPEN_IS_C = { kael_heal: true }, NO_FLAP = { sylvara: true };
   function voice(who, text) {
-    stopVoice(); if (!S.voice || !"KLV".includes(who)) return;
+    stopVoice(); if (!S.voice || !"KLVS".includes(who)) return;
     audio = new Audio(`${A}vo/${hash(text)}.mp3`); audio.play().catch(() => {});
-    const c = $("mn-cu"), k = c?.dataset.k; if (!k || !c.classList.contains("on")) return;
+    const c = $("mn-cu"), k = c?.dataset.k; if (!k || NO_FLAP[k] || !c.classList.contains("on")) return;
     const closed = `url('${A}${OPEN_IS_C[k] ? "o_" : "c_"}${k}.webp')`, open = `url('${A}${OPEN_IS_C[k] ? "c_" : "o_"}${k}.webp')`;
     let n = 0; c.style.backgroundImage = closed;
     flap = setInterval(() => { if (!audio || audio.ended || audio.paused && audio.currentTime > 0) { c.style.backgroundImage = closed; clearInterval(flap); return; }
@@ -158,13 +159,19 @@
   function say(who, text, name) {
     return new Promise((res) => {
       const w = $("mn-who"), p = $("mn-txt"); if (!p) return;
-      if ("KLV".includes(who) && who.length === 1) {
+      if ("KLVS".includes(who) && who.length === 1) {
         const key = who === "V" ? "malzar" : cu[who]; closeup(key || null);
         w.textContent = P[who].name + (who === S.cur ? " (you)" : ""); w.className = "sl-who"; w.style.background = P[who].col;
       } else if (who === "o") { closeup(null); w.textContent = name; w.className = "sl-who"; w.style.background = "#d8a447"; }
       else { closeup(null); w.className = "sl-who hide"; }
       p.className = who === "n" ? "narr" : "";
       voice(who, text);
+      if (audio && !S.subs) { // voiced line without subtitles: show a speaking wave; text only if the audio fails
+        p.className = "mn-wave"; p.innerHTML = "<i></i><i></i><i></i><i></i><i></i>";
+        audio.addEventListener("error", () => { if (p.className === "mn-wave") { p.className = ""; p.textContent = text; } });
+        audio.addEventListener("ended", () => p.classList.add("done"));
+        typing = null; onTap = res; return;
+      }
       let i = 0; p.textContent = "";
       const iv = setInterval(() => { i += 2; p.textContent = text.slice(0, i); if (i >= text.length) done(); }, 24);
       function done() { clearInterval(iv); p.textContent = text; typing = null; onTap = res; }
@@ -189,7 +196,7 @@
     }
     if (n.n) await say("n", n.n);
     else if (n.o) await say("o", n.o[1], n.o[0]);
-    else { const who = ["K", "L", "V"].find((k) => n[k]); if (who) await say(who, n[who]); }
+    else { const who = ["K", "L", "V", "S"].find((k) => n[k]); if (who) await say(who, n[who]); }
     if (n.c) {
       const opts = n.c[S.cur] || []; const i = await choose(opts); const c = opts[i];
       love(Math.round((c[1] || 0) * GAIN));
