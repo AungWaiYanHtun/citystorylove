@@ -61,9 +61,10 @@
     if ($("date-tab-btn")) cards.push(card("hub-date", "date-assets/bg_rooftop.webp", "date-assets/mya_smile.webp", "HOT", t.date, t.play));
     if ($("detective-tab-btn")) cards.push(card("hub-det", "detective-assets/bg_party.webp", "detective-assets/mira.webp", "AI", t.det, t.play));
     if ($("story-tab-btn")) cards.push(card("hub-story", "story-assets/bg_cafe.webp", "story-assets/lin_smile.webp", "AI", t.story, t.play));
-    sec.innerHTML = `<div class="cg-library" id="cg-lib">${cards.join("")}</div><div class="cg-dots" id="cg-dots">${cards.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>${window.CSLGacha ? window.CSLGacha.bannerHTML() : ""}`;
+    sec.innerHTML = `<div class="cg-library" id="cg-lib">${cards.join("")}</div><div class="cg-dots" id="cg-dots">${cards.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>${window.CSLGacha ? window.CSLGacha.bannerHTML() : ""}${window.CSLMoon ? window.CSLMoon.bannerHTML() : ""}`;
     carousel();
     $("hub-gacha")?.addEventListener("click", () => window.CSLGacha?.open());
+    $("hub-moon")?.addEventListener("click", () => window.CSLMoon?.open());
     $("hub-beach")?.addEventListener("click", () => window.CSLBeach?.open());
     $("hub-det")?.addEventListener("click", () => openGame("detective-tab-btn", "detective-section"));
     $("hub-story")?.addEventListener("click", () => openGame("story-tab-btn", "story-section"));
