@@ -277,73 +277,95 @@
   }
 
 
-  // ---- people (walk around) ----
-  const PPL = [{ k: "boy", h: 100 }, { k: "girl", h: 96 }, { k: "builder", h: 92 }, { k: "fisher", h: 92 }];
-  const DOCK = { x: 640, y: 1250 };
+  // ---- people: real walk cycle (swinging legs) along the sand road + grid lanes ----
+  const PPL = [{ k: "boy", h: 100, hip: 0.5, ar: 0.327 }, { k: "girl", h: 96, hip: 0.5, ar: 0.332 }, { k: "builder", h: 92, hip: 0.52, ar: 0.4 }, { k: "fisher", h: 92, hip: 0.5, ar: 0.432 }];
+  // sand road on the ground art (world px): top of road → corner → down → beach → dock
+  const ROAD = [{ x: 925, y: 760 }, { x: 1140, y: 900 }, { x: 960, y: 1030 }, { x: 790, y: 1140 }, { x: 768, y: 1215 }];
+  const BEACH = [{ x: 700, y: 1250 }, { x: 860, y: 1265 }, { x: 980, y: 1250 }];
+  const DOCK = { x: 640, y: 1268 };
+  const SPEED = 42; // world px per second, calm human pace
   let ppl = [], raf = 0, lastT = 0;
-  const inB = (gx, gy) => S.b.some((b) => gx > b.x - 0.2 && gx < b.x + D[b.t].s + 0.2 && gy > b.y - 0.2 && gy < b.y + D[b.t].s + 0.2);
-  function rndTile(nearX, nearY, r) {
-    for (let i = 0; i < 40; i++) {
-      const gx = nearX == null ? 0.5 + Math.random() * (N - 1) : Math.max(0.3, Math.min(N - 0.3, nearX + (Math.random() * 2 - 1) * r));
-      const gy = nearY == null ? 0.5 + Math.random() * (N - 1) : Math.max(0.3, Math.min(N - 0.3, nearY + (Math.random() * 2 - 1) * r));
+  const inB = (gx, gy) => S.b.some((b) => gx > b.x - 0.15 && gx < b.x + D[b.t].s + 0.15 && gy > b.y - 0.15 && gy < b.y + D[b.t].s + 0.15);
+  const gridF = (wx, wy) => { const a = (wx - OX) / (TW / 2), b = (wy - OY) / (TH2 / 2); return { x: (a + b) / 2, y: (b - a) / 2 }; };
+  function freeTile(cx, cy, r) {
+    for (let i = 0; i < 60; i++) {
+      const gx = Math.floor(Math.max(0, Math.min(N - 1, cx + (Math.random() * 2 - 1) * r))) + 0.5, gy = Math.floor(Math.max(0, Math.min(N - 1, cy + (Math.random() * 2 - 1) * r))) + 0.5;
       if (!inB(gx, gy)) return { gx, gy };
     }
-    return { gx: N - 0.5, gy: N - 0.5 };
+    return null;
+  }
+  // grid lane route: walk along the tile axes (x first or y first), whichever path is clear
+  function laneRoute(from, to) {
+    const f = gridF(from.x, from.y), clearSeg = (x1, y1, x2, y2) => { const n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) * 3); for (let i = 1; i <= n; i++) { const k = i / n; if (inB(x1 + (x2 - x1) * k, y1 + (y2 - y1) * k)) return false; } return true; };
+    const fx = Math.max(0.5, Math.min(N - 0.5, f.x)), fy = Math.max(0.5, Math.min(N - 0.5, f.y));
+    const c1 = { gx: to.gx, gy: fy }, c2 = { gx: fx, gy: to.gy };
+    let corner = clearSeg(fx, fy, c1.gx, c1.gy) && clearSeg(c1.gx, c1.gy, to.gx, to.gy) ? c1 : c2;
+    return [P(corner.gx, corner.gy), P(to.gx, to.gy)];
+  }
+  const near = (pt, list) => list.reduce((best, q, i) => (Math.hypot(q.x - pt.x, q.y - pt.y) < Math.hypot(list[best].x - pt.x, list[best].y - pt.y) ? i : best), 0);
+  function roadTo(from, endIdx) { // walk onto the road, then along it to ROAD[endIdx]
+    const i = near(from, ROAD), out = [];
+    if (i <= endIdx) for (let k = i; k <= endIdx; k++) out.push(ROAD[k]); else for (let k = i; k >= endIdx; k--) out.push(ROAD[k]);
+    return out;
   }
   function spawnPeople() {
     ppl.forEach((p) => p.el.remove()); ppl = [];
     PPL.forEach((d, i) => {
       const el = document.createElement("div"); el.className = "is-p"; el.dataset.k = d.k;
-      el.innerHTML = `<img src="${A}p_${d.k}.webp" alt="" draggable="false" style="height:${d.h}px"><span class="is-say"></span>`;
+      const src = `${A}p_${d.k}.webp`, hp = Math.round(d.hip * 100);
+      el.innerHTML = `<div class="is-fig" style="height:${d.h}px;--hip:${hp}%;--ar:${d.ar}"><img class="lg l" src="${src}" alt="" draggable="false"><img class="lg r" src="${src}" alt="" draggable="false"><img class="bd" src="${src}" alt="" draggable="false"></div><span class="is-say"></span>`;
       ui.ents.appendChild(el);
-      const st = rndTile(i < 2 ? 5 : null, i < 2 ? 6 : null, 2);
-      ppl.push({ k: d.k, el, gx: st.gx, gy: st.gy, tx: st.gx, ty: st.gy, wait: Math.random() * 2, mode: "idle", world: null, face: 1 });
+      const st = i < 2 ? freeTile(6, 7, 1.5) : i === 3 ? null : freeTile(7, 8, 2);
+      const pos = st ? P(st.gx, st.gy) : { ...DOCK };
+      ppl.push({ k: d.k, el, x: pos.x, y: pos.y, route: [], wait: 0.5 + Math.random() * 2, act: i === 3 ? "fish" : "idle", face: 1 });
     });
     lastT = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(step);
   }
   function plan(p) {
+    const here = { x: p.x, y: p.y }, onBeach = here.y > ROAD[4].y - 20;
     const job = p.k === "builder" ? S.b.find((b) => b.busy) : null;
-    if (job) { const s = D[job.t].s; const c = rndTile(job.x + s + 0.4, job.y + s / 2, 0.3); p.tx = Math.min(N - 0.3, job.x + s + 0.35); p.ty = job.y + s / 2; if (inB(p.tx, p.ty)) { p.tx = c.gx; p.ty = c.gy; } p.mode = "work"; p.job = job.id; return; }
-    if (p.k === "fisher" && Math.random() < 0.7) { p.mode = "fish"; p.target = DOCK; return; }
-    const c = p.k === "boy" || p.k === "girl" ? rndTile(5.5, 5.5, 4) : rndTile();
-    p.tx = c.gx; p.ty = c.gy; p.mode = "walk";
+    if (job) { const s = D[job.t].s, spot = { gx: Math.min(N - 0.5, job.x + s + 0.5), gy: job.y + s - 0.5 }; p.route = (onBeach ? roadTo(here, 0) : []).concat(laneRoute(onBeach ? ROAD[0] : here, inB(spot.gx, spot.gy) ? { gx: job.x + s - 0.5, gy: Math.min(N - 0.5, job.y + s + 0.5) } : spot)); p.act = "work"; p.job = job.id; return; }
+    if (p.k === "fisher") {
+      if (p.act !== "fish" && Math.random() < 0.75) { p.route = roadTo(here, 4).concat([DOCK]); p.act = "fish"; return; }
+    }
+    const r = Math.random();
+    if (onBeach) { // stroll on the beach or walk back up the road
+      if (r < 0.4) { p.route = [BEACH[Math.floor(Math.random() * BEACH.length)]]; p.act = "idle"; }
+      else { p.route = roadTo(here, 0); p.act = "idle"; }
+      return;
+    }
+    if ((p.k === "boy" || p.k === "girl") && r < 0.35) { p.route = roadTo(here, 4).concat([BEACH[Math.floor(Math.random() * BEACH.length)]]); p.act = "idle"; return; }
+    const tgt = p.k === "boy" || p.k === "girl" ? freeTile(5.5, 6, 3.5) : freeTile(5.5, 5.5, 5.5);
+    if (tgt) p.route = laneRoute(here, tgt); p.act = "idle";
   }
   function step(now) {
     if (!ui) return;
     const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
     ppl.forEach((p) => {
-      let pos;
-      if (p.world || p.mode === "fish") {
-        // free-world walking (to/from dock)
-        const cur = p.world || P(p.gx, p.gy), tgt = p.mode === "fish" ? p.target : P(p.tx, p.ty);
-        const dx = tgt.x - cur.x, dy = tgt.y - cur.y, d = Math.hypot(dx, dy), sp = 60 * dt;
-        if (d > 2) { p.world = { x: cur.x + (dx / d) * Math.min(sp, d), y: cur.y + (dy / d) * Math.min(sp, d) }; p.face = dx >= 0 ? 1 : -1; p.el.classList.add("walk"); p.el.classList.remove("fishing", "working"); }
-        else if (p.mode === "fish") { p.el.classList.remove("walk"); p.el.classList.add("fishing"); p.wait -= dt; if (p.wait <= 0) { if (Math.random() < 0.35) say(p, "🐟", true); p.wait = 3 + Math.random() * 4; if (Math.random() < 0.25 || S.b.some((b) => b.busy) && false) { p.mode = "back"; const c = rndTile(8, 9, 2); p.tx = c.gx; p.ty = c.gy; } } }
-        else { // reached grid tile again
-          const g = toGridF(p.world.x, p.world.y); p.gx = g.x; p.gy = g.y; p.world = null; p.mode = "idle"; p.wait = 1;
-        }
-        pos = p.world || P(p.gx, p.gy);
-        p.el.style.zIndex = p.mode === "fish" || pos.y > P(N, N).y - 10 ? 4000 : 10 + Math.floor(depthOf(pos) * 2) + 1;
+      let walking = false;
+      if (p.route.length) {
+        const q = p.route[0], dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy), mv = SPEED * dt;
+        if (d <= mv) { p.x = q.x; p.y = q.y; p.route.shift(); if (!p.route.length) p.wait = p.act === "fish" ? 4 : 1 + Math.random() * 3; }
+        else { p.x += (dx / d) * mv; p.y += (dy / d) * mv; walking = true; if (Math.abs(dx) > 0.5) p.face = dx > 0 ? 1 : -1; }
       } else {
-        const dx = p.tx - p.gx, dy = p.ty - p.gy, d = Math.hypot(dx, dy), sp = 1.1 * dt;
-        if (d > 0.05) { p.gx += (dx / d) * Math.min(sp, d); p.gy += (dy / d) * Math.min(sp, d); const sx = dx - dy; if (Math.abs(sx) > 0.01) p.face = sx > 0 ? 1 : -1; p.el.classList.add("walk"); p.el.classList.remove("working", "fishing"); }
-        else {
-          p.el.classList.remove("walk");
-          const job = p.mode === "work" ? S.b.find((b) => b.id === p.job && b.busy) : null;
-          if (job) { p.el.classList.add("working"); p.face = -1; }
-          else { p.el.classList.remove("working"); if (p.mode === "work") p.mode = "idle"; p.wait -= dt; if (p.wait <= 0) { p.wait = 1.5 + Math.random() * 4; plan(p); } }
-          if (p.k === "builder" && !job && S.b.some((b) => b.busy)) { p.wait = 0; plan(p); }
-        }
-        pos = P(p.gx, p.gy);
-        p.el.style.zIndex = 10 + Math.floor((p.gx + p.gy) * 2) + 1;
+        const job = p.act === "work" ? S.b.find((b) => b.id === p.job && b.busy) : null;
+        if (p.act === "work" && !job) p.act = "idle";
+        if (p.k === "builder" && p.act !== "work" && S.b.some((b) => b.busy)) { plan(p); }
+        else if (!job) {
+          p.wait -= dt;
+          if (p.act === "fish" && p.wait <= 0 && Math.random() < 0.5) { say(p, "🐟", true); p.wait = 3 + Math.random() * 4; if (Math.random() < 0.3) { p.act = "idle"; plan(p); } }
+          else if (p.wait <= 0) plan(p);
+        } else p.face = -1;
       }
-      p.el.style.transform = `translate(${pos.x}px,${pos.y}px)`;
-      p.el.querySelector("img").style.transform = `translateX(-50%) scaleX(${p.face})`;
+      const atDock = p.act === "fish" && !p.route.length; if (atDock) p.face = 1; const working = p.act === "work" && !p.route.length;
+      p.el.classList.toggle("walk", walking); p.el.classList.toggle("fishing", atDock); p.el.classList.toggle("working", working);
+      const g = gridF(p.x, p.y);
+      p.el.style.zIndex = p.y > ROAD[4].y - 30 || g.x > N || g.y > N ? 4000 : 10 + Math.floor((g.x + g.y) * 2) + 1;
+      p.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
+      p.el.firstChild.style.transform = `translateX(-50%) scaleX(${p.face})`;
     });
     raf = requestAnimationFrame(step);
   }
-  function toGridF(wx, wy) { const a = (wx - OX) / (TW / 2), b = (wy - OY) / (TH2 / 2); return { x: Math.max(0.3, Math.min(N - 0.3, (a + b) / 2)), y: Math.max(0.3, Math.min(N - 0.3, (b - a) / 2)) }; }
-  function depthOf(pos) { const g = toGridF(pos.x, pos.y); return g.x + g.y; }
   function say(p, text, short) {
     const b = p.el.querySelector(".is-say"); b.textContent = text; p.el.classList.add("talk");
     clearTimeout(p.sayT); p.sayT = setTimeout(() => p.el.classList.remove("talk"), short ? 1500 : 2800);
