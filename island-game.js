@@ -8,9 +8,9 @@
   const tg = window.Telegram?.WebApp, API = window.VIDEOSPACE_CONFIG?.VIP_API_URL;
   const lang = () => { try { return localStorage.getItem("hub_lang") === "my" ? "my" : "en"; } catch { return "en"; } };
   const L = {
-    en: { title: "Island Clash", sub: "Build your island · raid your rivals", play: "▶ Play", shop: "Build", attack: "Attack", gems: "Free gems", soon: "⚔️ Battles arrive in Phase 2!", lv: "Level", upg: "Upgrade", move: "Move", collect: "Collect", max: "Max level", needTH: (n) => `Needs Town Hall ${n}`, noB: "All builders are busy", noRes: (r) => `Not enough ${r}`, full: "Storage is full", ok: "✓", cancel: "✕", built: "Built!", fin: "Finish", ad15: "▶ Ad: −15 min", limit: "Limit reached — upgrade Town Hall", gemAd: "+5 💎 from ad", place: "Drag to place, then ✓", prod: "Production", cap: "Capacity", hr: "/h", gold: "gold", elixir: "elixir", gemsW: "gems", vip: "VIP: 2× faster builds + 1 extra builder",
+    en: { title: "Island Clash", sub: "Build your island · raid your rivals", play: "▶ Play", shop: "Build", attack: "Attack", gems: "Free gems", soon: "⚔️ Battles arrive in Phase 2!", lv: "Level", upg: "Upgrade", move: "Move", collect: "Collect", max: "Max level", needTH: (n) => `Needs Town Hall ${n}`, noB: "All builders are busy", noRes: (r) => `Not enough ${r}`, full: "Storage is full", ok: "✓", cancel: "✕", built: "Built!", fin: "Finish", ad15: "▶ Ad: −15 min", limit: "Limit reached — upgrade Town Hall", gemAd: "+5 💎 from ad", place: "Drag to place, then ✓", prod: "Production", cap: "Capacity", hr: "/h", gold: "gold", elixir: "elixir", gemsW: "gems", say: { boy: ["This island is ours! 🏝️", "Let's build something big.", "Collect the gold, boss!"], girl: ["Hi! Welcome home 💕", "Our island looks prettier every day!", "Let's upgrade the Town Hall?"], builder: ["On it, boss! 🔨", "Give me a job!", "Need more builders?"], fisher: ["Nice catch today 🐟", "The sea is calm.", "Shh… the fish are biting."] }, vip: "VIP: 2× faster builds + 1 extra builder",
       n: { townhall: "Town Hall", goldmine: "Gold Mine", elixir: "Elixir Collector", goldstore: "Gold Storage", elixstore: "Elixir Storage", cannon: "Cannon", archer: "Archer Tower", barracks: "Barracks", hut: "Builder's Hut" } },
-    my: { title: "Island Clash", sub: "ကိုယ့်ကျွန်းတည်ဆောက် · ရန်သူကိုတိုက်", play: "▶ ဆော့မယ်", shop: "ဆောက်မယ်", attack: "တိုက်မယ်", gems: "Gem အလကား", soon: "⚔️ တိုက်ပွဲက အဆင့် ၂ မှာလာမယ်!", lv: "Level", upg: "Upgrade", move: "ရွှေ့", collect: "သိမ်း", max: "အမြင့်ဆုံး level", needTH: (n) => `Town Hall ${n} လိုတယ်`, noB: "ဆောက်သူတွေ အားလုံးအလုပ်များနေ", noRes: (r) => `${r} မလောက်ဘူး`, full: "သိုလှောင်ရုံ ပြည့်နေပြီ", ok: "✓", cancel: "✕", built: "ဆောက်ပြီး!", fin: "ပြီးစေ", ad15: "▶ Ad: −15 မိနစ်", limit: "အရေအတွက်ပြည့်ပြီ — Town Hall မြှင့်ပါ", gemAd: "Ad ကနေ +5 💎", place: "ဆွဲပြီးနေရာချ၊ ပြီးရင် ✓", prod: "ထုတ်လုပ်မှု", cap: "သိုလှောင်နိုင်မှု", hr: "/နာရီ", gold: "ရွှေ", elixir: "elixir", gemsW: "gem", vip: "VIP: ၂ဆ မြန်မြန်ဆောက် + ဆောက်သူ ၁ ယောက်ပို",
+    my: { title: "Island Clash", sub: "ကိုယ့်ကျွန်းတည်ဆောက် · ရန်သူကိုတိုက်", play: "▶ ဆော့မယ်", shop: "ဆောက်မယ်", attack: "တိုက်မယ်", gems: "Gem အလကား", soon: "⚔️ တိုက်ပွဲက အဆင့် ၂ မှာလာမယ်!", lv: "Level", upg: "Upgrade", move: "ရွှေ့", collect: "သိမ်း", max: "အမြင့်ဆုံး level", needTH: (n) => `Town Hall ${n} လိုတယ်`, noB: "ဆောက်သူတွေ အားလုံးအလုပ်များနေ", noRes: (r) => `${r} မလောက်ဘူး`, full: "သိုလှောင်ရုံ ပြည့်နေပြီ", ok: "✓", cancel: "✕", built: "ဆောက်ပြီး!", fin: "ပြီးစေ", ad15: "▶ Ad: −15 မိနစ်", limit: "အရေအတွက်ပြည့်ပြီ — Town Hall မြှင့်ပါ", gemAd: "Ad ကနေ +5 💎", place: "ဆွဲပြီးနေရာချ၊ ပြီးရင် ✓", prod: "ထုတ်လုပ်မှု", cap: "သိုလှောင်နိုင်မှု", hr: "/နာရီ", gold: "ရွှေ", elixir: "elixir", gemsW: "gem", say: { boy: ["ဒီကျွန်းက ငါတို့ပိုင်တယ် 🏝️", "ကြီးကြီးကျယ်ကျယ် ဆောက်ကြမယ်", "ရွှေသိမ်းလိုက်နော်"], girl: ["ဟိုင်း! ပြန်ရောက်ပြီလား 💕", "ကျွန်းလေးက နေ့တိုင်းပိုလှလာတယ်", "Town Hall မြှင့်ရအောင်?"], builder: ["လုပ်ပေးမယ် ဆရာ 🔨", "အလုပ်ပေးပါဦး!", "ဆောက်သူ ထပ်လိုသေးလား?"], fisher: ["ဒီနေ့ ငါးကောင်းကောင်းရတယ် 🐟", "ပင်လယ်က ငြိမ်နေတယ်", "တိုးတိုး… ငါးဟပ်နေပြီ"] }, vip: "VIP: ၂ဆ မြန်မြန်ဆောက် + ဆောက်သူ ၁ ယောက်ပို",
       n: { townhall: "Town Hall", goldmine: "ရွှေတွင်း", elixir: "Elixir စုစက်", goldstore: "ရွှေသိုလှောင်ရုံ", elixstore: "Elixir သိုလှောင်ရုံ", cannon: "အမြောက်", archer: "လေးသမားမျှော်စင်", barracks: "စစ်တန်းလျား", hut: "ဆောက်သူတဲ" } }
   };
   let t = L[lang()];
@@ -86,7 +86,7 @@
       <div id="is-panel" class="is-panel hidden"></div><div id="is-pl" class="is-pl hidden"><span>${t.place}</span><button id="is-no" class="is-pb no">✕</button><button id="is-yes" class="is-pb yes">✓</button></div>`;
     document.body.appendChild(root); document.body.classList.add("is-open");
     ui = { root, view: $("is-view"), world: $("is-world"), ents: $("is-ents"), sc: 0.6, tx: 0, ty: 0, info: null };
-    grid(); fit(); drawAll(); hud(); wire();
+    grid(); fit(); drawAll(); hud(); wire(); spawnPeople();
     $("is-back").onclick = close;
     $("is-shop").onclick = shop;
     $("is-atk").onclick = () => toast(t.soon);
@@ -95,7 +95,7 @@
     loop = setInterval(tick, 1000); tick(); pull(); checkVip();
     try { tg?.disableVerticalSwipes?.(); } catch {}
   }
-  function close() { clearInterval(loop); place = null; ui?.root.remove(); ui = null; document.body.classList.remove("is-open"); save(); try { tg?.enableVerticalSwipes?.(); } catch {} }
+  function close() { clearInterval(loop); cancelAnimationFrame(raf); ppl = []; place = null; ui?.root.remove(); ui = null; document.body.classList.remove("is-open"); save(); try { tg?.enableVerticalSwipes?.(); } catch {} }
 
   function grid() {
     const c = $("is-grid").getContext("2d"); c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 1.5;
@@ -136,7 +136,8 @@
     window.addEventListener("resize", () => ui && apply());
   }
   function tap(target) {
-    const be = target.closest?.(".is-b"); if (place) return;
+    if (place) return; const pe = target.closest?.(".is-p"); if (pe) { tapPerson(pe); return; }
+    const be = target.closest?.(".is-b");
     if (!be) { hidePanel(); return; }
     const b = S.b.find((x) => x.id === +be.dataset.id); if (!b) return;
     if (D[b.t].prod && stored(b) > 0 && be.classList.contains("ready")) { collect(b); return; }
@@ -273,6 +274,84 @@
     e.querySelector("b").textContent = fmt(S.elixir); e.querySelector("u").style.width = Math.min(100, (S.elixir / ce) * 100) + "%";
     $("is-gm").querySelector("b").textContent = S.gems;
     $("is-bl").querySelector("b").textContent = `${builders() - busyN()}/${builders()}`;
+  }
+
+
+  // ---- people (walk around) ----
+  const PPL = [{ k: "boy", h: 100 }, { k: "girl", h: 96 }, { k: "builder", h: 92 }, { k: "fisher", h: 92 }];
+  const DOCK = { x: 640, y: 1250 };
+  let ppl = [], raf = 0, lastT = 0;
+  const inB = (gx, gy) => S.b.some((b) => gx > b.x - 0.2 && gx < b.x + D[b.t].s + 0.2 && gy > b.y - 0.2 && gy < b.y + D[b.t].s + 0.2);
+  function rndTile(nearX, nearY, r) {
+    for (let i = 0; i < 40; i++) {
+      const gx = nearX == null ? 0.5 + Math.random() * (N - 1) : Math.max(0.3, Math.min(N - 0.3, nearX + (Math.random() * 2 - 1) * r));
+      const gy = nearY == null ? 0.5 + Math.random() * (N - 1) : Math.max(0.3, Math.min(N - 0.3, nearY + (Math.random() * 2 - 1) * r));
+      if (!inB(gx, gy)) return { gx, gy };
+    }
+    return { gx: N - 0.5, gy: N - 0.5 };
+  }
+  function spawnPeople() {
+    ppl.forEach((p) => p.el.remove()); ppl = [];
+    PPL.forEach((d, i) => {
+      const el = document.createElement("div"); el.className = "is-p"; el.dataset.k = d.k;
+      el.innerHTML = `<img src="${A}p_${d.k}.webp" alt="" draggable="false" style="height:${d.h}px"><span class="is-say"></span>`;
+      ui.ents.appendChild(el);
+      const st = rndTile(i < 2 ? 5 : null, i < 2 ? 6 : null, 2);
+      ppl.push({ k: d.k, el, gx: st.gx, gy: st.gy, tx: st.gx, ty: st.gy, wait: Math.random() * 2, mode: "idle", world: null, face: 1 });
+    });
+    lastT = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(step);
+  }
+  function plan(p) {
+    const job = p.k === "builder" ? S.b.find((b) => b.busy) : null;
+    if (job) { const s = D[job.t].s; const c = rndTile(job.x + s + 0.4, job.y + s / 2, 0.3); p.tx = Math.min(N - 0.3, job.x + s + 0.35); p.ty = job.y + s / 2; if (inB(p.tx, p.ty)) { p.tx = c.gx; p.ty = c.gy; } p.mode = "work"; p.job = job.id; return; }
+    if (p.k === "fisher" && Math.random() < 0.7) { p.mode = "fish"; p.target = DOCK; return; }
+    const c = p.k === "boy" || p.k === "girl" ? rndTile(5.5, 5.5, 4) : rndTile();
+    p.tx = c.gx; p.ty = c.gy; p.mode = "walk";
+  }
+  function step(now) {
+    if (!ui) return;
+    const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+    ppl.forEach((p) => {
+      let pos;
+      if (p.world || p.mode === "fish") {
+        // free-world walking (to/from dock)
+        const cur = p.world || P(p.gx, p.gy), tgt = p.mode === "fish" ? p.target : P(p.tx, p.ty);
+        const dx = tgt.x - cur.x, dy = tgt.y - cur.y, d = Math.hypot(dx, dy), sp = 60 * dt;
+        if (d > 2) { p.world = { x: cur.x + (dx / d) * Math.min(sp, d), y: cur.y + (dy / d) * Math.min(sp, d) }; p.face = dx >= 0 ? 1 : -1; p.el.classList.add("walk"); p.el.classList.remove("fishing", "working"); }
+        else if (p.mode === "fish") { p.el.classList.remove("walk"); p.el.classList.add("fishing"); p.wait -= dt; if (p.wait <= 0) { if (Math.random() < 0.35) say(p, "🐟", true); p.wait = 3 + Math.random() * 4; if (Math.random() < 0.25 || S.b.some((b) => b.busy) && false) { p.mode = "back"; const c = rndTile(8, 9, 2); p.tx = c.gx; p.ty = c.gy; } } }
+        else { // reached grid tile again
+          const g = toGridF(p.world.x, p.world.y); p.gx = g.x; p.gy = g.y; p.world = null; p.mode = "idle"; p.wait = 1;
+        }
+        pos = p.world || P(p.gx, p.gy);
+        p.el.style.zIndex = p.mode === "fish" || pos.y > P(N, N).y - 10 ? 4000 : 10 + Math.floor(depthOf(pos) * 2) + 1;
+      } else {
+        const dx = p.tx - p.gx, dy = p.ty - p.gy, d = Math.hypot(dx, dy), sp = 1.1 * dt;
+        if (d > 0.05) { p.gx += (dx / d) * Math.min(sp, d); p.gy += (dy / d) * Math.min(sp, d); const sx = dx - dy; if (Math.abs(sx) > 0.01) p.face = sx > 0 ? 1 : -1; p.el.classList.add("walk"); p.el.classList.remove("working", "fishing"); }
+        else {
+          p.el.classList.remove("walk");
+          const job = p.mode === "work" ? S.b.find((b) => b.id === p.job && b.busy) : null;
+          if (job) { p.el.classList.add("working"); p.face = -1; }
+          else { p.el.classList.remove("working"); if (p.mode === "work") p.mode = "idle"; p.wait -= dt; if (p.wait <= 0) { p.wait = 1.5 + Math.random() * 4; plan(p); } }
+          if (p.k === "builder" && !job && S.b.some((b) => b.busy)) { p.wait = 0; plan(p); }
+        }
+        pos = P(p.gx, p.gy);
+        p.el.style.zIndex = 10 + Math.floor((p.gx + p.gy) * 2) + 1;
+      }
+      p.el.style.transform = `translate(${pos.x}px,${pos.y}px)`;
+      p.el.querySelector("img").style.transform = `translateX(-50%) scaleX(${p.face})`;
+    });
+    raf = requestAnimationFrame(step);
+  }
+  function toGridF(wx, wy) { const a = (wx - OX) / (TW / 2), b = (wy - OY) / (TH2 / 2); return { x: Math.max(0.3, Math.min(N - 0.3, (a + b) / 2)), y: Math.max(0.3, Math.min(N - 0.3, (b - a) / 2)) }; }
+  function depthOf(pos) { const g = toGridF(pos.x, pos.y); return g.x + g.y; }
+  function say(p, text, short) {
+    const b = p.el.querySelector(".is-say"); b.textContent = text; p.el.classList.add("talk");
+    clearTimeout(p.sayT); p.sayT = setTimeout(() => p.el.classList.remove("talk"), short ? 1500 : 2800);
+  }
+  function tapPerson(el) {
+    const p = ppl.find((x) => x.el === el); if (!p) return;
+    const lines = t.say[p.k]; say(p, lines[Math.floor(Math.random() * lines.length)]);
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch {}
   }
 
   // ---- hub card ----

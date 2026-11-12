@@ -94,3 +94,18 @@ body.is-open{overflow:hidden}
 .is-card-body b{font-size:26px;font-weight:900}
 .is-card-body small{font-size:15px;opacity:.8}
 .is-card-play{margin-top:10px;padding:12px 34px;border-radius:16px;background:linear-gradient(#ffe27a,#e2a713);color:#2a1a00;font-weight:900;font-size:20px;box-shadow:0 4px 0 #8a5300}
+
+/* people */
+.is-p{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.is-p img{position:absolute;bottom:0;left:0;transform:translateX(-50%);transform-origin:50% 100%;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35));pointer-events:auto}
+.is-p::before{content:"";position:absolute;left:-16px;top:-6px;width:32px;height:12px;border-radius:50%;background:rgba(0,0,0,.25)}
+.is-p.walk{animation:isWalk .42s ease-in-out infinite}
+@keyframes isWalk{0%,100%{margin-top:0}50%{margin-top:-5px}}
+.is-p.working{animation:isWork .5s ease-in-out infinite}
+@keyframes isWork{0%,100%{margin-top:0}40%{margin-top:-3px}}
+.is-p.working::after{content:"🔨";position:absolute;left:-30px;top:-70px;font-size:22px;animation:isHam .25s ease-in-out infinite alternate;transform-origin:80% 80%}
+.is-p.fishing::after{content:"";position:absolute;left:30px;top:-6px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35);animation:isRip 1.6s ease-out infinite}
+@keyframes isRip{0%{transform:scale(.4);opacity:1}100%{transform:scale(2.4);opacity:0}}
+.is-say{position:absolute;left:50%;bottom:108px;transform:translateX(-50%) scale(.6);opacity:0;white-space:nowrap;padding:7px 12px;border-radius:14px;background:#fff;color:#222;font-weight:800;font-size:15px;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:.2s;pointer-events:none}
+.is-say::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
+.is-p.talk .is-say{opacity:1;transform:translateX(-50%) scale(1)}
