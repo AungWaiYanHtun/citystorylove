@@ -98,7 +98,7 @@ body.is-open{overflow:hidden}
 /* people — legs swing like a real walk cycle */
 .is-p{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
 .is-p::before{content:"";position:absolute;left:-15px;top:-5px;width:30px;height:10px;border-radius:50%;background:rgba(0,0,0,.28)}
-.is-fig{position:absolute;bottom:0;left:0;aspect-ratio:var(--ar,0.4);transform-origin:50% 100%;transition:transform .14s linear;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+.is-fig{position:absolute;bottom:0;left:0;aspect-ratio:var(--ar,0.4);transform-origin:50% 100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
 .is-fig img{position:absolute;inset:0;height:100%;width:auto;left:50%;transform:translateX(-50%);pointer-events:auto}
 .is-fig .bd{clip-path:inset(0 0 calc(100% - var(--hip) - 3%) 0)}
 .is-fig .lg{transform-origin:50% var(--hip)}

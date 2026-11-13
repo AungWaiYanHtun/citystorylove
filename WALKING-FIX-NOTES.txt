@@ -1,0 +1,19 @@
+CITYSTORYLOVE - ISLAND WALKING UPDATE
+
+This update keeps the original island artwork, existing characters, buildings,
+resources, save logic, and game interface.
+
+Walking changes:
+- NPC movement is constrained to the central lawn, the sandy path corridor,
+  and the small beach/dock area.
+- A* pathfinding routes around placed buildings and prevents diagonal corner-cutting.
+- The sandy path is preferred when it provides a sensible route.
+- Residents roam around the open lawn; the fisher can travel to the dock.
+- Removed automatic horizontal mirroring while walking. The supplied character
+  artwork is front-facing, so mirroring it during vertical/diagonal movement
+  made characters look as if they were walking backwards.
+
+Note: The supplied character assets contain only front-facing artwork. True
+front/back/left/right body-facing animation requires additional directional
+character frames. This update avoids fake rotations/mirroring and improves
+where characters can walk, but it cannot invent missing sprite directions.
