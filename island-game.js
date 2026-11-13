@@ -317,7 +317,7 @@
       ui.ents.appendChild(el);
       const st = i < 2 ? freeTile(6, 7, 1.5) : i === 3 ? null : freeTile(7, 8, 2);
       const pos = st ? P(st.gx, st.gy) : { ...DOCK };
-      ppl.push({ k: d.k, el, x: pos.x, y: pos.y, route: [], wait: 0.5 + Math.random() * 2, act: i === 3 ? "fish" : "idle", face: 1 });
+      ppl.push({ k: d.k, el, x: pos.x, y: pos.y, route: [], wait: 0.5 + Math.random() * 2, act: i === 3 ? "fish" : "idle", face: 1, dir: 0 });
     });
     lastT = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(step);
   }
@@ -346,7 +346,13 @@
       if (p.route.length) {
         const q = p.route[0], dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy), mv = SPEED * dt;
         if (d <= mv) { p.x = q.x; p.y = q.y; p.route.shift(); if (!p.route.length) p.wait = p.act === "fish" ? 4 : 1 + Math.random() * 3; }
-        else { p.x += (dx / d) * mv; p.y += (dy / d) * mv; walking = true; if (Math.abs(dx) > 0.5) p.face = dx > 0 ? 1 : -1; }
+        else {
+          p.x += (dx / d) * mv; p.y += (dy / d) * mv; walking = true;
+          // The character artwork faces toward the bottom of the screen.
+          // Rotate it to follow the actual screen-space travel direction,
+          // instead of only mirroring left/right (which caused sideways/backward walking).
+          p.dir = Math.atan2(dx, dy) * 180 / Math.PI;
+        }
       } else {
         const job = p.act === "work" ? S.b.find((b) => b.id === p.job && b.busy) : null;
         if (p.act === "work" && !job) p.act = "idle";
@@ -362,7 +368,7 @@
       const g = gridF(p.x, p.y);
       p.el.style.zIndex = p.y > ROAD[4].y - 30 || g.x > N || g.y > N ? 4000 : 10 + Math.floor((g.x + g.y) * 2) + 1;
       p.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
-      p.el.firstChild.style.transform = `translateX(-50%) scaleX(${p.face})`;
+      p.el.firstChild.style.transform = `translateX(-50%) rotate(${p.dir || 0}deg)`;
     });
     raf = requestAnimationFrame(step);
   }
