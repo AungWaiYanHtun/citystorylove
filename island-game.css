@@ -97,9 +97,9 @@ body.is-open{overflow:hidden}
 
 /* Directional resident sprites: each character has front/back/left/right frames. */
 .is-p{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
-.is-p::before{content:"";position:absolute;left:-15px;top:-5px;width:30px;height:10px;border-radius:50%;background:rgba(0,0,0,.28)}
-.is-fig{position:absolute;bottom:0;left:0;width:100px;transform:translateX(-50%);filter:drop-shadow(0 3px 2px rgba(0,0,0,.3));pointer-events:none}
-.is-fig .is-sprite{position:absolute;left:50%;bottom:0;height:100%;width:auto;max-width:100%;object-fit:contain;transform:translateX(-50%);pointer-events:auto;user-select:none}
+.is-p::before{content:"";position:absolute;left:-21px;top:-6px;width:42px;height:12px;border-radius:50%;background:rgba(0,0,0,.30)}
+.is-fig{position:absolute;bottom:0;left:0;width:132px;transform:translateX(-50%);filter:drop-shadow(0 4px 3px rgba(0,0,0,.34));pointer-events:none}
+.is-fig .is-sprite{position:absolute;left:50%;bottom:0;height:100%;width:auto;max-width:100%;object-fit:contain;transform:translateX(-50%);pointer-events:auto;user-select:none;image-rendering:auto}
 .is-p.walk .is-fig .is-sprite{animation:isWalkBob .34s ease-in-out infinite alternate}
 @keyframes isWalkBob{from{margin-bottom:0}to{margin-bottom:2px}}
 .is-p.working .is-fig .is-sprite{animation:isWorkBob .5s ease-in-out infinite alternate}
@@ -107,6 +107,6 @@ body.is-open{overflow:hidden}
 .is-p.working::after{content:"🔨";position:absolute;left:-34px;top:-64px;font-size:22px;animation:isHam .25s ease-in-out infinite alternate;transform-origin:80% 80%}
 .is-p.fishing::after{content:"";position:absolute;left:-46px;top:6px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35);animation:isRip 1.6s ease-out infinite}
 @keyframes isRip{0%{transform:scale(.4);opacity:1}100%{transform:scale(2.4);opacity:0}}
-.is-say{position:absolute;left:50%;bottom:112px;transform:translateX(-50%) scale(.6);opacity:0;white-space:nowrap;padding:7px 12px;border-radius:14px;background:#fff;color:#222;font-weight:800;font-size:15px;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:.2s;pointer-events:none}
+.is-say{position:absolute;left:50%;bottom:calc(var(--person-height, 180px) + 8px);transform:translateX(-50%) scale(.6);opacity:0;white-space:nowrap;padding:7px 12px;border-radius:14px;background:#fff;color:#222;font-weight:800;font-size:15px;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:.2s;pointer-events:none}
 .is-say::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
 .is-p.talk .is-say{opacity:1;transform:translateX(-50%) scale(1)}

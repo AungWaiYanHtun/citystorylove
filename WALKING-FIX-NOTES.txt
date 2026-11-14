@@ -1,22 +1,34 @@
-CITYSTORYLOVE - DIRECTIONAL WALKING UPDATE
+CITYSTORYLOVE - CHARACTER WALKING / DEPTH UPDATE
 
-Preserves the original island map, buildings, UI, resources, save logic, and
-four character identities. Adds eight cleaned directional walking frames per
-character (two poses each for front, back, left, and right) and selects the
-matching facing direction from movement.
+Preserves the original tropical island artwork, buildings, resources, save data,
+menus, and existing game features. The four residents keep their established
+character identities and use the 32 directional PNG files in:
+  island-assets/characters/
 
-NPC movement uses A* over a walkable-land mask for the lawn, sandy path, and
-dock area. It avoids mapped natural obstacle zones, placed buildings, water,
-and outer foliage. Diagonal corner cutting is disabled. Every grid-to-grid
-movement segment is checked at short intervals, and intermediate route cells
-are retained so path smoothing cannot shortcut through obstacles.
+Character updates:
+- Uses front, back, left, and right artwork for each resident.
+- Alternates the two walking poses using elapsed time rather than frame count.
+- Enlarges the four residents so they remain visible at the full-island mobile
+  zoom level.
+- Sorts people and buildings using their ground-contact screen Y, so a person
+  can correctly appear behind a building instead of always drawing over it.
+- Chooses roaming destinations with spacing from other residents to reduce
+  overlapping/spawning on top of each other.
+
+Movement updates:
+- Keeps movement on the lawn, sandy path, and dock/beach walking area.
+- Uses A* pathfinding around placed buildings and mapped natural obstacles.
+- Checks the initial connection to the path grid and every grid segment.
+- Prevents diagonal corner cutting and keeps intermediate route cells.
+- Fisher beach points are checked against the walkable area.
 
 Checks performed:
-- JavaScript syntax check with Node.js 22.
-- ZIP archive integrity test.
-- Confirmed all 32 directional sprite files exist and decode as valid PNGs.
-- Pathfinding harness tested all 276 pairs of the island's 24 patrol nodes;
-  every returned route segment stayed inside the walkable mask.
+- Node.js syntax check for the updated island-game.js.
+- All 32 expected directional PNG files exist and decode successfully.
+- Pathfinding harness checked all 342 ordered routes among 19 valid island
+  patrol points with the default buildings; no returned route crossed a
+  non-walkable segment and no valid-point route was missing.
+- ZIP archive integrity check.
 
-Not performed: a full live browser/mobile play-through. Please test the updated
-ZIP on a staging copy of the game before replacing the live deployment.
+Not performed: a complete live Android / Netlify play-through. Test on a
+staging copy before replacing the live site.

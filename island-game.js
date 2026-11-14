@@ -152,7 +152,10 @@
     if (!el) { el = document.createElement("div"); el.className = "is-b"; el.dataset.id = b.id; el.innerHTML = `<div class="is-foot"></div><img src="${A}${b.t}.webp" alt="" draggable="false"><span class="is-lv"></span><span class="is-bub"></span><div class="is-cons"><div class="is-bar"><i></i></div><span class="is-time"></span><em>🔨</em></div>`; ui.ents.appendChild(el); b._el = el; }
     const top = P(b.x, b.y), bot = P(b.x + s, b.y + s), W = s * TW;
     el.style.left = (bot.x - W / 2) + "px"; el.style.top = top.y + "px"; el.style.width = W + "px"; el.style.height = (bot.y - top.y) + "px";
-    el.style.zIndex = 10 + (b.x + b.y + s) * 2;
+    // Sort buildings and people by their ground-contact (bottom) screen Y.
+    // This lets a resident correctly pass behind a building instead of always
+    // being drawn over its roof/walls.
+    el.style.zIndex = 10 + Math.floor(bot.y);
     const img = el.querySelector("img"); img.style.width = W * d.w + "px";
     el.querySelector(".is-lv").textContent = b.lv || "";
     el.querySelector(".is-bub").textContent = d.kind === "gold" ? "🪙" : "🟣";
@@ -280,9 +283,14 @@
   // ---- island residents: walk only on the visible grass, sandy road and dock ----
   // Coordinates are in the 1600x1600 ground.webp world. The polygon follows the
   // open lawn; the narrow road corridor and dock apron are added separately.
-  const PPL = [{ k: "boy", h: 100, hip: 0.5, ar: 0.327 }, { k: "girl", h: 96, hip: 0.5, ar: 0.332 }, { k: "builder", h: 92, hip: 0.52, ar: 0.4 }, { k: "fisher", h: 92, hip: 0.5, ar: 0.432 }];
+  const PPL = [
+    { k: "boy", h: 188 },
+    { k: "girl", h: 182 },
+    { k: "builder", h: 176 },
+    { k: "fisher", h: 176 }
+  ];
   const ROAD = [{ x: 905, y: 744 }, { x: 1120, y: 900 }, { x: 930, y: 1040 }, { x: 780, y: 1150 }, { x: 665, y: 1245 }];
-  const BEACH = [{ x: 590, y: 1240 }, { x: 710, y: 1270 }, { x: 820, y: 1240 }];
+  const BEACH = [{ x: 590, y: 1240 }, { x: 710, y: 1270 }, { x: 780, y: 1240 }];
   const DOCK = { x: 665, y: 1245 };
   // Fixed natural obstacles visible on the original island artwork (world pixels).
   // These cover the campfire/logs and exposed stones inside the lawn; the outer
@@ -335,6 +343,7 @@
     for(let i=1;i<steps;i++){const f=i/steps;if(!walkable(a.x+(b.x-a.x)*f,a.y+(b.y-a.y)*f))return false;}
     return true;
   }
+  const LAWN_NODES = WALK_NODES.slice(0, 16).filter(point => walkable(point.x, point.y));
   const CELL=32, WMIN=320, WMAX=1232, YMIN=320, YMAX=1344;
   const keyOf=(ix,iy)=>ix+','+iy;
   const worldOf=(ix,iy)=>({x:WMIN+ix*CELL+CELL/2,y:YMIN+iy*CELL+CELL/2});
@@ -343,7 +352,7 @@
     const cx=Math.round((pt.x-WMIN-CELL/2)/CELL), cy=Math.round((pt.y-YMIN-CELL/2)/CELL);
     for(let r=0;r<=9 && !best;r++) for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++) {
       if(x<0||y<0||x>=(WMAX-WMIN)/CELL||y>=(YMAX-YMIN)/CELL) continue;
-      const q=worldOf(x,y); if(!walkable(q.x,q.y)) continue;
+      const q=worldOf(x,y); if(!walkable(q.x,q.y) || !segmentWalkable(pt,q)) continue;
       const d=(q.x-pt.x)**2+(q.y-pt.y)**2; if(d<bd){bd=d;best={x,y};}
     }
     return best;
@@ -374,9 +383,20 @@
     // straight-line shortcuts through rocks, trees, or the edge of the path.
     return cells.map(c=>worldOf(c.x,c.y));
   }
-  function randomLawnPoint() {
-    for(let i=0;i<100;i++){const q=WALK_NODES[Math.floor(Math.random()*16)];const p={x:q.x+(Math.random()-.5)*65,y:q.y+(Math.random()-.5)*65};if(walkable(p.x,p.y))return p;}
-    return {x:790,y:700};
+  function randomLawnPoint(forPerson) {
+    // Choose a clear point with enough room around other residents. This avoids
+    // sending two people to the same tiny patch of grass or spawning them on top
+    // of one another.
+    for (let i = 0; i < 180; i++) {
+      const q = LAWN_NODES[Math.floor(Math.random() * LAWN_NODES.length)];
+      const point = { x: q.x + (Math.random() - .5) * 52, y: q.y + (Math.random() - .5) * 52 };
+      if (!walkable(point.x, point.y)) continue;
+      const crowded = ppl.some(other => other !== forPerson && Math.hypot(other.x - point.x, other.y - point.y) < 132);
+      if (!crowded) return point;
+    }
+    // A deterministic fallback still stays inside the central lawn.
+    const fallbacks = [{x:790,y:700},{x:650,y:850},{x:990,y:700},{x:700,y:520}];
+    return fallbacks.find(point => walkable(point.x, point.y) && !ppl.some(other => other !== forPerson && Math.hypot(other.x-point.x,other.y-point.y)<110)) || {x:790,y:700};
   }
   function spawnPeople() {
     ppl.forEach(p=>p.el.remove()); ppl=[];
@@ -384,35 +404,51 @@
       const el=document.createElement('div');el.className='is-p';el.dataset.k=d.k;
       const src=`${A}characters/${d.k}_front_0.png`;
       el.innerHTML=`<div class="is-fig" style="height:${d.h}px"><img class="is-sprite" src="${src}" alt="" draggable="false"></div><span class="is-say"></span>`;
+      el.style.setProperty('--person-height', `${d.h}px`);
       ui.ents.appendChild(el);
-      const pos=i===3?{x:665,y:1245}:randomLawnPoint();
-      ppl.push({k:d.k,el,x:pos.x,y:pos.y,route:[],wait:.5+Math.random()*2,act:i===3?'fish':'idle',dir:'front',frame:0,animClock:0});
+      const pos = i === 3 ? { x: 665, y: 1245 } : randomLawnPoint();
+      ppl.push({ id: i, k:d.k, el, x:pos.x, y:pos.y, route:[], wait:.5+Math.random()*2, act:i===3?'fish':'idle', dir:'front', frame:0, animClock:0 });
     });
     lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(step);
   }
-  function setRoute(p,target,act) { const path=findPath({x:p.x,y:p.y},target);p.route=path;p.act=act||'idle'; }
+  function setRoute(p, target, act) {
+    let destination = target;
+    // Avoid selecting another resident's exact standing spot as a destination.
+    if (ppl.some(other => other !== p && Math.hypot(other.x - destination.x, other.y - destination.y) < 112)) {
+      destination = randomLawnPoint(p);
+    }
+    const path = findPath({ x:p.x, y:p.y }, destination);
+    p.route = path;
+    p.act = act || 'idle';
+  }
   function plan(p) {
     const job=p.k==='builder'?S.b.find(b=>b.busy):null;
     if(job){
-      const s=D[job.t].s, target=P(job.x+s+.4,job.y+s+.4), safe=walkable(target.x,target.y)?target:randomLawnPoint();
+      const s=D[job.t].s, target=P(job.x+s+.4,job.y+s+.4), safe=walkable(target.x,target.y)?target:randomLawnPoint(p);
       setRoute(p,safe,'work');p.job=job.id;return;
     }
     if(p.k==='fisher' && (p.act!=='fish' || Math.random()<.25)) { setRoute(p,DOCK,'fish');return; }
-    if(p.act==='fish' && Math.random()<.55){setRoute(p,randomLawnPoint(),'idle');return;}
-    const target=Math.random()<.22?BEACH[Math.floor(Math.random()*BEACH.length)]:randomLawnPoint();
+    if(p.act==='fish' && Math.random()<.55){setRoute(p,randomLawnPoint(p),'idle');return;}
+    const target=Math.random()<.22?BEACH[Math.floor(Math.random()*BEACH.length)]:randomLawnPoint(p);
     setRoute(p,target,'idle');
   }
-  function setFacing(p, dx, dy, walking) {
+  function setFacing(p, dx, dy, walking, dt) {
+    // Movement coordinates are screen/world pixels, so select the matching
+    // front/back/side view from the actual direction of travel.
     if (walking && (Math.abs(dx) + Math.abs(dy) > 0.001)) {
       if (Math.abs(dx) > Math.abs(dy) * 1.12) p.dir = dx < 0 ? 'left' : 'right';
       else p.dir = dy < 0 ? 'back' : 'front';
+      p.animClock += dt;
+    } else {
+      p.animClock = 0;
     }
-    if (walking) p.animClock += 1;
-    const frame = walking ? (Math.floor(p.animClock / 8) % 2) : 0;
+    // Two alternating walk poses at a stable time-based rate (independent of FPS).
+    const frame = walking ? (Math.floor(p.animClock / 0.16) % 2) : 0;
     if (p.frame !== frame || p._renderedDir !== p.dir) {
       const img = p.el.querySelector('.is-sprite');
       if (img) img.src = `${A}characters/${p.k}_${p.dir}_${frame}.png`;
-      p.frame = frame; p._renderedDir = p.dir;
+      p.frame = frame;
+      p._renderedDir = p.dir;
     }
   }
   function step(now) {
@@ -432,8 +468,10 @@
       }
       const atDock=p.act==='fish'&&!p.route.length,working=p.act==='work'&&!p.route.length;
       p.el.classList.toggle('walk',walking);p.el.classList.toggle('fishing',atDock);p.el.classList.toggle('working',working);
-      setFacing(p, moveX, moveY, walking);
-      p.el.style.zIndex=100+Math.floor(p.y);
+      setFacing(p, moveX, moveY, walking, dt);
+      // Match building depth sorting: lower screen-Y feet appear behind,
+      // higher screen-Y feet appear in front.
+      p.el.style.zIndex = 10 + Math.floor(p.y);
       p.el.style.transform=`translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
       p.el.firstChild.style.transform='translateX(-50%)';
     });
