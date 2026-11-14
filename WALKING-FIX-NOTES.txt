@@ -1,19 +1,22 @@
-CITYSTORYLOVE - ISLAND WALKING UPDATE
+CITYSTORYLOVE - DIRECTIONAL WALKING UPDATE
 
-This update keeps the original island artwork, existing characters, buildings,
-resources, save logic, and game interface.
+Preserves the original island map, buildings, UI, resources, save logic, and
+four character identities. Adds eight cleaned directional walking frames per
+character (two poses each for front, back, left, and right) and selects the
+matching facing direction from movement.
 
-Walking changes:
-- NPC movement is constrained to the central lawn, the sandy path corridor,
-  and the small beach/dock area.
-- A* pathfinding routes around placed buildings and prevents diagonal corner-cutting.
-- The sandy path is preferred when it provides a sensible route.
-- Residents roam around the open lawn; the fisher can travel to the dock.
-- Removed automatic horizontal mirroring while walking. The supplied character
-  artwork is front-facing, so mirroring it during vertical/diagonal movement
-  made characters look as if they were walking backwards.
+NPC movement uses A* over a walkable-land mask for the lawn, sandy path, and
+dock area. It avoids mapped natural obstacle zones, placed buildings, water,
+and outer foliage. Diagonal corner cutting is disabled. Every grid-to-grid
+movement segment is checked at short intervals, and intermediate route cells
+are retained so path smoothing cannot shortcut through obstacles.
 
-Note: The supplied character assets contain only front-facing artwork. True
-front/back/left/right body-facing animation requires additional directional
-character frames. This update avoids fake rotations/mirroring and improves
-where characters can walk, but it cannot invent missing sprite directions.
+Checks performed:
+- JavaScript syntax check with Node.js 22.
+- ZIP archive integrity test.
+- Confirmed all 32 directional sprite files exist and decode as valid PNGs.
+- Pathfinding harness tested all 276 pairs of the island's 24 patrol nodes;
+  every returned route segment stayed inside the walkable mask.
+
+Not performed: a full live browser/mobile play-through. Please test the updated
+ZIP on a staging copy of the game before replacing the live deployment.

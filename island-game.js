@@ -284,6 +284,16 @@
   const ROAD = [{ x: 905, y: 744 }, { x: 1120, y: 900 }, { x: 930, y: 1040 }, { x: 780, y: 1150 }, { x: 665, y: 1245 }];
   const BEACH = [{ x: 590, y: 1240 }, { x: 710, y: 1270 }, { x: 820, y: 1240 }];
   const DOCK = { x: 665, y: 1245 };
+  // Fixed natural obstacles visible on the original island artwork (world pixels).
+  // These cover the campfire/logs and exposed stones inside the lawn; the outer
+  // tree line remains excluded by the walkable-land polygon.
+  const NATURAL_BLOCKERS = [
+    {x:405,y:610,rx:38,ry:34}, {x:485,y:560,rx:42,ry:27},
+    {x:755,y:455,rx:20,ry:18}, {x:895,y:465,rx:34,ry:24},
+    {x:1010,y:475,rx:42,ry:30}, {x:1080,y:520,rx:22,ry:18},
+    {x:1145,y:640,rx:26,ry:26}, {x:1160,y:790,rx:34,ry:30},
+    {x:930,y:1000,rx:35,ry:25}, {x:720,y:1050,rx:24,ry:18}
+  ];
   const SPEED = 34;
   const LAWN = [
     {x:350,y:610},{x:410,y:500},{x:540,y:405},{x:690,y:350},{x:850,y:345},
@@ -315,8 +325,14 @@
     const pt={x,y};
     const land=insidePoly(x,y,LAWN) || insidePoly(x,y,SAND) || nearLine(pt,ROAD,31);
     if (!land) return false;
+    if (NATURAL_BLOCKERS.some(o => ((x-o.x)*(x-o.x))/(o.rx*o.rx)+((y-o.y)*(y-o.y))/(o.ry*o.ry) < 1)) return false;
     const g=gridF(x,y);
     if (S.b.some(b=>g.x>b.x-0.12 && g.x<b.x+D[b.t].s+0.12 && g.y>b.y-0.12 && g.y<b.y+D[b.t].s+0.12)) return false;
+    return true;
+  }
+  function segmentWalkable(a,b) {
+    const d=Math.hypot(b.x-a.x,b.y-a.y), steps=Math.max(2,Math.ceil(d/8));
+    for(let i=1;i<steps;i++){const f=i/steps;if(!walkable(a.x+(b.x-a.x)*f,a.y+(b.y-a.y)*f))return false;}
     return true;
   }
   const CELL=32, WMIN=320, WMAX=1232, YMIN=320, YMAX=1344;
@@ -344,7 +360,7 @@
       for(const [dx,dy] of dirs){
         const nx=cur.x+dx,ny=cur.y+dy, nk=keyOf(nx,ny);
         if(nx<0||ny<0||nx>=(WMAX-WMIN)/CELL||ny>=(YMAX-YMIN)/CELL||closed.has(nk)) continue;
-        const q=worldOf(nx,ny); if(!walkable(q.x,q.y)) continue;
+        const from=worldOf(cur.x,cur.y),q=worldOf(nx,ny); if(!walkable(q.x,q.y)||!segmentWalkable(from,q)) continue;
         if(dx&&dy){const q1=worldOf(cur.x+dx,cur.y),q2=worldOf(cur.x,cur.y+dy);if(!walkable(q1.x,q1.y)||!walkable(q2.x,q2.y))continue;}
         const terrain=nearLine(q,ROAD,34)?0.82:1; const ng=cur.g+(dx&&dy?1.414:1)*terrain; if(ng>=(costs.get(nk)??Infinity))continue;
         costs.set(nk,ng);came.set(nk,ck);open.push({x:nx,y:ny,g:ng,f:ng+Math.hypot(nx-b.x,ny-b.y)});
@@ -354,10 +370,9 @@
     const cells=[];let k=keyOf(b.x,b.y);cells.push(b);
     while(k!==keyOf(a.x,a.y)){k=came.get(k);if(!k)return [];const [x,y]=k.split(',').map(Number);cells.push({x,y});}
     cells.reverse();
-    // Keep the route smooth by dropping intermediate points on the same line.
-    const pts=cells.map(c=>worldOf(c.x,c.y)), out=[];
-    for(let i=0;i<pts.length;i++) if(i===0||i===pts.length-1||Math.sign(pts[i].x-pts[i-1].x)!==Math.sign(pts[i+1].x-pts[i].x)||Math.sign(pts[i].y-pts[i-1].y)!==Math.sign(pts[i+1].y-pts[i].y)) out.push(pts[i]);
-    return out;
+    // Keep every verified grid step. Skipping intermediate cells can create
+    // straight-line shortcuts through rocks, trees, or the edge of the path.
+    return cells.map(c=>worldOf(c.x,c.y));
   }
   function randomLawnPoint() {
     for(let i=0;i<100;i++){const q=WALK_NODES[Math.floor(Math.random()*16)];const p={x:q.x+(Math.random()-.5)*65,y:q.y+(Math.random()-.5)*65};if(walkable(p.x,p.y))return p;}
@@ -367,11 +382,11 @@
     ppl.forEach(p=>p.el.remove()); ppl=[];
     PPL.forEach((d,i)=>{
       const el=document.createElement('div');el.className='is-p';el.dataset.k=d.k;
-      const src=`${A}p_${d.k}.webp`,hp=Math.round(d.hip*100);
-      el.innerHTML=`<div class="is-fig" style="height:${d.h}px;--hip:${hp}%;--ar:${d.ar}"><img class="lg l" src="${src}" alt="" draggable="false"><img class="lg r" src="${src}" alt="" draggable="false"><img class="bd" src="${src}" alt="" draggable="false"></div><span class="is-say"></span>`;
+      const src=`${A}characters/${d.k}_front_0.png`;
+      el.innerHTML=`<div class="is-fig" style="height:${d.h}px"><img class="is-sprite" src="${src}" alt="" draggable="false"></div><span class="is-say"></span>`;
       ui.ents.appendChild(el);
       const pos=i===3?{x:665,y:1245}:randomLawnPoint();
-      ppl.push({k:d.k,el,x:pos.x,y:pos.y,route:[],wait:.5+Math.random()*2,act:i===3?'fish':'idle',face:1});
+      ppl.push({k:d.k,el,x:pos.x,y:pos.y,route:[],wait:.5+Math.random()*2,act:i===3?'fish':'idle',dir:'front',frame:0,animClock:0});
     });
     lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(step);
   }
@@ -387,15 +402,28 @@
     const target=Math.random()<.22?BEACH[Math.floor(Math.random()*BEACH.length)]:randomLawnPoint();
     setRoute(p,target,'idle');
   }
+  function setFacing(p, dx, dy, walking) {
+    if (walking && (Math.abs(dx) + Math.abs(dy) > 0.001)) {
+      if (Math.abs(dx) > Math.abs(dy) * 1.12) p.dir = dx < 0 ? 'left' : 'right';
+      else p.dir = dy < 0 ? 'back' : 'front';
+    }
+    if (walking) p.animClock += 1;
+    const frame = walking ? (Math.floor(p.animClock / 8) % 2) : 0;
+    if (p.frame !== frame || p._renderedDir !== p.dir) {
+      const img = p.el.querySelector('.is-sprite');
+      if (img) img.src = `${A}characters/${p.k}_${p.dir}_${frame}.png`;
+      p.frame = frame; p._renderedDir = p.dir;
+    }
+  }
   function step(now) {
     if(!ui)return;
     const dt=Math.min(.08,(now-lastT)/1000);lastT=now;
     ppl.forEach(p=>{
-      let walking=false;
+      let walking=false, moveX=0, moveY=0;
       if(p.route.length){
         const q=p.route[0],dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy),mv=SPEED*dt;
         if(d<=mv){p.x=q.x;p.y=q.y;p.route.shift();if(!p.route.length)p.wait=p.act==='fish'?4:1.5+Math.random()*3;}
-        else{p.x+=(dx/d)*mv;p.y+=(dy/d)*mv;walking=true;}
+        else{moveX=dx/d;moveY=dy/d;p.x+=moveX*mv;p.y+=moveY*mv;walking=true;}
       }else{
         const job=p.act==='work'?S.b.find(b=>b.id===p.job&&b.busy):null;
         if(p.act==='work'&&!job)p.act='idle';
@@ -404,8 +432,7 @@
       }
       const atDock=p.act==='fish'&&!p.route.length,working=p.act==='work'&&!p.route.length;
       p.el.classList.toggle('walk',walking);p.el.classList.toggle('fishing',atDock);p.el.classList.toggle('working',working);
-      // Character artwork is front-facing. Never mirror it for vertical/diagonal travel:
-      // mirroring a single front sprite was the source of the backwards-looking walk.
+      setFacing(p, moveX, moveY, walking);
       p.el.style.zIndex=100+Math.floor(p.y);
       p.el.style.transform=`translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
       p.el.firstChild.style.transform='translateX(-50%)';
