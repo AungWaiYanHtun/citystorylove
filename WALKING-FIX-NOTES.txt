@@ -43,3 +43,17 @@ Follow-up tuning (2026-11-14):
 - The supplied directional set contains 2 poses per direction, not a full
   4- or 8-frame cycle; this update improves cadence but does not invent
   additional hand-drawn poses.
+
+
+Follow-up repair (2026-11-14):
+- Reduced resident render heights to 99-104 world pixels to address the
+  oversized appearance in the supplied Android recording.
+- The supplied front/back art has near-standing leg poses. Front/back rendering
+  now separates torso and lower-leg regions and alternates the two leg layers
+  with a restrained procedural stride. Side-facing art continues to use its
+  supplied two walking poses.
+- Added route string-pulling only when each shortcut segment passes the dense
+  walkability test, reducing direction jitter while retaining obstacle checks.
+- Reduced roaming idle gaps and slightly moderated travel speed.
+- Static syntax, required asset, and ZIP integrity checks are run at packaging.
+  A full Android/Netlify runtime play-through remains necessary.

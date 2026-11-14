@@ -286,10 +286,10 @@
   // Character height is deliberately smaller than the previous oversized pass.
   // Values are world pixels and scale with the island camera.
   const PPL = [
-    { k: "boy", h: 142 },
-    { k: "girl", h: 138 },
-    { k: "builder", h: 134 },
-    { k: "fisher", h: 134 }
+    { k: "boy", h: 104 },
+    { k: "girl", h: 101 },
+    { k: "builder", h: 99 },
+    { k: "fisher", h: 99 }
   ];
   const ROAD = [{ x: 905, y: 744 }, { x: 1120, y: 900 }, { x: 930, y: 1040 }, { x: 780, y: 1150 }, { x: 665, y: 1245 }];
   const BEACH = [{ x: 590, y: 1240 }, { x: 710, y: 1270 }, { x: 780, y: 1240 }];
@@ -304,7 +304,7 @@
     {x:1145,y:640,rx:26,ry:26}, {x:1160,y:790,rx:34,ry:30},
     {x:930,y:1000,rx:35,ry:25}, {x:720,y:1050,rx:24,ry:18}
   ];
-  const SPEED = 48;
+  const SPEED = 42;
   const LAWN = [
     {x:350,y:610},{x:410,y:500},{x:540,y:405},{x:690,y:350},{x:850,y:345},
     {x:1010,y:405},{x:1140,y:520},{x:1200,y:650},{x:1160,y:790},
@@ -381,9 +381,22 @@
     const cells=[];let k=keyOf(b.x,b.y);cells.push(b);
     while(k!==keyOf(a.x,a.y)){k=came.get(k);if(!k)return [];const [x,y]=k.split(',').map(Number);cells.push({x,y});}
     cells.reverse();
-    // Keep every verified grid step. Skipping intermediate cells can create
-    // straight-line shortcuts through rocks, trees, or the edge of the path.
-    return cells.map(c=>worldOf(c.x,c.y));
+    // String-pull the grid route only across segments that pass the same
+    // dense walkability test used by movement. This removes tiny zig-zags
+    // without allowing shortcuts through obstacles or outside walkable land.
+    const raw = cells.map(c=>worldOf(c.x,c.y));
+    if (raw.length <= 2) return raw;
+    const smooth = [raw[0]];
+    let anchor = 0;
+    while (anchor < raw.length - 1) {
+      let next = anchor + 1;
+      for (let j = raw.length - 1; j > anchor + 1; j--) {
+        if (segmentWalkable(raw[anchor], raw[j])) { next = j; break; }
+      }
+      smooth.push(raw[next]);
+      anchor = next;
+    }
+    return smooth;
   }
   function randomLawnPoint(forPerson) {
     // Choose a clear point with enough room around other residents. This avoids
@@ -405,7 +418,11 @@
     PPL.forEach((d,i)=>{
       const el=document.createElement('div');el.className='is-p';el.dataset.k=d.k;
       const src=`${A}characters/${d.k}_front_0.png`;
-      el.innerHTML=`<div class="is-fig" style="height:${d.h}px"><img class="is-sprite" src="${src}" alt="" draggable="false"></div><span class="is-say"></span>`;
+      el.innerHTML=`<div class="is-fig is-fb" style="height:${d.h}px">
+        <img class="is-sprite is-base" src="${src}" alt="" draggable="false">
+        <img class="is-sprite is-leg is-leg-a" src="${src}" alt="" draggable="false">
+        <img class="is-sprite is-leg is-leg-b" src="${src}" alt="" draggable="false">
+      </div><span class="is-say"></span>`;
       el.style.setProperty('--person-height', `${d.h}px`);
       ui.ents.appendChild(el);
       const pos = i === 3 ? { x: 665, y: 1245 } : randomLawnPoint();
@@ -447,8 +464,10 @@
     // Two alternating walk poses at a stable time-based rate (independent of FPS).
     const frame = walking ? (Math.floor(p.animClock / 0.12) % 2) : 0;
     if (p.frame !== frame || p._renderedDir !== p.dir) {
-      const img = p.el.querySelector('.is-sprite');
-      if (img) img.src = `${A}characters/${p.k}_${p.dir}_${frame}.png`;
+      const src = `${A}characters/${p.k}_${p.dir}_${frame}.png`;
+      p.el.querySelectorAll('.is-sprite').forEach(img => { img.src = src; });
+      const fig = p.el.querySelector('.is-fig');
+      if (fig) fig.classList.toggle('is-fb', p.dir === 'front' || p.dir === 'back');
       p.frame = frame;
       p._renderedDir = p.dir;
     }
@@ -460,7 +479,7 @@
       let walking=false, moveX=0, moveY=0;
       if(p.route.length){
         const q=p.route[0],dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy),mv=SPEED*dt;
-        if(d<=mv){p.x=q.x;p.y=q.y;p.route.shift();if(!p.route.length)p.wait=p.act==='fish'?3.5:.55+Math.random()*.9;}
+        if(d<=mv){p.x=q.x;p.y=q.y;p.route.shift();if(!p.route.length)p.wait=p.act==='fish'?3.5:.25+Math.random()*.55;}
         else{moveX=dx/d;moveY=dy/d;p.x+=moveX*mv;p.y+=moveY*mv;walking=true;}
       }else{
         const job=p.act==='work'?S.b.find(b=>b.id===p.job&&b.busy):null;
