@@ -1,59 +1,36 @@
-CITYSTORYLOVE - CHARACTER WALKING / DEPTH UPDATE
+CITYSTORYLOVE — ISLAND CAMERA & RESIDENT WALKING REPAIR
 
-Preserves the original tropical island artwork, buildings, resources, save data,
-menus, and existing game features. The four residents keep their established
-character identities and use the 32 directional PNG files in:
-  island-assets/characters/
+This update is based on the uploaded citystorylove-natural-walking-repair.zip.
+It preserves the existing island ground artwork, buildings, resources, menus,
+save data, and the four original resident designs.
 
-Character updates:
-- Uses front, back, left, and right artwork for each resident.
-- Alternates the two walking poses using elapsed time rather than frame count.
-- Enlarges the four residents so they remain visible at the full-island mobile
-  zoom level.
-- Sorts people and buildings using their ground-contact screen Y, so a person
-  can correctly appear behind a building instead of always drawing over it.
-- Chooses roaming destinations with spacing from other residents to reduce
-  overlapping/spawning on top of each other.
+WHAT CHANGED
+- The square island now fits the shorter viewport edge and is centered, so the
+  complete island is visible on portrait and landscape phone screens.
+- The camera refits after screen rotation or viewport resize.
+- Residents use their original full front/back/left/right directional PNGs.
+  The old synthetic split-leg clipping and duplicate sprite overlays are gone.
+- The two supplied poses for each direction alternate based on distance moved,
+  not render FPS, so the gait remains tied to actual walking speed.
+- Resident scale is proportional to the fitted island camera.
+- Walking speed is tuned to 76 world pixels per second.
+- Existing walkable-land polygons, mapped natural obstacles, placed-building
+  collision checks, A* pathfinding, diagonal corner checks, and safe route
+  smoothing are retained.
+- Modified script/style cache versions are bumped in index.html.
 
-Movement updates:
-- Keeps movement on the lawn, sandy path, and dock/beach walking area.
-- Uses A* pathfinding around placed buildings and mapped natural obstacles.
-- Checks the initial connection to the path grid and every grid segment.
-- Prevents diagonal corner cutting and keeps intermediate route cells.
-- Fisher beach points are checked against the walkable area.
+ASSETS
+- 32 directional PNGs are included: 4 residents × 4 directions × 2 poses.
+- Original island artwork and existing game assets are retained.
 
-Checks performed:
-- Node.js syntax check for the updated island-game.js.
-- All 32 expected directional PNG files exist and decode successfully.
-- Pathfinding harness checked all 342 ordered routes among 19 valid island
-  patrol points with the default buildings; no returned route crossed a
-  non-walkable segment and no valid-point route was missing.
-- ZIP archive integrity check.
+CHECKS PERFORMED
+- `node --check island-game.js` passed.
+- All 32 directional PNG files were found and decoded successfully.
+- Pathfinding harness: 19 valid patrol points, all 342 ordered routes checked;
+  no missing routes and no returned segment crossed a non-walkable area.
+- 30 random resident spawn points were checked; all were walkable.
+- ZIP integrity test passed.
 
-Not performed: a complete live Android / Netlify play-through. Test on a
-staging copy before replacing the live site.
-
-
-Follow-up tuning (2026-11-14):
-- Reduced resident height from roughly 176-188 to 134-142 world pixels to
-  address the oversized appearance in the user's mobile screenshot.
-- Increased travel speed from 34 to 48 world pixels/second.
-- Shortened idle pauses between roaming trips and sped up the two supplied
-  walk poses to make steps easier to see.
-- The supplied directional set contains 2 poses per direction, not a full
-  4- or 8-frame cycle; this update improves cadence but does not invent
-  additional hand-drawn poses.
-
-
-Follow-up repair (2026-11-14):
-- Reduced resident render heights to 99-104 world pixels to address the
-  oversized appearance in the supplied Android recording.
-- The supplied front/back art has near-standing leg poses. Front/back rendering
-  now separates torso and lower-leg regions and alternates the two leg layers
-  with a restrained procedural stride. Side-facing art continues to use its
-  supplied two walking poses.
-- Added route string-pulling only when each shortcut segment passes the dense
-  walkability test, reducing direction jitter while retaining obstacle checks.
-- Reduced roaming idle gaps and slightly moderated travel speed.
-- Static syntax, required asset, and ZIP integrity checks are run at packaging.
-  A full Android/Netlify runtime play-through remains necessary.
+NOT TESTED
+- A complete live Android / Telegram / Netlify play-through was not performed.
+  Test on a staging deployment before replacing the live site.

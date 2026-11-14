@@ -101,10 +101,22 @@
     const c = $("is-grid").getContext("2d"); c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 1.5;
     for (let i = 0; i <= N; i++) { let a = P(i, 0), b = P(i, N); c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); a = P(0, i); b = P(N, i); c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); }
   }
-  function fit() { const vw = ui.view.clientWidth, vh = ui.view.clientHeight; ui.min = Math.max(vw, vh) / 1600; ui.sc = Math.max(ui.min, 0.66); ui.tx = vw / 2 - OX * ui.sc; ui.ty = vh / 2 - 760 * ui.sc; apply(); }
+  function fit() {
+    const vw = ui.view.clientWidth, vh = ui.view.clientHeight;
+    // Ground artwork is square. Fit to the shorter viewport edge so the
+    // complete island remains visible on portrait phones (no zoom crop).
+    ui.min = Math.min(vw, vh) / 1600;
+    ui.sc = ui.min;
+    const worldSize = 1600 * ui.sc;
+    ui.tx = (vw - worldSize) / 2;
+    ui.ty = (vh - worldSize) / 2;
+    apply();
+  }
   function apply() {
     const vw = ui.view.clientWidth, vh = ui.view.clientHeight, W = 1600 * ui.sc;
-    ui.tx = Math.min(0, Math.max(vw - W, ui.tx)); ui.ty = Math.min(0, Math.max(vh - W, ui.ty));
+    // Center a smaller world; clamp a zoomed-in world to its edges.
+    ui.tx = W <= vw ? Math.max(0, Math.min(vw - W, ui.tx)) : Math.min(0, Math.max(vw - W, ui.tx));
+    ui.ty = W <= vh ? Math.max(0, Math.min(vh - W, ui.ty)) : Math.min(0, Math.max(vh - W, ui.ty));
     ui.world.style.transform = `translate(${ui.tx}px,${ui.ty}px) scale(${ui.sc})`;
   }
   function zoomAt(f, cx, cy) { const ns = Math.max(ui.min, Math.min(1.6, ui.sc * f)); const k = ns / ui.sc; ui.tx = cx - (cx - ui.tx) * k; ui.ty = cy - (cy - ui.ty) * k; ui.sc = ns; apply(); }
@@ -133,7 +145,7 @@
     };
     v.addEventListener("pointerup", up); v.addEventListener("pointercancel", up);
     v.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.9, e.clientX, e.clientY); }, { passive: false });
-    window.addEventListener("resize", () => ui && apply());
+    window.addEventListener("resize", () => ui && fit());
   }
   function tap(target) {
     if (place) return; const pe = target.closest?.(".is-p"); if (pe) { tapPerson(pe); return; }
@@ -286,10 +298,10 @@
   // Character height is deliberately smaller than the previous oversized pass.
   // Values are world pixels and scale with the island camera.
   const PPL = [
-    { k: "boy", h: 104 },
-    { k: "girl", h: 101 },
-    { k: "builder", h: 99 },
-    { k: "fisher", h: 99 }
+    { k: "boy", h: 190 },
+    { k: "girl", h: 182 },
+    { k: "builder", h: 184 },
+    { k: "fisher", h: 184 }
   ];
   const ROAD = [{ x: 905, y: 744 }, { x: 1120, y: 900 }, { x: 930, y: 1040 }, { x: 780, y: 1150 }, { x: 665, y: 1245 }];
   const BEACH = [{ x: 590, y: 1240 }, { x: 710, y: 1270 }, { x: 780, y: 1240 }];
@@ -304,7 +316,7 @@
     {x:1145,y:640,rx:26,ry:26}, {x:1160,y:790,rx:34,ry:30},
     {x:930,y:1000,rx:35,ry:25}, {x:720,y:1050,rx:24,ry:18}
   ];
-  const SPEED = 42;
+  const SPEED = 76;
   const LAWN = [
     {x:350,y:610},{x:410,y:500},{x:540,y:405},{x:690,y:350},{x:850,y:345},
     {x:1010,y:405},{x:1140,y:520},{x:1200,y:650},{x:1160,y:790},
@@ -418,15 +430,13 @@
     PPL.forEach((d,i)=>{
       const el=document.createElement('div');el.className='is-p';el.dataset.k=d.k;
       const src=`${A}characters/${d.k}_front_0.png`;
-      el.innerHTML=`<div class="is-fig is-fb" style="height:${d.h}px">
-        <img class="is-sprite is-base" src="${src}" alt="" draggable="false">
-        <img class="is-sprite is-leg is-leg-a" src="${src}" alt="" draggable="false">
-        <img class="is-sprite is-leg is-leg-b" src="${src}" alt="" draggable="false">
+      el.innerHTML=`<div class="is-fig" style="height:${d.h}px">
+        <img class="is-sprite" src="${src}" alt="" draggable="false">
       </div><span class="is-say"></span>`;
       el.style.setProperty('--person-height', `${d.h}px`);
       ui.ents.appendChild(el);
       const pos = i === 3 ? { x: 665, y: 1245 } : randomLawnPoint();
-      ppl.push({ id: i, k:d.k, el, x:pos.x, y:pos.y, route:[], wait:.2+Math.random()*.6, act:i===3?'fish':'idle', dir:'front', frame:0, animClock:0 });
+      ppl.push({ id: i, k:d.k, el, x:pos.x, y:pos.y, route:[], wait:.2+Math.random()*.6, act:i===3?'fish':'idle', dir:'front', frame:0, animDistance:0 });
     });
     lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(step);
   }
@@ -451,23 +461,23 @@
     const target=Math.random()<.22?BEACH[Math.floor(Math.random()*BEACH.length)]:randomLawnPoint(p);
     setRoute(p,target,'idle');
   }
-  function setFacing(p, dx, dy, walking, dt) {
-    // Movement coordinates are screen/world pixels, so select the matching
-    // front/back/side view from the actual direction of travel.
+  function setFacing(p, dx, dy, walking, distanceMoved) {
+    // Direction is derived from the actual screen-space travel vector.
+    // Never mirror a sprite: use the matching authored left/right artwork.
     if (walking && (Math.abs(dx) + Math.abs(dy) > 0.001)) {
       if (Math.abs(dx) > Math.abs(dy) * 1.12) p.dir = dx < 0 ? 'left' : 'right';
       else p.dir = dy < 0 ? 'back' : 'front';
-      p.animClock += dt;
+      p.animDistance = (p.animDistance || 0) + distanceMoved;
     } else {
-      p.animClock = 0;
+      p.animDistance = 0;
     }
-    // Two alternating walk poses at a stable time-based rate (independent of FPS).
-    const frame = walking ? (Math.floor(p.animClock / 0.12) % 2) : 0;
+    // The two supplied PNG poses alternate after a fixed travel distance,
+    // so animation cadence follows walking speed rather than device FPS.
+    const frame = walking ? (Math.floor(p.animDistance / 18) % 2) : 0;
     if (p.frame !== frame || p._renderedDir !== p.dir) {
       const src = `${A}characters/${p.k}_${p.dir}_${frame}.png`;
-      p.el.querySelectorAll('.is-sprite').forEach(img => { img.src = src; });
-      const fig = p.el.querySelector('.is-fig');
-      if (fig) fig.classList.toggle('is-fb', p.dir === 'front' || p.dir === 'back');
+      const img = p.el.querySelector('.is-sprite');
+      if (img) img.src = src;
       p.frame = frame;
       p._renderedDir = p.dir;
     }
@@ -489,7 +499,7 @@
       }
       const atDock=p.act==='fish'&&!p.route.length,working=p.act==='work'&&!p.route.length;
       p.el.classList.toggle('walk',walking);p.el.classList.toggle('fishing',atDock);p.el.classList.toggle('working',working);
-      setFacing(p, moveX, moveY, walking, dt);
+      setFacing(p, moveX, moveY, walking, walking ? SPEED * dt : 0);
       // Match building depth sorting: lower screen-Y feet appear behind,
       // higher screen-Y feet appear in front.
       p.el.style.zIndex = 10 + Math.floor(p.y);

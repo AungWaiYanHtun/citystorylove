@@ -1,0 +1,14 @@
+CityStoryLove ဂိမ်းဖိုင်အသစ် ထည့်သွင်းရန်
+
+၁။ GitHub မှာ လက်ရှိ Repository ကို အရင် Backup လုပ်ထားပါ။
+၂။ ဒီ ZIP ကို ဖုန်းထဲမှာ Extract လုပ်ပါ။
+၃။ Extract လုပ်ထားတဲ့ ဖိုင်/Folder အားလုံးကို GitHub Repository ရဲ့ မူလ Root
+   နေရာမှာ Upload လုပ်ပါ။ ဖိုင်အမည်တူရင် Replace လုပ်ပါ။
+၄။ island-assets Folder တစ်ခုလုံး၊ အထူးသဖြင့် characters Folder ကို မဖျက်ပါနဲ့။
+၅။ Commit changes လုပ်ပါ။ Netlify က GitHub နဲ့ ချိတ်ထားရင် Deploy အလိုအလျောက်
+   ပြန်လုပ်ပါလိမ့်မယ်။
+၆။ ဖုန်းမှာ ဂိမ်းကို ပြန်ဖွင့်ပြီး ကျွန်းတစ်ကျွန်းလုံး မြင်ရမရ၊ လူတွေ လမ်းလျှောက်တဲ့
+   ဦးတည်ချက်နဲ့ ခြေလှမ်း Animation မှန်မမှန် စမ်းကြည့်ပါ။
+
+သတိပြုရန် — ဒီ ZIP ကို Static syntax၊ ပုံဖိုင်၊ Pathfinding နဲ့ ZIP integrity
+စစ်ဆေးထားပါတယ်။ Live Android/Telegram စမ်းသပ်မှုကို မလုပ်ရသေးပါ။
