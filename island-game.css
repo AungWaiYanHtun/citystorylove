@@ -100,8 +100,8 @@ body.is-open{overflow:hidden}
 .is-p::before{content:"";position:absolute;left:-21px;top:-6px;width:42px;height:12px;border-radius:50%;background:rgba(0,0,0,.30)}
 .is-fig{position:absolute;bottom:0;left:0;width:132px;transform:translateX(-50%);filter:drop-shadow(0 4px 3px rgba(0,0,0,.34));pointer-events:none}
 .is-fig .is-sprite{position:absolute;left:50%;bottom:0;height:100%;width:auto;max-width:100%;object-fit:contain;transform:translateX(-50%);pointer-events:auto;user-select:none;image-rendering:auto}
-.is-p.walk .is-fig .is-sprite{animation:isWalkBob .34s ease-in-out infinite alternate}
-@keyframes isWalkBob{from{margin-bottom:0}to{margin-bottom:2px}}
+.is-p.walk .is-fig .is-sprite{animation:isWalkBob .24s ease-in-out infinite alternate}
+@keyframes isWalkBob{from{margin-bottom:0}to{margin-bottom:1px}}
 .is-p.working .is-fig .is-sprite{animation:isWorkBob .5s ease-in-out infinite alternate}
 @keyframes isWorkBob{from{margin-bottom:0}to{margin-bottom:2px}}
 .is-p.working::after{content:"🔨";position:absolute;left:-34px;top:-64px;font-size:22px;animation:isHam .25s ease-in-out infinite alternate;transform-origin:80% 80%}

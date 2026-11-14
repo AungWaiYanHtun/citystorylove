@@ -283,11 +283,13 @@
   // ---- island residents: walk only on the visible grass, sandy road and dock ----
   // Coordinates are in the 1600x1600 ground.webp world. The polygon follows the
   // open lawn; the narrow road corridor and dock apron are added separately.
+  // Character height is deliberately smaller than the previous oversized pass.
+  // Values are world pixels and scale with the island camera.
   const PPL = [
-    { k: "boy", h: 188 },
-    { k: "girl", h: 182 },
-    { k: "builder", h: 176 },
-    { k: "fisher", h: 176 }
+    { k: "boy", h: 142 },
+    { k: "girl", h: 138 },
+    { k: "builder", h: 134 },
+    { k: "fisher", h: 134 }
   ];
   const ROAD = [{ x: 905, y: 744 }, { x: 1120, y: 900 }, { x: 930, y: 1040 }, { x: 780, y: 1150 }, { x: 665, y: 1245 }];
   const BEACH = [{ x: 590, y: 1240 }, { x: 710, y: 1270 }, { x: 780, y: 1240 }];
@@ -302,7 +304,7 @@
     {x:1145,y:640,rx:26,ry:26}, {x:1160,y:790,rx:34,ry:30},
     {x:930,y:1000,rx:35,ry:25}, {x:720,y:1050,rx:24,ry:18}
   ];
-  const SPEED = 34;
+  const SPEED = 48;
   const LAWN = [
     {x:350,y:610},{x:410,y:500},{x:540,y:405},{x:690,y:350},{x:850,y:345},
     {x:1010,y:405},{x:1140,y:520},{x:1200,y:650},{x:1160,y:790},
@@ -407,7 +409,7 @@
       el.style.setProperty('--person-height', `${d.h}px`);
       ui.ents.appendChild(el);
       const pos = i === 3 ? { x: 665, y: 1245 } : randomLawnPoint();
-      ppl.push({ id: i, k:d.k, el, x:pos.x, y:pos.y, route:[], wait:.5+Math.random()*2, act:i===3?'fish':'idle', dir:'front', frame:0, animClock:0 });
+      ppl.push({ id: i, k:d.k, el, x:pos.x, y:pos.y, route:[], wait:.2+Math.random()*.6, act:i===3?'fish':'idle', dir:'front', frame:0, animClock:0 });
     });
     lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(step);
   }
@@ -443,7 +445,7 @@
       p.animClock = 0;
     }
     // Two alternating walk poses at a stable time-based rate (independent of FPS).
-    const frame = walking ? (Math.floor(p.animClock / 0.16) % 2) : 0;
+    const frame = walking ? (Math.floor(p.animClock / 0.12) % 2) : 0;
     if (p.frame !== frame || p._renderedDir !== p.dir) {
       const img = p.el.querySelector('.is-sprite');
       if (img) img.src = `${A}characters/${p.k}_${p.dir}_${frame}.png`;
@@ -458,7 +460,7 @@
       let walking=false, moveX=0, moveY=0;
       if(p.route.length){
         const q=p.route[0],dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy),mv=SPEED*dt;
-        if(d<=mv){p.x=q.x;p.y=q.y;p.route.shift();if(!p.route.length)p.wait=p.act==='fish'?4:1.5+Math.random()*3;}
+        if(d<=mv){p.x=q.x;p.y=q.y;p.route.shift();if(!p.route.length)p.wait=p.act==='fish'?3.5:.55+Math.random()*.9;}
         else{moveX=dx/d;moveY=dy/d;p.x+=moveX*mv;p.y+=moveY*mv;walking=true;}
       }else{
         const job=p.act==='work'?S.b.find(b=>b.id===p.job&&b.busy):null;

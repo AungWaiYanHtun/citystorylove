@@ -32,3 +32,14 @@ Checks performed:
 
 Not performed: a complete live Android / Netlify play-through. Test on a
 staging copy before replacing the live site.
+
+
+Follow-up tuning (2026-11-14):
+- Reduced resident height from roughly 176-188 to 134-142 world pixels to
+  address the oversized appearance in the user's mobile screenshot.
+- Increased travel speed from 34 to 48 world pixels/second.
+- Shortened idle pauses between roaming trips and sped up the two supplied
+  walk poses to make steps easier to see.
+- The supplied directional set contains 2 poses per direction, not a full
+  4- or 8-frame cycle; this update improves cadence but does not invent
+  additional hand-drawn poses.
