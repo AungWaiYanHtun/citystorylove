@@ -146,7 +146,7 @@
 
   // ---- residents ----
   // Boy and girl use 8 directions × 8 walk frames; builder and fisher retain 4 directions × 2 frames.
-  const DIRS = ["front", "back", "left", "right"], DIRS8 = ["front", "front_right", "right", "back_right", "back", "back_left", "left", "front_left"], SPEED = 42, FIG_H = 292 / 320; // figure fills 292 of the 320px frame
+  const DIRS = ["front", "back", "left", "right"], DIRS8 = ["front", "front_right", "right", "back_right", "back", "back_left", "left", "front_left"], SPEED = 50, FIG_H = 292 / 320; // figure fills 292 of the 320px frame
   const PPL = [{ k: "boy", h: 112, at: { x: 700, y: 560 } }, { k: "girl", h: 100, at: { x: 450, y: 420 } }, { k: "builder", h: 106, at: { x: 660, y: 320 } }, { k: "fisher", h: 106, at: { x: 330, y: 560 } }];
   const SPOTS = {
     fire: { x: 330, y: 370 }, sign: { x: 300, y: 480 }, house: { x: 690, y: 315 }, garden: { x: 560, y: 690 },
@@ -171,9 +171,13 @@
   function wantDir(p, dx, dy) {
     if (p.k === "boy" || p.k === "girl") {
       // Eight-way facing: 0° is screen-down/front, then clockwise in 45° steps.
-      const angle = Math.atan2(dx, dy);
-      const idx = (Math.round(angle / (Math.PI / 4)) + 8) % 8;
-      return DIRS8[idx];
+      // with hysteresis: keep the current facing until the path clearly leaves its 45° slice
+      const angle = Math.atan2(dx, dy), cur = DIRS8.indexOf(p.dir);
+      if (cur >= 0) {
+        let diff = angle - cur * Math.PI / 4; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        if (Math.abs(diff) < Math.PI / 8 + 0.3) return p.dir;
+      }
+      return DIRS8[(Math.round(angle / (Math.PI / 4)) + 8) % 8];
     }
     const ax = Math.abs(dx), ay = Math.abs(dy), side = dx > 0 ? "right" : "left", vert = dy > 0 ? "front" : "back";
     const cur = p.dir, curSide = cur === "left" || cur === "right";
@@ -211,7 +215,11 @@
         const blocked = idx > 0 && ppl.some((o, j) => j < idx && Math.hypot(o.x - p.x, o.y - p.y) < 46 && ((o.x - p.x) * dx + (o.y - p.y) * dy) > 0);
         if (blocked) p.hold = (p.hold || 0) + dt; else p.hold = 0;
         const want = d > 0.5 ? wantDir(p, dx, dy) : p.dir;
-        if (want !== p.dir && !p.turn) p.turn = 0.16; // brief stop, then face the new way
+        if (want !== p.dir && !p.turn) {
+          // a small 45° change turns while walking; only a real turn (90° or more) stops briefly
+          const a = DIRS8.indexOf(want), b = DIRS8.indexOf(p.dir), gap = a >= 0 && b >= 0 ? Math.min((a - b + 8) % 8, (b - a + 8) % 8) : 2;
+          if (gap <= 1 && p.v > 4) { p.dir = want; p.fi = -1; } else p.turn = 0.16;
+        }
         if (p.turn > 0) { p.turn -= dt; p.v = 0; if (p.turn <= 0.08) show(p, want, 0); if (p.turn <= 0) p.turn = 0; }
         else if (!(blocked && p.hold < 2.5)) {
           target = SPEED;
@@ -223,11 +231,11 @@
       } else { p.v = 0; p.wait -= dt; if (p.wait <= 0) plan(p); }
       const walking = p.v > 4;
       p.el.classList.toggle("walk", walking);
-      const STEP = p.h * 0.3; // ground covered per complete walk cycle
+      const STEP = (p.k === "boy" || p.k === "girl") ? p.h * 0.55 : p.h * 0.3; // ground covered per complete walk cycle (two steps)
       const ph = p.dist / STEP;
       const frame = (p.k === "boy" || p.k === "girl") ? (walking ? Math.floor(ph * 8) % 8 : 0) : (walking ? Math.floor(ph) % 2 : 0);
       show(p, p.dir, frame);
-      const bob = walking ? -Math.abs(Math.sin(ph * Math.PI)) * p.h * 0.012 : 0;
+      const bob = walking ? ((p.k === "boy" || p.k === "girl") ? -Math.abs(Math.sin(ph * Math.PI * 2)) * p.h * 0.006 : -Math.abs(Math.sin(ph * Math.PI)) * p.h * 0.012) : 0;
       p.el.style.zIndex = Math.round(p.y);
       p.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
       p.el.firstChild.style.transform = `translate(-50%,${bob.toFixed(2)}px)`;
