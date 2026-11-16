@@ -2,8 +2,8 @@
 body.is-open{overflow:hidden}
 #is-root{position:fixed;inset:0;z-index:9000;background:linear-gradient(#0589cf,#0577a8 40%,#05525f 75%);font-family:"DM Sans",system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none;overflow:hidden}
 #is-view{position:absolute;inset:0;touch-action:none;overflow:hidden}
-#is-world{position:absolute;left:0;top:0;width:1024px;height:1024px;transform-origin:0 0;will-change:transform}
-.is-ground{position:absolute;inset:0;width:1024px;height:1024px;pointer-events:none;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 96%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 96%,#0000)}
+#is-world{position:absolute;left:0;top:0;width:1536px;height:1536px;transform-origin:0 0;will-change:transform}
+.is-ground{position:absolute;inset:0;width:1536px;height:1536px;pointer-events:none;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 96%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 96%,#0000)}
 #is-ents{position:absolute;inset:0}
 
 /* top HUD */
@@ -52,7 +52,7 @@ body.is-open{overflow:hidden}
 .is-p::before{content:"";position:absolute;left:-17px;top:-5px;width:34px;height:10px;border-radius:50%;background:rgba(0,0,0,.25)}
 .is-fig{position:absolute;bottom:0;left:0;transform-origin:50% 100%;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
 .is-spr{position:absolute;inset:0;display:block;background-repeat:no-repeat;background-position:0 0;pointer-events:auto}
-.is-say{position:absolute;left:50%;bottom:128px;transform:translateX(-50%) scale(.6);opacity:0;white-space:nowrap;padding:6px 11px;border-radius:13px;background:#fff;color:#222;font-weight:800;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:.2s;pointer-events:none}
+.is-say{position:absolute;left:50%;bottom:150px;transform:translateX(-50%) scale(.6);opacity:0;white-space:nowrap;padding:6px 11px;border-radius:13px;background:#fff;color:#222;font-weight:800;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:.2s;pointer-events:none}
 .is-say::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
 .is-p.talk .is-say{opacity:1;transform:translateX(-50%) scale(1)}
 /* v107: hide level/XP pill, smaller wood icon */
@@ -67,3 +67,6 @@ img.is-spr{width:100%;height:100%;object-fit:contain;object-position:50% 100%;us
 #is-root{background:linear-gradient(#0a8bd0 0%,#0786c9 30%,#06709f 70%,#04506a 100%)}
 .is-ground{-webkit-mask-image:linear-gradient(#0000 0,#000 6%,#000 92%,#0000 100%),linear-gradient(90deg,#0000 0,#000 3%,#000 97%,#0000 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(#0000 0,#000 6%,#000 92%,#0000 100%),linear-gradient(90deg,#0000 0,#000 3%,#000 97%,#0000 100%);mask-composite:intersect}
 .cz-big img{width:44px;height:40px}
+
+.is-p.sit::before{top:-14px;opacity:.5}
+.is-p{transition:none}
