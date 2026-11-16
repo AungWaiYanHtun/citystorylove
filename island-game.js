@@ -66,40 +66,70 @@
     $("cz-lvn").textContent = S.lv; $("cz-xpt").textContent = `${S.xp}/${need}`; $("cz-xpb").style.width = Math.min(100, (S.xp / need) * 100) + "%";
     $("cz-g").textContent = fmt(S.gold); $("cz-w").textContent = fmt(S.wood); $("cz-m").textContent = fmt(S.gems);
   }
-  // whole island fits the screen width (like the reference); pinch / wheel zooms, drag pans
+  // v118 camera: the island picture always COVERS the whole screen (no empty sea band),
+  // starts a little zoomed in and centred, pinch / wheel zoom around the fingers, drag pans with edge clamping.
+  function limits() {
+    const vw = ui.view.clientWidth || innerWidth, vh = ui.view.clientHeight || innerHeight;
+    ui.min = Math.max(vw / W, vh / W);            // smallest zoom still fills the screen
+    ui.max = ui.min * 2.2;                 // deeper zoom only blurs the painting
+    return [vw, vh];
+  }
   function fit() {
-    const vw = ui.view.clientWidth, vh = ui.view.clientHeight;
-    // zoom out = whole island; start a little closer (about the old view) so the island feels big — drag to explore
-    ui.min = Math.min(vw / W, vh / W); ui.max = vw / 1024 * 2.4;
-    ui.sc = Math.min(ui.max, Math.max(vw / 1024 * 1.1, vh / W * 1.02)); const w = W * ui.sc;
-    ui.tx = (vw - w) / 2; ui.ty = (vh - w) / 2 + 10;
+    const [vw, vh] = limits();
+    ui.sc = ui.min * 1.05; const w = W * ui.sc;
+    ui.tx = (vw - w) / 2; ui.ty = (vh - w) / 2 + w * 0.04;   // centre, a touch toward the beach
     apply();
     const r = ui.root.querySelector(".cz-right"); if (r) r.style.bottom = "18px";
   }
+  function refit() {           // screen size changed (Telegram expand, rotate, keyboard): keep the same centre point
+    if (!ui) return; const ow = ui.vw || 0, oh = ui.vh || 0; const [vw, vh] = limits();
+    if (!ow) { fit(); return; }
+    const cx = (ow / 2 - ui.tx) / ui.sc, cy = (oh / 2 - ui.ty) / ui.sc;
+    ui.sc = Math.max(ui.min, Math.min(ui.max, ui.sc));
+    ui.tx = vw / 2 - cx * ui.sc; ui.ty = vh / 2 - cy * ui.sc; apply();
+  }
   function apply() {
-    const vw = ui.view.clientWidth, vh = ui.view.clientHeight, w = W * ui.sc;
+    const vw = ui.view.clientWidth || innerWidth, vh = ui.view.clientHeight || innerHeight, w = W * ui.sc;
+    ui.vw = vw; ui.vh = vh;
     ui.tx = w <= vw ? (vw - w) / 2 : Math.min(0, Math.max(vw - w, ui.tx));
-    ui.ty = w <= vh ? Math.min(Math.max(ui.ty, 0), vh - w) : Math.min(0, Math.max(vh - w, ui.ty));
-    ui.world.style.transform = `translate(${ui.tx}px,${ui.ty}px) scale(${ui.sc})`;
+    ui.ty = w <= vh ? (vh - w) / 2 : Math.min(0, Math.max(vh - w, ui.ty));
+    ui.world.style.transform = `translate3d(${ui.tx}px,${ui.ty}px,0) scale(${ui.sc})`;
   }
   function zoomAt(f, cx, cy) { const ns = Math.max(ui.min, Math.min(ui.max, ui.sc * f)); const k = ns / ui.sc; ui.tx = cx - (cx - ui.tx) * k; ui.ty = cy - (cy - ui.ty) * k; ui.sc = ns; apply(); }
   function wire() {
     const v = ui.view, pts = new Map(); let st = null, pinch = null;
+    const startPan = (p, moved) => { st = { x: p.x, y: p.y, tx: ui.tx, ty: ui.ty, time: Date.now(), moved, target: null }; };
     v.addEventListener("pointerdown", (e) => {
-      v.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pts.size === 1) st = { x: e.clientX, y: e.clientY, tx: ui.tx, ty: ui.ty, time: Date.now(), moved: false, target: e.target };
-      else if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), sc: ui.sc }; }
+      try { v.setPointerCapture(e.pointerId); } catch {}
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 1) { startPan({ x: e.clientX, y: e.clientY }, false); st.target = e.target; }
+      else if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        pinch = { d: Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), sc: ui.sc, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+        if (st) st.moved = true;
+      }
     });
     v.addEventListener("pointermove", (e) => {
       if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pinch && pts.size >= 2) { const [a, b] = [...pts.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); zoomAt((pinch.sc * d / pinch.d) / ui.sc, (a.x + b.x) / 2, (a.y + b.y) / 2); return; }
+      if (pinch && pts.size >= 2) {
+        const [a, b] = [...pts.values()]; const d = Math.max(20, Math.hypot(a.x - b.x, a.y - b.y));
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        ui.tx += mx - pinch.mx; ui.ty += my - pinch.my; pinch.mx = mx; pinch.my = my;   // two-finger pan
+        zoomAt((pinch.sc * d / pinch.d) / ui.sc, mx, my); return;
+      }
       if (!st) return; const dx = e.clientX - st.x, dy = e.clientY - st.y; if (Math.abs(dx) + Math.abs(dy) > 8) st.moved = true;
       ui.tx = st.tx + dx; ui.ty = st.ty + dy; apply();
     });
-    const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (st && pts.size === 0) { if (!st.moved && Date.now() - st.time < 500) tap(st.target); st = null; } };
+    const up = (e) => {
+      pts.delete(e.pointerId);
+      if (pts.size < 2 && pinch) { pinch = null; if (pts.size === 1) startPan([...pts.values()][0], true); return; }   // no jump after pinch
+      if (st && pts.size === 0) { if (!st.moved && Date.now() - st.time < 500 && st.target) tap(st.target); st = null; }
+    };
     v.addEventListener("pointerup", up); v.addEventListener("pointercancel", up);
     v.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.9, e.clientX, e.clientY); }, { passive: false });
-    window.addEventListener("resize", () => ui && fit());
+    window.addEventListener("resize", refit);
+    try { tg?.onEvent?.("viewportChanged", refit); } catch {}
+    try { new ResizeObserver(refit).observe(v); } catch {}
   }
   function tap(target) { const pe = target.closest?.(".is-p"); if (pe) tapPerson(pe); }
 
@@ -145,7 +175,7 @@
   }
 
   // ---- residents ----
-  // Boy and girl use 8 directions × 8 walk frames; builder and fisher retain 4 directions × 2 frames.
+  // Everyone uses 8 directions × 8 walk frames (v117: builder and fisher too).
   const DIRS = ["front", "back", "left", "right"], DIRS8 = ["front", "front_right", "right", "back_right", "back", "back_left", "left", "front_left"], SPEED = 50, FIG_H = 292 / 320; // figure fills 292 of the 320px frame
   const PPL = [{ k: "boy", h: 134, at: { x: 840, y: 840 } }, { k: "girl", h: 120, at: { x: 705, y: 780 } }, { k: "builder", h: 127, at: { x: 1035, y: 472 } }, { k: "fisher", h: 127, at: { x: 450, y: 1320 } }];
   const SPOTS = {
@@ -203,8 +233,8 @@
   function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp`; }
   function preload() {
     Object.keys(LIKES).forEach((k) => {
-      const dirs = (k === "boy" || k === "girl") ? DIRS8 : DIRS;
-      const frames = (k === "boy" || k === "girl") ? Array.from({ length: 8 }, (_, i) => i) : [0, 1];
+      const dirs = DIRS8;
+      const frames = Array.from({ length: 8 }, (_, i) => i);
       if (k === "boy" || k === "girl") { const u = src(k, "sit", 0); if (!IMG[u]) { IMG[u] = new Image(); IMG[u].src = u; } }
       dirs.forEach((d) => frames.forEach((f) => {
         const u = src(k, d, f); if (!IMG[u]) { IMG[u] = new Image(); IMG[u].src = u; }
@@ -216,7 +246,7 @@
   function show(p, dir, f) { if (dir === p.dir && f === p.fi) return; p.dir = dir; p.fi = f; p.img.src = src(p.k, dir, f); }
   // pick the facing from the screen direction of travel, with hysteresis so it doesn't flicker on diagonals
   function wantDir(p, dx, dy) {
-    if (p.k === "boy" || p.k === "girl") {
+    if (true) {
       // Eight-way facing: 0° is screen-down/front, then clockwise in 45° steps.
       // with hysteresis: keep the current facing until the path clearly leaves its 45° slice
       const angle = Math.atan2(dx, dy), cur = DIRS8.indexOf(p.dir);
@@ -286,11 +316,11 @@
       } else if (p.script) { p.v = 0; } else { p.v = 0; p.wait -= dt; if (p.wait <= 0) plan(p); }
       const walking = p.v > 4 && !(p.act && (p.act.sit || p.act.hide));
       p.el.classList.toggle("walk", walking);
-      const STEP = (p.k === "boy" || p.k === "girl") ? p.h * 0.55 : p.h * 0.3; // ground covered per complete walk cycle (two steps)
+      const STEP = p.h * 0.55; // ground covered per complete walk cycle (two steps)
       const ph = p.dist / STEP;
-      const frame = (p.k === "boy" || p.k === "girl") ? (walking ? Math.floor(ph * 8) % 8 : 0) : (walking ? Math.floor(ph) % 2 : 0);
+      const frame = walking ? Math.floor(ph * 8) % 8 : 0;
       if (!(p.act && p.act.sit)) show(p, p.dir, frame);
-      const bob = walking ? ((p.k === "boy" || p.k === "girl") ? -Math.abs(Math.sin(ph * Math.PI * 2)) * p.h * 0.006 : -Math.abs(Math.sin(ph * Math.PI)) * p.h * 0.012) : 0;
+      const bob = walking ? -Math.abs(Math.sin(ph * Math.PI * 2)) * p.h * 0.006 : 0;
       p.el.style.zIndex = Math.round(p.y);
       p.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
       p.el.firstChild.style.transform = `translate(-50%,${bob.toFixed(2)}px)`;
