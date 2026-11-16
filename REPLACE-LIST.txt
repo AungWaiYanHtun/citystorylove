@@ -1,0 +1,26 @@
+CityStoryLove island update — second resident 8-direction walk cycle
+
+This package includes:
+- Boy: 8 directions × 8 frames (64 WebP frames)
+- Girl: 8 directions × 8 frames (64 WebP frames)
+- Updated island-game.js so both boy and girl use all 8 directions and animate through 8 frames per walk cycle.
+- Builder and fisher remain on their existing 4-direction × 2-frame animation.
+
+GitHub update:
+1. Replace island-game.js with the included file.
+2. Upload all files in island-assets/characters/ to the matching GitHub folder, keeping existing builder_* and fisher_* files.
+3. Keep the island background, UI assets, index.html, CSS, config and all other site files.
+
+Girl direction order and file naming:
+front, front_right, right, back_right, back, back_left, left, front_left
+Each direction has frames 0–7, e.g. girl_front_0.webp through girl_front_7.webp.
+
+The previous 4-direction girl_front/back/left/right files are retained for backup but are no longer used by the updated game code.
+
+Validation performed:
+- JavaScript syntax check passed with node --check.
+- 64 girl frames and 64 boy frames exist with expected names.
+- All character WebP files were decoded successfully.
+- ZIP integrity check passed.
+
+Note: Full in-browser / Telegram WebApp runtime movement testing was not performed in this environment.
