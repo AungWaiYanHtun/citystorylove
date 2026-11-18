@@ -48,7 +48,7 @@
     if (ui) return;
     t = L[lang()];
     const root = document.createElement("div"); root.id = "is-root";
-    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}cozy_island_beach.webp?v=134" alt="" draggable="false"><div id="is-ents"></div></div></div>
+    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}cozy_island_beach.webp?v=135" alt="" draggable="false"><div id="is-ents"></div></div></div>
       <div class="cz-top">
         <button class="cz-ava" id="cz-back"><img src="${A}ui_avatar.webp" alt=""></button>
         <div class="cz-lv"><img src="${A}ui_star.webp" alt=""><b id="cz-lvn"></b><div class="cz-xp"><i id="cz-xpb"></i><span id="cz-xpt"></span></div></div>
@@ -74,7 +74,7 @@
       </div>`;
     root.insertAdjacentHTML("beforeend", `<div class="is-loading" id="is-loading" role="status" aria-live="polite">
       <div class="is-loading-panel">
-        <div class="is-loading-island">🏝️</div>
+        <img class="is-loading-logo" src="${A}logo_island.webp?v=135" alt="Island Life">
         <strong>${lang() === "my" ? "ကျွန်းလေး ပြင်ဆင်နေပါတယ်" : "Preparing your island"}</strong>
         <span class="is-loading-sub">${lang() === "my" ? "လူပုံများနှင့် Animation များ ဖတ်နေသည်" : "Loading characters and animations"}</span>
         <div class="is-loading-track"><i id="is-loading-bar"></i></div>
@@ -287,7 +287,7 @@
     return false;
   }
   const IMG = {}; // decoded image cache: animation starts only after every required frame is ready
-  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=134`; }
+  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=135`; }
   const loadImage = (url) => {
     if (IMG[url]?.complete && IMG[url].naturalWidth > 0) return Promise.resolve(IMG[url]);
     if (IMG[url]?.__promise) return IMG[url].__promise;
@@ -304,8 +304,9 @@
     }).catch((err) => { delete IMG[url]; throw err; });
     return im.__promise;
   };
+  const MISSING = new Set();
   function criticalImageUrls() {
-    const urls = [`${A}cozy_island_beach.webp?v=134`];
+    const urls = [`${A}cozy_island_beach.webp?v=135`];
     ["ui_avatar.webp", "ui_star.webp", "ui_coin.webp", "ui_wood.webp", "ui_gem.webp", "ui_gear.webp", "ui_tasks.webp", "ui_trophy.webp", "ui_mail.webp", "ui_build.webp", "ui_map.webp"].forEach((f) => urls.push(A + f));
     Object.keys(LIKES).forEach((k) => {
       if (k === "boy" || k === "girl") urls.push(src(k, "sit", 0));
@@ -315,15 +316,17 @@
     return [...new Set(urls)];
   }
   async function preload(onProgress) {
-    const urls = criticalImageUrls(); let done = 0; const errors = [];
+    const urls = criticalImageUrls(); let done = 0; const errors = []; MISSING.clear();
     // Bounded batches keep mobile browsers responsive while loading all residents.
     for (let i = 0; i < urls.length; i += 12) {
       const batch = urls.slice(i, i + 12);
-      const results = await Promise.all(batch.map((u) => loadImage(u).catch((e) => { errors.push(e); return null; })));
+      const results = await Promise.all(batch.map((u) => loadImage(u).catch((e) => { errors.push(e); MISSING.add(u); return null; })));
       done += batch.length;
       onProgress?.(done, urls.length);
     }
-    if (errors.length) throw new Error(`${errors.length} image asset(s) could not be loaded`);
+    // Only the island background is essential; a missing sprite falls back instead of blocking the game.
+    if ([...MISSING].some((u) => u.includes("cozy_island_beach"))) throw new Error("Island background could not be loaded");
+    if (MISSING.size) console.warn("[Island] Missing images (upload these to GitHub):", [...MISSING]);
     return urls.length;
   }
   async function beginGameLoading(token) {
@@ -357,6 +360,7 @@
       overlay.classList.add("is-loading-done");
       window.setTimeout(() => { if (ui && ui.loadToken === token) overlay.remove(); }, 260);
       pull();
+      if (MISSING.size) { const f = [...MISSING][0].split("?")[0].split("/").slice(-2).join("/"); setTimeout(() => toast(`⚠️ ${MISSING.size} image(s) missing on server, e.g. ${f}`), 600); }
     } catch (err) {
       if (!ui || ui.loadToken !== token) return;
       overlay.classList.add("is-loading-error-state");
@@ -526,10 +530,12 @@
     if (ui) { ui.moveFisher = false; $("is-map-hint").hidden = true; }
   }
   // ---- Fishing (v134): the fisher sits on his stool; the player casts, waits for the float to sink, and pulls. ----
-  const fishSrc = (pose, side) => `${A}characters/fisher/fish_${pose}_${side}.webp?v=134`;
+  const fishSrc = (pose, side) => `${A}characters/fisher/fish_${pose}_${side}.webp?v=135`;
   function fishPose(p, pose) {
     const side = p.spot === "shrimpDock" ? "r" : "l", key = "fish_" + pose + side;
-    if (p.dir === key) return; p.dir = key; p.fi = -1; p.img.src = fishSrc(pose, side);
+    if (p.dir === key) return;
+    if (MISSING.has(fishSrc(pose, side))) { show(p, side === "l" ? "left" : "right", "idle"); return; }
+    p.dir = key; p.fi = -1; p.img.src = fishSrc(pose, side);
   }
   // 50 fish + 8 shrimp/crab. r: 0 common, 1 uncommon, 2 rare, 3 epic, 4 legendary. kg: typical weight range.
   const RAR = [
@@ -660,7 +666,7 @@
   // ---- hub card ----
   function cardHTML() {
     t = L[lang()];
-    return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp?v=134')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
+    return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp?v=135')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
   }
   window.CSLIsland = { open, close, cardHTML, assignWorkerJob, fish: (k) => fishAt(k || "dock"), _state: () => S };
 })();
