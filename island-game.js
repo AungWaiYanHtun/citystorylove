@@ -230,20 +230,22 @@
     return false;
   }
   const IMG = {}; // preload every frame so a turn never flashes blank
-  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp`; }
+  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=131`; }
   function preload() {
     Object.keys(LIKES).forEach((k) => {
       const dirs = DIRS8;
-      const frames = Array.from({ length: 8 }, (_, i) => i);
+      
       if (k === "boy" || k === "girl") { const u = src(k, "sit", 0); if (!IMG[u]) { IMG[u] = new Image(); IMG[u].src = u; } }
-      dirs.forEach((d) => frames.forEach((f) => {
+      dirs.forEach((d) => Array.from({ length: NF(d) }, (_, i) => i).forEach((f) => {
         const u = src(k, d, f); if (!IMG[u]) { IMG[u] = new Image(); IMG[u].src = u; }
       }));
     });
   }
   let ppl = [], raf = 0, lastT = 0;
   function randomLawn() { for (let i = 0; i < 200; i++) { const p = { x: 60 + Math.random() * 1420, y: 300 + Math.random() * 1100 }; if (sight(p, p) && walkable(p.x, p.y)) return p; } return { x: 840, y: 840 }; }
-  function show(p, dir, f) { if (dir === p.dir && f === p.fi) return; p.dir = dir; p.fi = f; p.img.src = src(p.k, dir, f); }
+  const IDLE = {"boy": {"front": 7, "front_right": 0, "right": 1, "back_right": 1, "back": 4, "back_left": 1, "left": 1, "front_left": 0}, "girl": {"front": 2, "front_right": 1, "right": 2, "back_right": 0, "back": 2, "back_left": 0, "left": 2, "front_left": 1}, "builder": {"front": 0, "front_right": 0, "right": 5, "back_right": 0, "back": 4, "back_left": 0, "left": 5, "front_left": 0}, "fisher": {"front": 0, "front_right": 1, "right": 1, "back_right": 1, "back": 0, "back_left": 1, "left": 1, "front_left": 1}};
+  const NF = (d) => (d.indexOf("_") > 0 ? 6 : 8); // diagonals: 6-frame cycle
+  function show(p, dir, f) { if (f === "idle") f = (IDLE[p.k] && IDLE[p.k][dir]) || 0; if (dir === p.dir && f === p.fi) return; p.dir = dir; p.fi = f; p.img.src = src(p.k, dir, f); }
   // pick the facing from the screen direction of travel, with hysteresis so it doesn't flicker on diagonals
   function wantDir(p, dx, dy) {
     if (true) {
@@ -270,7 +272,7 @@
       el.innerHTML = `<div class="is-fig" style="height:${fh.toFixed(1)}px;width:${fw.toFixed(1)}px"><img class="is-spr" alt="" draggable="false"></div><span class="is-say"></span>`;
       ui.ents.appendChild(el);
       const p = { k: d.k, h: d.h, el, img: el.querySelector("img"), x: d.at.x, y: d.at.y, route: [], wait: 0.6 + i * 0.9, spot: null, dir: "", fi: -1, dist: 0, turn: 0, v: 0 };
-      ppl.push(p); show(p, ["front", "right", "left", "back"][i], 0);
+      ppl.push(p); show(p, ["front", "right", "left", "back"][i], "idle");
     });
     lastT = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(step);
   }
@@ -305,7 +307,7 @@
           const a = DIRS8.indexOf(want), b = DIRS8.indexOf(p.dir), gap = a >= 0 && b >= 0 ? Math.min((a - b + 8) % 8, (b - a + 8) % 8) : 2;
           if (gap <= 1 && p.v > 4) { p.dir = want; p.fi = -1; } else p.turn = 0.16;
         }
-        if (p.turn > 0) { p.turn -= dt; p.v = 0; if (p.turn <= 0.08) show(p, want, 0); if (p.turn <= 0) p.turn = 0; }
+        if (p.turn > 0) { p.turn -= dt; p.v = 0; if (p.turn <= 0.08) show(p, want, "idle"); if (p.turn <= 0) p.turn = 0; }
         else if (!(blocked && p.hold < 2.5)) {
           target = SPEED;
           p.v += (target - p.v) * Math.min(1, dt * 7); // ease into the walk
@@ -318,7 +320,7 @@
       p.el.classList.toggle("walk", walking);
       const STEP = p.h * 0.55; // ground covered per complete walk cycle (two steps)
       const ph = p.dist / STEP;
-      const frame = walking ? Math.floor(ph * 8) % 8 : 0;
+      const nf = NF(p.dir), frame = walking ? Math.floor(ph * nf) % nf : "idle";
       if (!(p.act && p.act.sit)) show(p, p.dir, frame);
       const bob = walking ? -Math.abs(Math.sin(ph * Math.PI * 2)) * p.h * 0.006 : 0;
       p.el.style.zIndex = Math.round(p.y);
@@ -330,7 +332,7 @@
   function arrive(p) {
     p.wait = 2 + Math.random() * 4;
     const face = { fire: "left", house: "back", dock: "left", well: "right", garden: "front", beach: "front", sign: "left" }[p.spot];
-    if (face) show(p, face, 0);
+    if (face) show(p, face, "idle");
     if (p.spot === "dock") { p.wait = 6 + Math.random() * 6; setTimeout(() => ui && say(p, "🎣", true), 1500); }
     if (p.k === "builder" && p.spot === "house") { p.wait = 4; setTimeout(() => ui && say(p, "🔨", true), 800); }
   }
