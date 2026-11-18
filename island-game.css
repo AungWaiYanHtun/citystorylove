@@ -92,8 +92,8 @@ img.is-spr{width:100%;height:100%;object-fit:contain;object-position:50% 100%;us
 .is-worker-roof{position:absolute;left:-48px;top:-72px;width:96px;height:48px;background:linear-gradient(145deg,#9b5527,#633018);clip-path:polygon(50% 0,100% 80%,88% 100%,12% 100%,0 80%);border:2px solid #e4b36b}
 .is-worker-body{position:absolute;left:-38px;top:-38px;width:76px;height:43px;border:3px solid #70421f;border-radius:5px;background:linear-gradient(90deg,#c98b4c,#9b602e);display:flex;flex-direction:column;align-items:center;justify-content:space-around;color:#fff2c5;font-size:8px;font-weight:900;text-shadow:0 1px 2px #44220c}
 .is-worker-body i{position:absolute;right:7px;bottom:0;width:13px;height:24px;border-radius:7px 7px 0 0;background:#51301d;border:1px solid #e2b36e;font-style:normal;font-size:9px;text-align:center;line-height:22px}
-.is-p.fishing .is-fig{transform:scaleY(.78);transform-origin:50% 100%}
-.is-p.fishing::after{content:"🎣";position:absolute;left:4px;top:-42px;font-size:17px;filter:drop-shadow(0 1px 2px #000)}
+
+
 
 /* Fisher controls: select the fisherman, then choose a destination marker. */
 .is-fishing-spot{position:absolute;left:0;top:0;z-index:700;display:flex;flex-direction:column;align-items:center;gap:2px;transform-origin:0 0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}
@@ -105,8 +105,8 @@ img.is-spr{width:100%;height:100%;object-fit:contain;object-position:50% 100%;us
 .is-person-actions button{min-height:42px;border:1px solid rgba(255,255,255,.65);border-radius:12px;background:linear-gradient(#ffe18b,#e6a92f);color:#392300;font-size:14px;font-weight:900}
 .is-person-actions #is-actions-close{position:absolute;right:8px;top:8px;min-height:26px;width:26px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff}
 .is-map-hint{position:absolute;z-index:9400;left:50%;top:calc(env(safe-area-inset-top) + 72px);transform:translateX(-50%);padding:9px 14px;border:1px solid #fff;border-radius:12px;background:rgba(6,43,55,.94);color:#fff;font-size:13px;font-weight:900;white-space:nowrap;pointer-events:none}
-.is-p.shrimping .is-fig{transform:scaleY(.78);transform-origin:50% 100%}
-.is-p.shrimping::after{content:"🦐";position:absolute;left:4px;top:-42px;font-size:17px;filter:drop-shadow(0 1px 2px #000)}
+
+
 
 
 /* Fishing locations map panel: two independent, upgrade-ready destinations. */
@@ -127,3 +127,40 @@ img.is-spr{width:100%;height:100%;object-fit:contain;object-position:50% 100%;us
 .is-map-go{flex:none;padding:6px 8px;border-radius:9px;background:#d8a43d;color:#382300;font-size:11px;font-weight:900}
 .is-map-upgrade-note{padding:9px 10px;border-radius:11px;background:rgba(0,0,0,.22);color:#e9e4cf;font-size:11px;line-height:1.5}
 .is-fishing-spot:active b,.is-map-location:active{transform:scale(.96)}
+
+/* v134 fishing mini-game */
+.is-fg{position:absolute;inset:0;z-index:9800;display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 64px) 10px 0;pointer-events:none}.fg-box{pointer-events:auto}
+.fg-box{position:relative;width:min(380px,100%);border:2px solid #f8d16c;border-radius:20px;background:linear-gradient(160deg,#155b66,#082c3d);box-shadow:0 12px 34px rgba(0,0,0,.55);padding:10px;color:#fff;font-family:inherit}
+.fg-head{display:flex;align-items:center;gap:8px;padding:2px 4px 8px}
+.fg-head b{font-size:16px;color:#ffe49a;flex:1}
+.fg-dex{font-size:12px;font-weight:800;background:rgba(255,255,255,.14);border-radius:10px;padding:3px 8px}
+.fg-x{width:28px;height:28px;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:14px}
+.fg-water{position:relative;height:170px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 120%,#2fb6c9 0,#1590b3 45%,#0b5f8a 100%);cursor:pointer}
+.fg-water::before{content:"";position:absolute;inset:-50%;background:repeating-radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.07) 0 6px,transparent 6px 22px);animation:fgw 9s linear infinite}
+@keyframes fgw{to{transform:translate(40px,25px)}}
+.fg-line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.fg-line path{fill:none;stroke:rgba(255,255,255,.85);stroke-width:.5;vector-effect:non-scaling-stroke}
+.fg-float{position:absolute;width:18px;height:26px;margin:-22px 0 0 -9px;opacity:0;transition:opacity .2s}
+.fg-float i{position:absolute;inset:0;border-radius:50% 50% 45% 45%;background:linear-gradient(#ff4b3a 0 48%,#fff 48% 100%);box-shadow:0 2px 0 rgba(0,0,0,.25),inset -3px 0 0 rgba(0,0,0,.12)}
+.fg-float.in{opacity:1;animation:fgbob 1.6s ease-in-out infinite}
+.fg-float.in.nib{animation:fgnib .45s ease-in-out}
+.fg-float.in.sink{animation:fgsink .35s ease-in forwards}
+@keyframes fgbob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes fgnib{0%,100%{transform:translateY(0)}30%{transform:translateY(7px)}60%{transform:translateY(-2px)}}
+@keyframes fgsink{to{transform:translateY(16px) scaleY(.35);opacity:.35}}
+.fg-ring{position:absolute;width:10px;height:5px;margin:-3px 0 0 -5px;border:2px solid rgba(255,255,255,.9);border-radius:50%;opacity:0}
+.fg-ring.on{animation:fgring .7s ease-out infinite}
+@keyframes fgring{0%{transform:scale(1);opacity:1}100%{transform:scale(7);opacity:0}}
+.fg-catch{position:absolute;width:90px;height:90px;margin:-45px 0 0 -45px;opacity:0;pointer-events:none}
+.fg-catch.up{animation:fgup .7s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes fgup{0%{transform:translateY(20px) scale(.3) rotate(-20deg);opacity:0}100%{transform:translateY(-55px) scale(1) rotate(8deg);opacity:1}}
+.fg-msg{min-height:22px;margin:9px 4px;text-align:center;font-size:14px;font-weight:800}
+.fg-btn{display:block;width:100%;min-height:50px;border:2px solid #fff3;border-radius:14px;background:linear-gradient(#ffe18b,#e6a92f);color:#392300;font-size:19px;font-weight:900;letter-spacing:1px;box-shadow:0 4px 0 #8a5a10}
+.fg-btn.pull{background:linear-gradient(#ff8a6b,#e2452e);color:#fff;box-shadow:0 4px 0 #8a2414}
+.fg-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5a10}
+.fg-card{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;border:2px solid var(--rc,#fff);border-radius:14px;background:rgba(255,255,255,.08)}
+.fg-card[hidden]{display:none}
+.fg-card img{width:64px;height:64px;object-fit:contain}
+.fg-card small{display:block;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}
+.fg-card b{display:block;font-size:17px}
+.fg-card span{font-size:12px;opacity:.9}

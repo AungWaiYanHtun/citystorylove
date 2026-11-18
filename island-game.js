@@ -48,7 +48,7 @@
     if (ui) return;
     t = L[lang()];
     const root = document.createElement("div"); root.id = "is-root";
-    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}cozy_island_beach.webp?v=133" alt="" draggable="false"><div id="is-ents"></div></div></div>
+    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}cozy_island_beach.webp?v=134" alt="" draggable="false"><div id="is-ents"></div></div></div>
       <div class="cz-top">
         <button class="cz-ava" id="cz-back"><img src="${A}ui_avatar.webp" alt=""></button>
         <div class="cz-lv"><img src="${A}ui_star.webp" alt=""><b id="cz-lvn"></b><div class="cz-xp"><i id="cz-xpb"></i><span id="cz-xpt"></span></div></div>
@@ -61,16 +61,16 @@
       <div class="cz-right"><button class="cz-big" data-s="1"><img src="${A}ui_build.webp" alt=""><small>${t.build}</small></button><button class="cz-big" id="is-map-open"><img src="${A}ui_map.webp" alt=""><small>${t.map}</small></button></div>
       <div class="is-person-actions" id="is-person-actions" hidden>
         <div class="is-person-actions-title" id="is-person-actions-title">🎣 Fisherman</div>
-        <button type="button" id="is-manual-fish">🎣 ကိုယ်တိုင်ငါးမျှားမယ်</button>
-        <button type="button" id="is-move-fisher">🚶 နေရာရွှေ့မယ်</button>
+        <button type="button" id="is-manual-fish">🎣 Fish now</button>
+        <button type="button" id="is-move-fisher">🚶 Move to another dock</button>
         <button type="button" id="is-actions-close" aria-label="Close">✕</button>
       </div>
-      <div class="is-map-hint" id="is-map-hint" hidden>နေရာအမှတ်အသားတစ်ခုကို နှိပ်ပါ</div>
+      <div class="is-map-hint" id="is-map-hint" hidden>Tap a dock marker</div>
       <div class="is-map-panel" id="is-map-panel" hidden>
-        <div class="is-map-panel-head"><div><small>ISLAND LOCATIONS</small><b>🗺️ ကျွန်းမြေပုံ</b></div><button type="button" id="is-map-close" aria-label="Close">✕</button></div>
-        <button type="button" class="is-map-location" data-location="dock"><span class="is-map-icon">🎣</span><span class="is-map-location-info"><b>ငါးမျှားဆိပ်</b><small>ပင်လယ်ငါးများ · Level <i id="is-fish-level">1</i></small></span><span class="is-map-go">မြေပုံပြ</span></button>
-        <button type="button" class="is-map-location" data-location="shrimpDock"><span class="is-map-icon">🦐</span><span class="is-map-location-info"><b>ပုဇွန်မျှားဆိပ်</b><small>ပုဇွန်များ · Level <i id="is-shrimp-level">1</i></small></span><span class="is-map-go">မြေပုံပြ</span></button>
-        <div class="is-map-upgrade-note">🔒 နေရာတစ်ခုချင်းစီ၏ Upgrade စနစ်ကို နောက်အဆင့်တွင် ဖွင့်နိုင်ရန် Level data ကို သိမ်းဆည်းထားပါတယ်။</div>
+        <div class="is-map-panel-head"><div><small>ISLAND LOCATIONS</small><b>🗺️ Island Map</b></div><button type="button" id="is-map-close" aria-label="Close">✕</button></div>
+        <button type="button" class="is-map-location" data-location="dock"><span class="is-map-icon">🎣</span><span class="is-map-location-info"><b>Fishing Dock</b><small>Sea fish · Level <i id="is-fish-level">1</i></small></span><span class="is-map-go">Go</span></button>
+        <button type="button" class="is-map-location" data-location="shrimpDock"><span class="is-map-icon">🦐</span><span class="is-map-location-info"><b>Shrimp Dock</b><small>Shrimp &amp; crabs · Level <i id="is-shrimp-level">1</i></small></span><span class="is-map-go">Go</span></button>
+        <div class="is-map-upgrade-note">🔒 Dock upgrades are coming soon.</div>
       </div>`;
     root.insertAdjacentHTML("beforeend", `<div class="is-loading" id="is-loading" role="status" aria-live="polite">
       <div class="is-loading-panel">
@@ -93,8 +93,8 @@
     $("is-map-open").onclick = openMapPanel;
     $("is-map-close").onclick = closeMapPanel;
     root.querySelectorAll("[data-location]").forEach((b) => (b.onclick = () => focusFishingSpot(b.dataset.location)));
-    $("is-manual-fish").onclick = () => startManualFishing();
-    $("is-move-fisher").onclick = () => { ui.moveFisher = true; $("is-map-hint").hidden = false; toast("ငါးမျှားဆိပ်အမှတ်အသားကို နှိပ်ပါ"); };
+    $("is-manual-fish").onclick = () => { const f = ppl.find((q) => q.k === "fisher"); fishAt(f && f.spot === "shrimpDock" ? "shrimpDock" : "dock"); };
+    $("is-move-fisher").onclick = () => { ui.moveFisher = true; $("is-map-hint").hidden = false; toast("Tap the Fishing Dock or Shrimp Dock"); };
     $("is-actions-close").onclick = () => hidePersonActions();
     root.querySelectorAll("[data-p]").forEach((b) => (b.onclick = async () => {
       if (b.dataset.p !== "gems") { toast(t.soon); return; }
@@ -179,7 +179,7 @@
       chooseFisherDestination(worldX, worldY); return;
     }
     const spotEl = target.closest?.(".is-fishing-spot");
-    if (spotEl) { openMapPanel(spotEl.classList.contains("is-spot-shrimpDock") ? "shrimpDock" : "dock"); return; }
+    if (spotEl) { fishAt(spotEl.classList.contains("is-spot-shrimpDock") ? "shrimpDock" : "dock"); return; }
     const pe = target.closest?.(".is-p"); if (pe) tapPerson(pe);
   }
 
@@ -287,7 +287,7 @@
     return false;
   }
   const IMG = {}; // decoded image cache: animation starts only after every required frame is ready
-  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=133`; }
+  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=134`; }
   const loadImage = (url) => {
     if (IMG[url]?.complete && IMG[url].naturalWidth > 0) return Promise.resolve(IMG[url]);
     if (IMG[url]?.__promise) return IMG[url].__promise;
@@ -305,10 +305,11 @@
     return im.__promise;
   };
   function criticalImageUrls() {
-    const urls = [`${A}cozy_island_beach.webp?v=133`];
+    const urls = [`${A}cozy_island_beach.webp?v=134`];
     ["ui_avatar.webp", "ui_star.webp", "ui_coin.webp", "ui_wood.webp", "ui_gem.webp", "ui_gear.webp", "ui_tasks.webp", "ui_trophy.webp", "ui_mail.webp", "ui_build.webp", "ui_map.webp"].forEach((f) => urls.push(A + f));
     Object.keys(LIKES).forEach((k) => {
       if (k === "boy" || k === "girl") urls.push(src(k, "sit", 0));
+      if (k === "fisher") ["wait", "pull"].forEach((q) => ["l", "r"].forEach((sd) => urls.push(fishSrc(q, sd))));
       DIRS8.forEach((d) => { for (let f = 0; f < NF(d); f++) urls.push(src(k, d, f)); });
     });
     return [...new Set(urls)];
@@ -399,7 +400,7 @@
       el.innerHTML = `<div class="is-fig" style="height:${fh.toFixed(1)}px;width:${fw.toFixed(1)}px"><img class="is-spr" alt="" draggable="false"></div><span class="is-say"></span>`;
       ui.ents.appendChild(el);
       if (i === 3) {
-        [["dock","🎣","ငါးမျှားဆိပ်"],["shrimpDock","🦐","ပုဇွန်မျှားဆိပ်"]].forEach(([key,emoji,label]) => {
+        [["dock","🎣","Fishing Dock"],["shrimpDock","🦐","Shrimp Dock"]].forEach(([key,emoji,label]) => {
           const marker = document.createElement("div"); marker.className = `is-fishing-spot is-spot-${key}`;
           marker.innerHTML = `<b>${emoji}</b><small>${label}</small>`;
           marker.style.transform = `translate(${SPOTS[key].x}px,${SPOTS[key].y}px)`; ui.ents.appendChild(marker);
@@ -408,7 +409,7 @@
       const startAt = d.k === "builder" ? WORKER_HOUSE.inside : d.at;
       const p = { k: d.k, h: d.h, el, img: el.querySelector("img"), x: startAt.x, y: startAt.y, route: [], wait: 0.6 + i * 0.9, spot: null, dir: "", fi: -1, dist: 0, turn: 0, v: 0 };
       ppl.push(p); show(p, ["front", "right", "left", "back"][i], "idle");
-      if (d.k === "fisher") { p.spot = "dock"; p.fishType = "fish"; p.route = []; p.wait = 999999; p.el.classList.add("fishing"); }
+      if (d.k === "fisher") { p.spot = "dock"; p.fishType = "fish"; p.route = []; p.wait = 999999; p.el.classList.add("fishing"); p.fishing = true; }
       if (d.k === "builder") { p.spot = "worker-house"; p.wait = 999999; p.el.style.opacity = 0; p.route = []; p.script = null; p.act = null; }
     });
     lastT = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(step);
@@ -459,11 +460,12 @@
       const STEP = p.h * 0.55; // ground covered per complete walk cycle (two steps)
       const ph = p.dist / STEP;
       const nf = NF(p.dir), frame = walking ? Math.floor(ph * nf) % nf : "idle";
-      if (!(p.act && p.act.sit)) show(p, p.dir, frame);
+      if (p.fishing && !walking) fishPose(p, p.pull ? "pull" : "wait");
+      else if (!(p.act && p.act.sit)) show(p, p.dir, frame);
       const bob = walking ? -Math.abs(Math.sin(ph * Math.PI * 2)) * p.h * 0.006 : 0;
       p.el.style.zIndex = Math.round(p.y);
       p.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
-      p.el.firstChild.style.transform = `translate(-50%,${bob.toFixed(2)}px)`;
+      p.el.firstChild.style.transform = p.fishing && !walking ? "translate(-50%,0) scale(1.333)" : `translate(-50%,${bob.toFixed(2)}px)`;
     });
     raf = requestAnimationFrame(step);
   }
@@ -472,8 +474,7 @@
       p.v = 0; p.route = []; p.wait = 999999;
       p.el.classList.remove("fishing", "shrimping");
       p.el.classList.add(p.fishType === "shrimp" ? "shrimping" : "fishing");
-      show(p, "left", "idle");
-      say(p, p.fishType === "shrimp" ? "🦐" : "🎣", true);
+      p.fishing = true; p.pull = false; fishPose(p, "wait");
       return;
     }
     p.wait = 2 + Math.random() * 4;
@@ -504,7 +505,7 @@
     const fisher = ppl.find((p) => p.k === "fisher");
     if (fisher) {
       ui.selectedPerson = fisher;
-      toast(key === "shrimpDock" ? "🦐 ပုဇွန်မျှားဆိပ်ကို မြေပုံပေါ်မှာ ပြထားပါတယ်" : "🎣 ငါးမျှားဆိပ်ကို မြေပုံပေါ်မှာ ပြထားပါတယ်");
+      toast(key === "shrimpDock" ? "🦐 Shrimp Dock" : "🎣 Fishing Dock");
     }
   }
 
@@ -517,22 +518,115 @@
   }
   function showPersonActions() {
     const panel = $("is-person-actions"); if (!panel) return;
-    $("is-person-actions-title").textContent = "🎣 ငါးမျှားသူ";
+    $("is-person-actions-title").textContent = "🎣 Fisherman";
     panel.hidden = false; ui.moveFisher = false; $("is-map-hint").hidden = true;
   }
   function hidePersonActions() {
     const panel = $("is-person-actions"); if (panel) panel.hidden = true;
     if (ui) { ui.moveFisher = false; $("is-map-hint").hidden = true; }
   }
+  // ---- Fishing (v134): the fisher sits on his stool; the player casts, waits for the float to sink, and pulls. ----
+  const fishSrc = (pose, side) => `${A}characters/fisher/fish_${pose}_${side}.webp?v=134`;
+  function fishPose(p, pose) {
+    const side = p.spot === "shrimpDock" ? "r" : "l", key = "fish_" + pose + side;
+    if (p.dir === key) return; p.dir = key; p.fi = -1; p.img.src = fishSrc(pose, side);
+  }
+  // 50 fish + 8 shrimp/crab. r: 0 common, 1 uncommon, 2 rare, 3 epic, 4 legendary. kg: typical weight range.
+  const RAR = [
+    { n: "Common", c: "#cfd8dc", w: 60, g: 5, win: 1.15 }, { n: "Uncommon", c: "#7ee081", w: 25, g: 12, win: 0.95 },
+    { n: "Rare", c: "#5ab4ff", w: 10, g: 30, win: 0.8 }, { n: "Epic", c: "#c27dff", w: 4, g: 80, win: 0.65 },
+    { n: "Legendary", c: "#ffc93c", w: 1, g: 200, win: 0.55 }];
+  const FISH = [
+    ["Sardine", 0, .05, .2], ["Anchovy", 0, .02, .08], ["Mackerel", 0, .3, 1.2], ["Herring", 0, .2, .6], ["Tilapia", 0, .4, 2],
+    ["Mullet", 0, .5, 2.5], ["Red Sea Bream", 1, .8, 4], ["Rabbitfish", 0, .3, 1.2], ["Scad", 0, .2, .7], ["Silver Perch", 0, .3, 1.5],
+    ["Catfish", 0, .8, 5], ["Carp", 0, 1, 6], ["Goby", 0, .05, .3], ["Sprat", 0, .02, .1], ["Silver Pomfret", 0, .3, 1.5],
+    ["Croaker", 0, .4, 2], ["Needlefish", 0, .2, 1], ["Flying Fish", 1, .2, .9], ["Ponyfish", 0, .05, .3], ["Whiting", 0, .2, .9],
+    ["Red Snapper", 1, 1, 8], ["Grouper", 1, 2, 15], ["Barracuda", 1, 2, 12], ["Bluefin Trevally", 1, 1, 6], ["Parrotfish", 1, 1, 7],
+    ["Clownfish", 1, .05, .2], ["Blue Tang", 1, .2, .6], ["Butterflyfish", 1, .1, .4], ["Angelfish", 1, .2, 1.2], ["Pufferfish", 1, .3, 2],
+    ["Flounder", 1, .5, 4], ["Sea Bass", 1, 1, 6], ["Yellowtail", 1, 2, 10], ["Milkfish", 1, 1, 8], ["Yellowfin Tuna", 2, 10, 60],
+    ["Mahi-mahi", 2, 5, 20], ["Swordfish", 2, 30, 150], ["Lionfish", 2, .3, 1.2], ["Moray Eel", 2, 2, 15], ["Stingray", 2, 5, 40],
+    ["Napoleon Wrasse", 2, 10, 60], ["Giant Trevally", 2, 8, 40], ["Salmon", 2, 3, 15], ["Koi", 2, 2, 10], ["Sailfish", 3, 20, 90],
+    ["Blue Marlin", 3, 80, 400], ["Hammerhead Shark", 3, 80, 300], ["Manta Ray", 3, 300, 1200], ["Golden Arowana", 4, 2, 6], ["Coelacanth", 4, 40, 90],
+    ["Tiger Prawn", 0, .05, .2, 1], ["White Shrimp", 0, .02, .06, 1], ["Mantis Shrimp", 2, .05, .2, 1], ["Pink Shrimp", 0, .02, .05, 1],
+    ["Blue Swimming Crab", 1, .2, .6, 1], ["Mud Crab", 1, .4, 1.5, 1], ["Spiny Lobster", 3, 1, 4, 1], ["Squid", 1, .2, 1.5, 1]];
+  const fishImg = (i) => `${A}fish/f${String(i).padStart(2, "0")}.webp`;
+  function rollCatch(dock) {
+    const shell = dock === "shrimpDock" && Math.random() < 0.7;
+    const pool = FISH.map((f, i) => i).filter((i) => (FISH[i][4] ? 1 : 0) === (shell ? 1 : 0));
+    const tot = pool.reduce((a, i) => a + RAR[FISH[i][1]].w, 0); let r = Math.random() * tot;
+    for (const i of pool) { r -= RAR[FISH[i][1]].w; if (r <= 0) return i; }
+    return pool[0];
+  }
+  function fishAt(key) {
+    const p = ppl.find((q) => q.k === "fisher"); if (!p) return;
+    ui.selectedPerson = p;
+    if (p.spot !== key || !p.fishing) { chooseFisherDestination(SPOTS[key].x, SPOTS[key].y); return; }
+    const vw = ui.view.clientWidth || innerWidth, vh = ui.view.clientHeight || innerHeight;
+    ui.tx = vw / 2 - p.x * ui.sc; ui.ty = vh * 0.78 - p.y * ui.sc; apply();
+    startManualFishing();
+  }
   function startManualFishing() {
-    const p = ui?.selectedPerson; if (!p) return;
-    p.v = 0; p.route = []; p.wait = 999999;
-    p.fishType = p.spot === "shrimpDock" ? "shrimp" : "fish";
-    p.el.classList.remove("fishing", "shrimping");
-    p.el.classList.add(p.fishType === "shrimp" ? "shrimping" : "fishing");
-    say(p, p.fishType === "shrimp" ? "🦐" : "🎣", true);
+    const p = ppl.find((q) => q.k === "fisher"); if (!p) return;
     hidePersonActions();
-    toast(p.fishType === "shrimp" ? "ပုဇွန်မျှားနေပါပြီ" : "ငါးမျှားနေပါပြီ");
+    if (!p.fishing) { toast("🎣 Send the fisherman to a dock first"); return; }
+    const dock = p.spot === "shrimpDock" ? "shrimpDock" : "dock";
+    if (!S.fishdex || typeof S.fishdex !== "object") S.fishdex = {};
+    const old = $("is-fg"); if (old) old.remove();
+    ui.root.insertAdjacentHTML("beforeend", `<div class="is-fg" id="is-fg">
+      <div class="fg-box">
+        <div class="fg-head"><b>${dock === "shrimpDock" ? "🦐 Shrimp Dock" : "🎣 Fishing Dock"}</b><span class="fg-dex" id="fg-dex"></span><button type="button" class="fg-x" id="fg-x" aria-label="Close">✕</button></div>
+        <div class="fg-water" id="fg-water">
+          <svg class="fg-line" id="fg-svg" style="opacity:0" viewBox="0 0 100 100" preserveAspectRatio="none"><path id="fg-path" d="M50 0 Q50 30 50 60" /></svg>
+          <div class="fg-float" id="fg-float"><i></i></div>
+          <div class="fg-ring" id="fg-ring"></div>
+          <img class="fg-catch" id="fg-catch" alt="">
+        </div>
+        <div class="fg-msg" id="fg-msg">Tap CAST to throw your line.</div>
+        <button type="button" class="fg-btn" id="fg-btn">CAST</button>
+        <div class="fg-card" id="fg-card" hidden></div>
+      </div></div>`);
+    const st = { mode: "idle", timers: [] }, btn = $("fg-btn"), msg = $("fg-msg"), fl = $("fg-float"), water = $("fg-water");
+    const later = (ms, fn) => st.timers.push(setTimeout(fn, ms));
+    const clear = () => { st.timers.forEach(clearTimeout); st.timers = []; };
+    const dex = () => { $("fg-dex").textContent = `📖 ${Object.keys(S.fishdex).length}/${FISH.length}`; };
+    const setFloat = (cls) => { fl.className = "fg-float " + cls; };
+    const buzz = (k) => { try { tg?.HapticFeedback?.impactOccurred?.(k); } catch {} };
+    const reset = (text) => { clear(); $("fg-svg").style.opacity = 0; st.mode = "idle"; p.pull = false; btn.textContent = "CAST"; btn.className = "fg-btn"; msg.textContent = text; };
+    function cast() {
+      clear(); $("fg-card").hidden = true; $("fg-catch").className = "fg-catch";
+      st.mode = "wait"; st.fish = rollCatch(dock); p.pull = false;
+      const x = 30 + Math.random() * 40, y = 45 + Math.random() * 25; st.x = x; st.y = y;
+      fl.style.left = x + "%"; fl.style.top = y + "%"; $("fg-ring").style.left = x + "%"; $("fg-ring").style.top = y + "%";
+      $("fg-path").setAttribute("d", `M50 0 Q${(50 + x) / 2} ${y * 0.35} ${x} ${y}`);
+      $("fg-svg").style.opacity = 1; setFloat("in"); btn.textContent = "PULL!"; btn.className = "fg-btn pull"; msg.textContent = "Wait for the float to sink…";
+      let t = 1200 + Math.random() * 1200;
+      const nibbles = Math.floor(Math.random() * 3);
+      for (let i = 0; i < nibbles; i++) { t += 700 + Math.random() * 1300; later(t, () => { if (st.mode === "wait") { setFloat("in nib"); buzz("light"); later(450, () => st.mode === "wait" && setFloat("in")); } }); }
+      t += 900 + Math.random() * 2600;
+      later(t, () => {
+        if (st.mode !== "wait") return;
+        st.mode = "bite"; setFloat("in sink"); $("fg-ring").className = "fg-ring on"; buzz("heavy"); msg.textContent = "It's biting! PULL NOW!";
+        later(RAR[FISH[st.fish][1]].win * 1000, () => { if (st.mode === "bite") { setFloat("in"); $("fg-ring").className = "fg-ring"; reset("Too slow… it got away. Cast again!"); } });
+      });
+    }
+    function pull() {
+      if (st.mode === "wait") { clear(); setFloat(""); reset("Too early! The fish swam away. Cast again."); return; }
+      if (st.mode !== "bite") return;
+      clear(); st.mode = "caught"; p.pull = true; $("fg-ring").className = "fg-ring"; setFloat(""); buzz("medium");
+      const i = st.fish, f = FISH[i], r = RAR[f[1]], kg = +(f[2] + Math.random() * (f[3] - f[2])).toFixed(2);
+      const c = $("fg-catch"); c.src = fishImg(i); c.style.left = st.x + "%"; c.style.top = st.y + "%"; c.className = "fg-catch up";
+      const isNew = !S.fishdex[i]; S.fishdex[i] = (S.fishdex[i] || 0) + 1; S.gold = (S.gold || 0) + r.g; save(); hud(); dex();
+      later(700, () => {
+        p.pull = false;
+        const card = $("fg-card"); card.hidden = false; card.style.setProperty("--rc", r.c);
+        card.innerHTML = `<img src="${fishImg(i)}" alt=""><div><small style="color:${r.c}">${r.n}${isNew ? " · NEW!" : ""}</small><b>${f[0]}</b><span>${kg} kg · +${r.g} 🪙</span></div>`;
+        reset(isNew ? `You caught a new ${f[4] ? "catch" : "fish"}!` : "Nice catch! Cast again?");
+      });
+    }
+    btn.onclick = () => (st.mode === "idle" || st.mode === "caught" ? cast() : pull());
+    water.onclick = () => { if (st.mode === "wait" || st.mode === "bite") pull(); };
+    $("fg-x").onclick = () => { clear(); p.pull = false; $("is-fg")?.remove(); };
+    dex();
   }
   function assignWorkerJob(target, duration = 10) {
     const worker = ppl.find((q) => q.k === "builder");
@@ -548,25 +642,25 @@
   }
   function chooseFisherDestination(x, y) {
     const p = ppl.find((q) => q.k === "fisher"); if (!p) return;
-    const choices = [{ key: "dock", type: "fish", label: "ငါးမျှားဆိပ်" }, { key: "shrimpDock", type: "shrimp", label: "ပုဇွန်မျှားဆိပ်" }];
+    const choices = [{ key: "dock", type: "fish", label: "Fishing Dock" }, { key: "shrimpDock", type: "shrimp", label: "Shrimp Dock" }];
     let best = null, dist = Infinity;
     for (const c of choices) { const d = Math.hypot(x - SPOTS[c.key].x, y - SPOTS[c.key].y); if (d < dist) { dist = d; best = c; } }
-    if (!best || dist > 125) { toast("🎣 သတ်မှတ်ထားတဲ့ ငါး/ပုဇွန်မျှားဆိပ်အမှတ်အသားကို နှိပ်ပါ"); return; }
+    if (!best || dist > 125) { toast("🎣 Tap the Fishing Dock or Shrimp Dock"); return; }
     const target = SPOTS[best.key], route = findPath({ x: p.x, y: p.y }, target);
-    if (!route.length && Math.hypot(p.x-target.x,p.y-target.y) > 24) { toast("ဒီနေရာကို လမ်းကြောင်းမတွေ့ပါ"); return; }
+    if (!route.length && Math.hypot(p.x-target.x,p.y-target.y) > 24) { toast("No path to that spot"); return; }
     p.route = route; p.spot = best.key; p.fishType = best.type; p.wait = 0;
-    p.el.classList.remove("fishing", "shrimping"); p.el.classList.remove("sit");
+    p.el.classList.remove("fishing", "shrimping"); p.el.classList.remove("sit"); p.fishing = false; p.pull = false;
     p.script = null; p.act = null; p.v = 0;
     ui.moveFisher = false; $("is-map-hint").hidden = true;
     hidePersonActions();
     if (!route.length) arrive(p);
-    toast(best.type === "shrimp" ? "🦐 ပုဇွန်မျှားဆိပ်ကို သွားနေပါပြီ" : "🎣 ငါးမျှားဆိပ်ကို သွားနေပါပြီ");
+    toast(best.type === "shrimp" ? "🦐 Walking to the Shrimp Dock" : "🎣 Walking to the Fishing Dock");
   }
 
   // ---- hub card ----
   function cardHTML() {
     t = L[lang()];
-    return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp?v=133')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
+    return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp?v=134')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
   }
-  window.CSLIsland = { open, close, cardHTML, assignWorkerJob, _state: () => S };
+  window.CSLIsland = { open, close, cardHTML, assignWorkerJob, fish: (k) => fishAt(k || "dock"), _state: () => S };
 })();
