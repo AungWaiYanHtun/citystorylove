@@ -18,7 +18,18 @@
 
   // ---- state ----
   let S = load(), ui = null, saveT = 0;
-  function fresh() { return { v: 1, ts: Date.now(), lv: 1, xp: 0, gold: 500, wood: 300, gems: 50 }; }
+  // Separate, persistent levels for both fishing locations; ready for future upgrade costs/effects.
+  function ensureLocationProgress() {
+    if (!S.locations || typeof S.locations !== "object") S.locations = {};
+    if (!S.locations.fishDock) S.locations.fishDock = { level: 1, upgrades: 0 };
+    if (!S.locations.shrimpDock) S.locations.shrimpDock = { level: 1, upgrades: 0 };
+    ["fishDock", "shrimpDock"].forEach((k) => {
+      S.locations[k].level = Math.max(1, Math.floor(Number(S.locations[k].level) || 1));
+      S.locations[k].upgrades = Math.max(0, Math.floor(Number(S.locations[k].upgrades) || 0));
+    });
+  }
+  ensureLocationProgress();
+  function fresh() { return { v: 1, ts: Date.now(), lv: 1, xp: 0, gold: 500, wood: 300, gems: 50, locations: { fishDock: { level: 1, upgrades: 0 }, shrimpDock: { level: 1, upgrades: 0 } } }; }
   function load() { try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); return s && s.v ? s : fresh(); } catch { return fresh(); } }
   function save() { S.ts = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} clearTimeout(saveT); saveT = setTimeout(push, 2000); }
   const hdr = () => ({ "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData });
@@ -47,7 +58,20 @@
         <button class="cz-gear" data-s="1"><img src="${A}ui_gear.webp" alt=""></button>
       </div>
       <div class="cz-side"><button class="cz-sq" data-s="1"><img src="${A}ui_tasks.webp" alt=""></button><button class="cz-sq" data-s="1"><img src="${A}ui_trophy.webp" alt=""></button><button class="cz-sq" data-s="1"><img src="${A}ui_mail.webp" alt=""><em>1</em></button></div>
-      <div class="cz-right"><button class="cz-big" data-s="1"><img src="${A}ui_build.webp" alt=""><small>${t.build}</small></button><button class="cz-big" data-s="1"><img src="${A}ui_map.webp" alt=""><small>${t.map}</small></button></div>`;
+      <div class="cz-right"><button class="cz-big" data-s="1"><img src="${A}ui_build.webp" alt=""><small>${t.build}</small></button><button class="cz-big" id="is-map-open"><img src="${A}ui_map.webp" alt=""><small>${t.map}</small></button></div>
+      <div class="is-person-actions" id="is-person-actions" hidden>
+        <div class="is-person-actions-title" id="is-person-actions-title">🎣 Fisherman</div>
+        <button type="button" id="is-manual-fish">🎣 ကိုယ်တိုင်ငါးမျှားမယ်</button>
+        <button type="button" id="is-move-fisher">🚶 နေရာရွှေ့မယ်</button>
+        <button type="button" id="is-actions-close" aria-label="Close">✕</button>
+      </div>
+      <div class="is-map-hint" id="is-map-hint" hidden>နေရာအမှတ်အသားတစ်ခုကို နှိပ်ပါ</div>
+      <div class="is-map-panel" id="is-map-panel" hidden>
+        <div class="is-map-panel-head"><div><small>ISLAND LOCATIONS</small><b>🗺️ ကျွန်းမြေပုံ</b></div><button type="button" id="is-map-close" aria-label="Close">✕</button></div>
+        <button type="button" class="is-map-location" data-location="dock"><span class="is-map-icon">🎣</span><span class="is-map-location-info"><b>ငါးမျှားဆိပ်</b><small>ပင်လယ်ငါးများ · Level <i id="is-fish-level">1</i></small></span><span class="is-map-go">မြေပုံပြ</span></button>
+        <button type="button" class="is-map-location" data-location="shrimpDock"><span class="is-map-icon">🦐</span><span class="is-map-location-info"><b>ပုဇွန်မျှားဆိပ်</b><small>ပုဇွန်များ · Level <i id="is-shrimp-level">1</i></small></span><span class="is-map-go">မြေပုံပြ</span></button>
+        <div class="is-map-upgrade-note">🔒 နေရာတစ်ခုချင်းစီ၏ Upgrade စနစ်ကို နောက်အဆင့်တွင် ဖွင့်နိုင်ရန် Level data ကို သိမ်းဆည်းထားပါတယ်။</div>
+      </div>`;
     root.insertAdjacentHTML("beforeend", `<div class="is-loading" id="is-loading" role="status" aria-live="polite">
       <div class="is-loading-panel">
         <div class="is-loading-island">🏝️</div>
@@ -60,12 +84,18 @@
       </div>
     </div>`);
     document.body.appendChild(root); document.body.classList.add("is-open");
-    ui = { root, view: $("is-view"), world: $("is-world"), ents: $("is-ents"), sc: 1, tx: 0, ty: 0 };
+    ui = { root, view: $("is-view"), world: $("is-world"), ents: $("is-ents"), sc: 1, tx: 0, ty: 0, moveFisher: false, selectedPerson: null };
     fit(); hud(); wire();
     const loadToken = (ui.loadToken || 0) + 1; ui.loadToken = loadToken;
     beginGameLoading(loadToken);
     $("cz-back").onclick = close;
     root.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => toast(t.soon)));
+    $("is-map-open").onclick = openMapPanel;
+    $("is-map-close").onclick = closeMapPanel;
+    root.querySelectorAll("[data-location]").forEach((b) => (b.onclick = () => focusFishingSpot(b.dataset.location)));
+    $("is-manual-fish").onclick = () => startManualFishing();
+    $("is-move-fisher").onclick = () => { ui.moveFisher = true; $("is-map-hint").hidden = false; toast("ငါးမျှားဆိပ်အမှတ်အသားကို နှိပ်ပါ"); };
+    $("is-actions-close").onclick = () => hidePersonActions();
     root.querySelectorAll("[data-p]").forEach((b) => (b.onclick = async () => {
       if (b.dataset.p !== "gems") { toast(t.soon); return; }
       const ok = await window.CSLAds?.reward?.("island", lang()); if (ok) { S.gems += 5; save(); hud(); toast(t.gems); }
@@ -135,7 +165,7 @@
     const up = (e) => {
       pts.delete(e.pointerId);
       if (pts.size < 2 && pinch) { pinch = null; if (pts.size === 1) startPan([...pts.values()][0], true); return; }   // no jump after pinch
-      if (st && pts.size === 0) { if (!st.moved && Date.now() - st.time < 500 && st.target) tap(st.target); st = null; }
+      if (st && pts.size === 0) { if (!st.moved && Date.now() - st.time < 500 && st.target) tap(st.target, e.clientX, e.clientY); st = null; }
     };
     v.addEventListener("pointerup", up); v.addEventListener("pointercancel", up);
     v.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.9, e.clientX, e.clientY); }, { passive: false });
@@ -143,7 +173,15 @@
     try { tg?.onEvent?.("viewportChanged", refit); } catch {}
     try { new ResizeObserver(refit).observe(v); } catch {}
   }
-  function tap(target) { const pe = target.closest?.(".is-p"); if (pe) tapPerson(pe); }
+  function tap(target, clientX, clientY) {
+    if (ui?.moveFisher) {
+      const worldX = (clientX - ui.tx) / ui.sc, worldY = (clientY - ui.ty) / ui.sc;
+      chooseFisherDestination(worldX, worldY); return;
+    }
+    const spotEl = target.closest?.(".is-fishing-spot");
+    if (spotEl) { openMapPanel(spotEl.classList.contains("is-spot-shrimpDock") ? "shrimpDock" : "dock"); return; }
+    const pe = target.closest?.(".is-p"); if (pe) tapPerson(pe);
+  }
 
   // ---- walkable map: 64×64 cells of 16px over the island picture (lawn, sand path, beach to the dock, dock) ----
   const C = 16, G = 96, MASK = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111110100000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111100000000000000000000000000000000000000000000000000000000001111000000000111111111111111111111111111000000000000000000000000000000000001110000000001000000001111010000000111111111111111111111111111100000000000000000000000000000000011111000000011100000001111111000000111111111111111111111111111111000000000000000000000000000000011111110011111111111111111111000000111111111111111111111111111111100000000000000000000000000000011111111111111111111111111111000000111111111111111111111111111111111100000000000000000000000000111111111111111111111111111110111111111111111111111111111111111111111110000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000011111111111111111111111001111111111111111111111111111111111111111111000000000000000000000000000011111111111111111111110000111111111111111111111111111111111111111111100000000000000000000000000011111111111111111100111000111111111111111111111111111111111111111111100000000000000000000000000011111111111111111000010000011111111111111111111111111111111111111111100000000000000000000000000011111111111111110000000000111111111111111111111111111111111111111111100000000000000000000000000011111111111110000000000001111111111111111111111111111111111111111111100000000000000000000000000011111111111100000000000001111111100111111111111111111111111111111111100000000000000000000000000011110000000000000000000001111111000011111111111111111111111111111111100000000000000000000000111111100000000000000000000011101011100011111111111111111111111111111111100000000000000000000000111111000000000000000000000001000001000001111111111111111111111111111111100000000000000000000000111110000000000000000000000000000000000011111111111111111111111111111111100000000000000000000000111110000000000000000000000000000000000111111111111111111111111111111111111111100000000000000000111110000000000000000000000000000000000111111111111111111111111111111111111111110000000000000000111110000000000000000000000000000000000111111111111111111111111111111111111111100000000000000000111100000000000000000000000000000000000111111111111111111111111111111111111111100000000000000000111100000000000000000000000000000000000011111111111111111111111111111111111111110000000000000000111100000000000000000000000000000000000011111111111111111111111111111111111111100000000000000000111100000000000000000110000000000000000001111111111111111111111111111111111111000000000000000000111100000000000000001111100000000000000001111111111111111111111111000000000000000000000000000000111100000000000000001111110000000000000000111111111111111111111111000000000000000000000000000000111100000000000000001111111000000000000001111111111110000000000010000000000000000000000000000000111100000000000000001111111110000000000011111111111110000000000000000000000000000000000000000000111100000000000000001111111111100000000111111111111110000000000000000000000000000000000000000000011100000000000000001111111111111000000011111111111110000000000000000000000000000000000000010000001000000000000000001111111111111100000001111111111110000000000000000000000000000000000111111000000000000000000000001111111111111111000011111111111110000000000000000000000000000000001111111000000000000000000000001111111111111111110111111111111110000000000000000000000000000000001111111000000000011111111111111111111111111111111111111111111110000000000000000000000000000000001111111000000000111111111111111111111111111111111111111111111111111100000000000000000000000000001111110000000000111111111111111111111111111111111111111111111110000000000000000000000000000000001111100000000000011111111111111111111111111111111111111111111110000000000000000001111111111111111111000000000000001111111111111111111111111111111111111111111110000000000000000011111111111111111110000000000000000011111111111111111111111111111111111111111110000000000000000011111111111111111000000000000000000001111111111111111111111111111111111111111110000000000000000011111111111111110000000000000000000000111111111111111111100000001111111111111110000000000000000011111111111111100000000000000000000000000111111111111111100000001111111111111110000000000000000011111111111111100000000000000000000000000000111111111111100000001111111111111110000000000000000011111111111111000000000000000000000000000000000111111111100000000111111111111110000000000000000011111111111110000000000000000000000000000000000000001111100000000000000111111110000000000000000011111111111100000000000000000000000000000000000000111111100000000000000111111110000000000000000011111111100000000000000000000000000000000000000011111111100000000000000011111110000000000000000011111110000000000000000000000000000000000000000111111111100000000000000000111111111111111111111111111000000000000000000000000000000000000000011111111111110000000000000000111111111111111111111111110000000000000000000000000000000000000000111111111111111000000000000000111111111111111111111111100000000000000000000000000000000000000001111111111111111000000100000000111111111111111111111111000000000000000000000000000000000000000011111111111111110000001110111111111111111111111111111100000000000000000000000000000000000000000011111111111111000000011111111111111111111111111111100000000000000000000000000000000000000000000001111111111110000000001111111111111111111110000000000000000000000000000000000000000000000000000000111111111000000000000111111111111111111100000000000000000000000000000000000000000000000000000000001111110000000000000000000111111111110000000000000000000000000000000000000000000000000000000000000111000000000000000000000001111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
@@ -192,7 +230,7 @@
   const PPL = [{ k: "boy", h: 134, at: { x: 840, y: 840 } }, { k: "girl", h: 120, at: { x: 705, y: 780 } }, { k: "builder", h: 127, at: { x: 1035, y: 472 } }, { k: "fisher", h: 127, at: { x: 450, y: 1320 } }];
   const SPOTS = {
     fire: { x: 495, y: 555 }, sign: { x: 615, y: 540 }, house: { x: 1035, y: 472 }, garden: { x: 1200, y: 705 },
-    well: { x: 1290, y: 840 }, dock: { x: 450, y: 1320 }, beach: { x: 840, y: 1320 }, lawnR: { x: 1140, y: 630 },
+    well: { x: 1290, y: 840 }, dock: { x: 450, y: 1320 }, shrimpDock: { x: 1160, y: 1280 }, beach: { x: 840, y: 1320 }, lawnR: { x: 1140, y: 630 },
     plotL: { x: 255, y: 600 }, plotT: { x: 705, y: 375 }, mid: { x: 840, y: 840 }, beachL: { x: 60, y: 840 }, beachW: { x: 390, y: 1095 }, beachR: { x: 1305, y: 1140 }, beachS: { x: 750, y: 1170 }
   };
   const LIKES = { boy: ["house", "well", "garden", "fire", "beach", "beachR", "mid", "plotT", "beachS"], girl: ["fire", "sign", "garden", "lawnR", "beachL", "plotL", "beachW", "beach"], builder: ["house", "garden", "well", "sign", "plotT", "mid"], fisher: ["dock", "dock", "beach", "beachS", "beachW", "fire"] };
@@ -204,6 +242,11 @@
     { boy: { seat: { x: 1100, y: 1188 }, near: { x: 1118, y: 1278 } }, girl: { seat: { x: 985, y: 1205 }, near: { x: 975, y: 1278 } } }
   ];
   const HOUSE = { near: { x: 1062, y: 438 }, door: { x: 1105, y: 369 } };
+  // Dedicated worker hut on the upper lawn; the builder enters, works inside, then comes back out.
+  const WORKER_HOUSE = { near: { x: 900, y: 520 }, door: { x: 920, y: 485 }, inside: { x: 920, y: 470 } };
+  // The worker stays inside the worker house while idle. A future job assignment
+  // can send the worker out; there is no autonomous wandering or random shift cycle.
+  function workerShiftScript() { return []; }
   let seatI = 0;
   let coupleT = 7;
   function coupleScript(k) {
@@ -214,7 +257,7 @@
   }
   function nextAct(p) {
     p.act = p.script.shift() || null;
-    if (!p.act) { p.script = null; p.wait = 1.5; return; }
+    if (!p.act) { p.script = null; p.wait = 999999; return; }
     const a = p.act;
     if (a.go) { p.route = findPath({ x: p.x, y: p.y }, a.go); if (!p.route.length) p.route = [a.go]; }
     if (a.sit) { a.t = a.sit; p.v = 0; p.dir = "front_left"; p.fi = -1; p.img.src = src(p.k, "sit", 0); p.el.classList.add("sit"); }
@@ -228,6 +271,8 @@
     if (!p.act) nextAct(p);
     const a = p.act; if (!a) return false;
     if (a.go) { if (!p.route.length) nextAct(p); return false; }   // normal walking code moves along the route
+    if (a.fish) { p.v = 0; p.route = []; p.el.classList.add("fishing"); show(p, "left", "idle"); return true; }
+    if (a.work) { a.t -= dt; p.v = 0; show(p, "front", "idle"); if (!a.started) { a.started = true; say(p, "🔨", true); } if (a.t <= 0) nextAct(p); return true; }
     if (a.sit || a.hide) { a.t -= dt; if (a.t <= 0) { if (a.hide) p.el.style.opacity = 0; nextAct(p); } return true; }
     if (a.wander) { a.t -= dt; if (a.t <= 0) nextAct(p); else if (!p.route.length) { p.route = findPath({ x: p.x, y: p.y }, randomLawn()); } return false; }
     if (a.glide) {
@@ -353,12 +398,24 @@
       const fh = d.h / FIG_H, fw = fh * 180 / 320;
       el.innerHTML = `<div class="is-fig" style="height:${fh.toFixed(1)}px;width:${fw.toFixed(1)}px"><img class="is-spr" alt="" draggable="false"></div><span class="is-say"></span>`;
       ui.ents.appendChild(el);
-      const p = { k: d.k, h: d.h, el, img: el.querySelector("img"), x: d.at.x, y: d.at.y, route: [], wait: 0.6 + i * 0.9, spot: null, dir: "", fi: -1, dist: 0, turn: 0, v: 0 };
+      if (i === 2) { const hut = document.createElement("div"); hut.className = "is-worker-house"; hut.innerHTML = `<span class="is-worker-roof"></span><span class="is-worker-body"><b>WORKERS</b><i>🚪</i></span>`; hut.style.transform = `translate(900px,520px)`; hut.style.zIndex = "510"; ui.ents.appendChild(hut); }
+      if (i === 3) {
+        [["dock","🎣","ငါးမျှားဆိပ်"],["shrimpDock","🦐","ပုဇွန်မျှားဆိပ်"]].forEach(([key,emoji,label]) => {
+          const marker = document.createElement("div"); marker.className = `is-fishing-spot is-spot-${key}`;
+          marker.innerHTML = `<b>${emoji}</b><small>${label}</small>`;
+          marker.style.transform = `translate(${SPOTS[key].x}px,${SPOTS[key].y}px)`; ui.ents.appendChild(marker);
+        });
+      }
+      const startAt = d.k === "builder" ? WORKER_HOUSE.inside : d.at;
+      const p = { k: d.k, h: d.h, el, img: el.querySelector("img"), x: startAt.x, y: startAt.y, route: [], wait: 0.6 + i * 0.9, spot: null, dir: "", fi: -1, dist: 0, turn: 0, v: 0 };
       ppl.push(p); show(p, ["front", "right", "left", "back"][i], "idle");
+      if (d.k === "fisher") { p.spot = "dock"; p.fishType = "fish"; p.route = []; p.wait = 999999; p.el.classList.add("fishing"); }
+      if (d.k === "builder") { p.spot = "worker-house"; p.wait = 999999; p.el.style.opacity = 0; p.route = []; p.script = null; p.act = null; }
     });
     lastT = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(step);
   }
   function plan(p) {
+    if (p.k === "fisher" || p.k === "builder") return;
     const likes = LIKES[p.k], name = Math.random() < 0.7 ? likes[Math.floor(Math.random() * likes.length)] : null;
     const base = name ? SPOTS[name] : randomLawn();
     const tgt = { x: base.x + (name ? (Math.random() - 0.5) * 30 : 0), y: base.y + (name ? (Math.random() - 0.5) * 16 : 0) };
@@ -412,6 +469,14 @@
     raf = requestAnimationFrame(step);
   }
   function arrive(p) {
+    if (p.k === "fisher") {
+      p.v = 0; p.route = []; p.wait = 999999;
+      p.el.classList.remove("fishing", "shrimping");
+      p.el.classList.add(p.fishType === "shrimp" ? "shrimping" : "fishing");
+      show(p, "left", "idle");
+      say(p, p.fishType === "shrimp" ? "🦐" : "🎣", true);
+      return;
+    }
     p.wait = 2 + Math.random() * 4;
     const face = { fire: "left", house: "back", dock: "left", well: "right", garden: "front", beach: "front", sign: "left" }[p.spot];
     if (face) show(p, face, "idle");
@@ -422,11 +487,81 @@
     const b = p.el.querySelector(".is-say"); b.textContent = text; p.el.classList.add("talk");
     clearTimeout(p.sayT); p.sayT = setTimeout(() => p.el.classList.remove("talk"), short ? 1500 : 2800);
   }
+  function openMapPanel() {
+    if (!ui) return;
+    ensureLocationProgress();
+    $("is-fish-level").textContent = S.locations.fishDock.level;
+    $("is-shrimp-level").textContent = S.locations.shrimpDock.level;
+    $("is-map-panel").hidden = false;
+  }
+  function closeMapPanel() { if (ui) $("is-map-panel").hidden = true; }
+  function focusFishingSpot(key) {
+    if (!ui || !SPOTS[key]) return;
+    const point = SPOTS[key], vw = ui.view.clientWidth || innerWidth, vh = ui.view.clientHeight || innerHeight;
+    closeMapPanel();
+    ui.tx = vw / 2 - point.x * ui.sc;
+    ui.ty = vh / 2 - point.y * ui.sc;
+    apply();
+    const fisher = ppl.find((p) => p.k === "fisher");
+    if (fisher) {
+      ui.selectedPerson = fisher;
+      toast(key === "shrimpDock" ? "🦐 ပုဇွန်မျှားဆိပ်ကို မြေပုံပေါ်မှာ ပြထားပါတယ်" : "🎣 ငါးမျှားဆိပ်ကို မြေပုံပေါ်မှာ ပြထားပါတယ်");
+    }
+  }
+
   function tapPerson(el) {
     const p = ppl.find((x) => x.el === el); if (!p) return;
+    if (p.k === "fisher") { ui.selectedPerson = p; showPersonActions(); return; }
     const lines = t.say[p.k]; say(p, lines[Math.floor(Math.random() * lines.length)]);
     if (S.xp < 100 * S.lv) { S.xp += 1; save(); hud(); }
     try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch {}
+  }
+  function showPersonActions() {
+    const panel = $("is-person-actions"); if (!panel) return;
+    $("is-person-actions-title").textContent = "🎣 ငါးမျှားသူ";
+    panel.hidden = false; ui.moveFisher = false; $("is-map-hint").hidden = true;
+  }
+  function hidePersonActions() {
+    const panel = $("is-person-actions"); if (panel) panel.hidden = true;
+    if (ui) { ui.moveFisher = false; $("is-map-hint").hidden = true; }
+  }
+  function startManualFishing() {
+    const p = ui?.selectedPerson; if (!p) return;
+    p.v = 0; p.route = []; p.wait = 999999;
+    p.fishType = p.spot === "shrimpDock" ? "shrimp" : "fish";
+    p.el.classList.remove("fishing", "shrimping");
+    p.el.classList.add(p.fishType === "shrimp" ? "shrimping" : "fishing");
+    say(p, p.fishType === "shrimp" ? "🦐" : "🎣", true);
+    hidePersonActions();
+    toast(p.fishType === "shrimp" ? "ပုဇွန်မျှားနေပါပြီ" : "ငါးမျှားနေပါပြီ");
+  }
+  function assignWorkerJob(target, duration = 10) {
+    const worker = ppl.find((q) => q.k === "builder");
+    if (!worker || !target || !Number.isFinite(Number(target.x)) || !Number.isFinite(Number(target.y))) return false;
+    worker.el.style.opacity = 1; worker.el.classList.remove("walk");
+    worker.route = []; worker.act = null; worker.script = [
+      { go: { x: Number(target.x), y: Number(target.y) } },
+      { work: Math.max(2, Math.min(120, Number(duration) || 10)) },
+      { go: WORKER_HOUSE.near }, { hide: 1 }
+    ];
+    worker.wait = 0; worker.v = 0;
+    return true;
+  }
+  function chooseFisherDestination(x, y) {
+    const p = ppl.find((q) => q.k === "fisher"); if (!p) return;
+    const choices = [{ key: "dock", type: "fish", label: "ငါးမျှားဆိပ်" }, { key: "shrimpDock", type: "shrimp", label: "ပုဇွန်မျှားဆိပ်" }];
+    let best = null, dist = Infinity;
+    for (const c of choices) { const d = Math.hypot(x - SPOTS[c.key].x, y - SPOTS[c.key].y); if (d < dist) { dist = d; best = c; } }
+    if (!best || dist > 125) { toast("🎣 သတ်မှတ်ထားတဲ့ ငါး/ပုဇွန်မျှားဆိပ်အမှတ်အသားကို နှိပ်ပါ"); return; }
+    const target = SPOTS[best.key], route = findPath({ x: p.x, y: p.y }, target);
+    if (!route.length && Math.hypot(p.x-target.x,p.y-target.y) > 24) { toast("ဒီနေရာကို လမ်းကြောင်းမတွေ့ပါ"); return; }
+    p.route = route; p.spot = best.key; p.fishType = best.type; p.wait = 0;
+    p.el.classList.remove("fishing", "shrimping"); p.el.classList.remove("sit");
+    p.script = null; p.act = null; p.v = 0;
+    ui.moveFisher = false; $("is-map-hint").hidden = true;
+    hidePersonActions();
+    if (!route.length) arrive(p);
+    toast(best.type === "shrimp" ? "🦐 ပုဇွန်မျှားဆိပ်ကို သွားနေပါပြီ" : "🎣 ငါးမျှားဆိပ်ကို သွားနေပါပြီ");
   }
 
   // ---- hub card ----
@@ -434,5 +569,5 @@
     t = L[lang()];
     return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
   }
-  window.CSLIsland = { open, close, cardHTML, _state: () => S };
+  window.CSLIsland = { open, close, cardHTML, assignWorkerJob, _state: () => S };
 })();

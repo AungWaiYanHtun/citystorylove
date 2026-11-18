@@ -86,3 +86,44 @@ img.is-spr{width:100%;height:100%;object-fit:contain;object-position:50% 100%;us
 .is-loading-done{opacity:0;pointer-events:none}
 .is-loading-error-state .is-loading-track i{background:linear-gradient(90deg,#ffb34d,#f06b4c)}
 @media(prefers-reduced-motion:reduce){.is-loading,.is-loading-track i{transition:none}}
+
+/* Dedicated worker hut and persistent fishing pose */
+.is-worker-house{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;filter:drop-shadow(0 5px 4px rgba(0,0,0,.35))}
+.is-worker-roof{position:absolute;left:-48px;top:-72px;width:96px;height:48px;background:linear-gradient(145deg,#9b5527,#633018);clip-path:polygon(50% 0,100% 80%,88% 100%,12% 100%,0 80%);border:2px solid #e4b36b}
+.is-worker-body{position:absolute;left:-38px;top:-38px;width:76px;height:43px;border:3px solid #70421f;border-radius:5px;background:linear-gradient(90deg,#c98b4c,#9b602e);display:flex;flex-direction:column;align-items:center;justify-content:space-around;color:#fff2c5;font-size:8px;font-weight:900;text-shadow:0 1px 2px #44220c}
+.is-worker-body i{position:absolute;right:7px;bottom:0;width:13px;height:24px;border-radius:7px 7px 0 0;background:#51301d;border:1px solid #e2b36e;font-style:normal;font-size:9px;text-align:center;line-height:22px}
+.is-p.fishing .is-fig{transform:scaleY(.78);transform-origin:50% 100%}
+.is-p.fishing::after{content:"🎣";position:absolute;left:4px;top:-42px;font-size:17px;filter:drop-shadow(0 1px 2px #000)}
+
+/* Fisher controls: select the fisherman, then choose a destination marker. */
+.is-fishing-spot{position:absolute;left:0;top:0;z-index:700;display:flex;flex-direction:column;align-items:center;gap:2px;transform-origin:0 0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}
+.is-fishing-spot b{display:grid;place-items:center;width:36px;height:36px;border:2px solid #fff;border-radius:50%;background:linear-gradient(#ffdc78,#d88a19);font-size:21px;box-shadow:0 2px 0 #75420d}
+.is-fishing-spot small{padding:3px 7px;border:1px solid rgba(255,255,255,.8);border-radius:8px;background:rgba(12,45,55,.9);color:#fff;font-size:10px;font-weight:900;white-space:nowrap}
+.is-person-actions{position:absolute;z-index:9500;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);width:min(330px,calc(100vw - 28px));padding:12px;border:2px solid #f8d16c;border-radius:18px;background:linear-gradient(160deg,rgba(21,69,78,.98),rgba(7,35,49,.98));box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;touch-action:manipulation}
+.is-person-actions[hidden],.is-map-hint[hidden]{display:none}
+.is-person-actions-title{font-size:15px;font-weight:900;text-align:center;color:#ffe49a;padding:2px 24px 6px}
+.is-person-actions button{min-height:42px;border:1px solid rgba(255,255,255,.65);border-radius:12px;background:linear-gradient(#ffe18b,#e6a92f);color:#392300;font-size:14px;font-weight:900}
+.is-person-actions #is-actions-close{position:absolute;right:8px;top:8px;min-height:26px;width:26px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff}
+.is-map-hint{position:absolute;z-index:9400;left:50%;top:calc(env(safe-area-inset-top) + 72px);transform:translateX(-50%);padding:9px 14px;border:1px solid #fff;border-radius:12px;background:rgba(6,43,55,.94);color:#fff;font-size:13px;font-weight:900;white-space:nowrap;pointer-events:none}
+.is-p.shrimping .is-fig{transform:scaleY(.78);transform-origin:50% 100%}
+.is-p.shrimping::after{content:"🦐";position:absolute;left:4px;top:-42px;font-size:17px;filter:drop-shadow(0 1px 2px #000)}
+
+
+/* Fishing locations map panel: two independent, upgrade-ready destinations. */
+.is-fishing-spot{pointer-events:auto;cursor:pointer}
+.is-map-panel{position:absolute;z-index:9600;left:50%;top:50%;transform:translate(-50%,-50%);width:min(370px,calc(100vw - 28px));padding:15px;border:2px solid #f4d17b;border-radius:20px;background:linear-gradient(155deg,rgba(24,76,79,.98),rgba(7,35,48,.99));box-shadow:0 16px 45px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:10px;touch-action:pan-y}
+.is-map-panel[hidden]{display:none}
+.is-map-panel-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 8px;border-bottom:1px solid rgba(255,255,255,.2)}
+.is-map-panel-head div{display:flex;flex-direction:column;gap:3px}
+.is-map-panel-head small{font-size:9px;letter-spacing:.16em;color:#b9e4d8;font-weight:900}
+.is-map-panel-head b{font-size:19px;color:#ffe5a0}
+.is-map-panel-head button{width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:17px}
+.is-map-location{display:flex;align-items:center;gap:10px;width:100%;min-height:66px;padding:9px;border:1px solid rgba(255,255,255,.32);border-radius:14px;background:linear-gradient(100deg,rgba(255,255,255,.13),rgba(255,255,255,.05));color:#fff;text-align:left}
+.is-map-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:12px;background:linear-gradient(#ffe18c,#d99725);font-size:25px}
+.is-map-location-info{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.is-map-location-info b{font-size:14px;font-weight:900}
+.is-map-location-info small{font-size:11px;color:#c7e6dc}
+.is-map-location-info i{font-style:normal;color:#ffe18c;font-weight:900}
+.is-map-go{flex:none;padding:6px 8px;border-radius:9px;background:#d8a43d;color:#382300;font-size:11px;font-weight:900}
+.is-map-upgrade-note{padding:9px 10px;border-radius:11px;background:rgba(0,0,0,.22);color:#e9e4cf;font-size:11px;line-height:1.5}
+.is-fishing-spot:active b,.is-map-location:active{transform:scale(.96)}
