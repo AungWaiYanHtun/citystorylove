@@ -48,16 +48,28 @@
       </div>
       <div class="cz-side"><button class="cz-sq" data-s="1"><img src="${A}ui_tasks.webp" alt=""></button><button class="cz-sq" data-s="1"><img src="${A}ui_trophy.webp" alt=""></button><button class="cz-sq" data-s="1"><img src="${A}ui_mail.webp" alt=""><em>1</em></button></div>
       <div class="cz-right"><button class="cz-big" data-s="1"><img src="${A}ui_build.webp" alt=""><small>${t.build}</small></button><button class="cz-big" data-s="1"><img src="${A}ui_map.webp" alt=""><small>${t.map}</small></button></div>`;
+    root.insertAdjacentHTML("beforeend", `<div class="is-loading" id="is-loading" role="status" aria-live="polite">
+      <div class="is-loading-panel">
+        <div class="is-loading-island">🏝️</div>
+        <strong>${lang() === "my" ? "ကျွန်းလေး ပြင်ဆင်နေပါတယ်" : "Preparing your island"}</strong>
+        <span class="is-loading-sub">${lang() === "my" ? "လူပုံများနှင့် Animation များ ဖတ်နေသည်" : "Loading characters and animations"}</span>
+        <div class="is-loading-track"><i id="is-loading-bar"></i></div>
+        <span class="is-loading-status" id="is-loading-status">0%</span>
+        <span class="is-loading-error" id="is-loading-error" hidden></span>
+        <button class="is-loading-retry" id="is-loading-retry" hidden>${lang() === "my" ? "ထပ်ကြိုးစားမယ်" : "Try again"}</button>
+      </div>
+    </div>`);
     document.body.appendChild(root); document.body.classList.add("is-open");
     ui = { root, view: $("is-view"), world: $("is-world"), ents: $("is-ents"), sc: 1, tx: 0, ty: 0 };
-    fit(); hud(); wire(); spawnPeople();
+    fit(); hud(); wire();
+    const loadToken = (ui.loadToken || 0) + 1; ui.loadToken = loadToken;
+    beginGameLoading(loadToken);
     $("cz-back").onclick = close;
     root.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => toast(t.soon)));
     root.querySelectorAll("[data-p]").forEach((b) => (b.onclick = async () => {
       if (b.dataset.p !== "gems") { toast(t.soon); return; }
       const ok = await window.CSLAds?.reward?.("island", lang()); if (ok) { S.gems += 5; save(); hud(); toast(t.gems); }
     }));
-    pull();
     try { tg?.disableVerticalSwipes?.(); } catch {}
   }
   function close() { cancelAnimationFrame(raf); ppl = []; ui?.root.remove(); ui = null; document.body.classList.remove("is-open"); save(); try { tg?.enableVerticalSwipes?.(); } catch {} }
@@ -229,17 +241,88 @@
     }
     return false;
   }
-  const IMG = {}; // preload every frame so a turn never flashes blank
-  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=131`; }
-  function preload() {
+  const IMG = {}; // decoded image cache: animation starts only after every required frame is ready
+  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=132`; }
+  const loadImage = (url) => {
+    if (IMG[url]?.complete && IMG[url].naturalWidth > 0) return Promise.resolve(IMG[url]);
+    if (IMG[url]?.__promise) return IMG[url].__promise;
+    const im = IMG[url] || new Image();
+    IMG[url] = im;
+    im.__promise = new Promise((resolve, reject) => {
+      im.onload = async () => {
+        try { if (im.decode) await im.decode(); } catch {}
+        if (im.naturalWidth > 0) resolve(im); else reject(new Error("Image decode failed: " + url));
+      };
+      im.onerror = () => reject(new Error("Image failed: " + url));
+      im.src = url;
+      if (im.complete && im.naturalWidth > 0) resolve(im);
+    }).catch((err) => { delete IMG[url]; throw err; });
+    return im.__promise;
+  };
+  function criticalImageUrls() {
+    const urls = [`${A}cozy_island_beach.webp`];
+    ["ui_avatar.webp", "ui_star.webp", "ui_coin.webp", "ui_wood.webp", "ui_gem.webp", "ui_gear.webp", "ui_tasks.webp", "ui_trophy.webp", "ui_mail.webp", "ui_build.webp", "ui_map.webp"].forEach((f) => urls.push(A + f));
     Object.keys(LIKES).forEach((k) => {
-      const dirs = DIRS8;
-      
-      if (k === "boy" || k === "girl") { const u = src(k, "sit", 0); if (!IMG[u]) { IMG[u] = new Image(); IMG[u].src = u; } }
-      dirs.forEach((d) => Array.from({ length: NF(d) }, (_, i) => i).forEach((f) => {
-        const u = src(k, d, f); if (!IMG[u]) { IMG[u] = new Image(); IMG[u].src = u; }
-      }));
+      if (k === "boy" || k === "girl") urls.push(src(k, "sit", 0));
+      DIRS8.forEach((d) => { for (let f = 0; f < NF(d); f++) urls.push(src(k, d, f)); });
     });
+    return [...new Set(urls)];
+  }
+  async function preload(onProgress) {
+    const urls = criticalImageUrls(); let done = 0; const errors = [];
+    // Bounded batches keep mobile browsers responsive while loading all residents.
+    for (let i = 0; i < urls.length; i += 12) {
+      const batch = urls.slice(i, i + 12);
+      const results = await Promise.all(batch.map((u) => loadImage(u).catch((e) => { errors.push(e); return null; })));
+      done += batch.length;
+      onProgress?.(done, urls.length);
+    }
+    if (errors.length) throw new Error(`${errors.length} image asset(s) could not be loaded`);
+    return urls.length;
+  }
+  async function beginGameLoading(token) {
+    const overlay = $("is-loading");
+    const bar = $("is-loading-bar"), status = $("is-loading-status");
+    const error = $("is-loading-error"), retry = $("is-loading-retry");
+    if (!overlay) return;
+    overlay.classList.remove("is-loading-error-state");
+    error.hidden = true; retry.hidden = true;
+    try {
+      await preload((done, total) => {
+        if (!ui || ui.loadToken !== token) return;
+        const pct = Math.round(done / total * 100);
+        if (bar) bar.style.width = pct + "%";
+        if (status) status.textContent = pct + "%";
+      });
+      if (!ui || ui.loadToken !== token) return;
+      const ground = ui.root.querySelector(".is-ground");
+      if (ground) {
+        if (!ground.complete || !ground.naturalWidth) {
+          await new Promise((resolve, reject) => {
+            ground.addEventListener("load", resolve, { once: true });
+            ground.addEventListener("error", () => reject(new Error("Island background failed to load")), { once: true });
+          });
+        }
+        if (ground.decode) await ground.decode();
+      }
+      if (!ui || ui.loadToken !== token) return;
+      spawnPeople();
+      if (status) status.textContent = "100%";
+      overlay.classList.add("is-loading-done");
+      window.setTimeout(() => { if (ui && ui.loadToken === token) overlay.remove(); }, 260);
+      pull();
+    } catch (err) {
+      if (!ui || ui.loadToken !== token) return;
+      overlay.classList.add("is-loading-error-state");
+      if (error) {
+        error.hidden = false;
+        error.textContent = lang() === "my"
+          ? "ပုံဖိုင်အချို့ မဖတ်နိုင်သေးပါ။ အင်တာနက်စစ်ပြီး ထပ်ကြိုးစားပါ။"
+          : "Some game images could not load. Check your connection and retry.";
+      }
+      if (retry) { retry.hidden = false; retry.onclick = () => beginGameLoading(token); }
+      console.warn("[Island] Game asset loading failed:", err);
+    }
   }
   let ppl = [], raf = 0, lastT = 0;
   function randomLawn() { for (let i = 0; i < 200; i++) { const p = { x: 60 + Math.random() * 1420, y: 300 + Math.random() * 1100 }; if (sight(p, p) && walkable(p.x, p.y)) return p; } return { x: 840, y: 840 }; }
@@ -264,7 +347,6 @@
     return ax > ay * 1.35 ? side : vert;
   }
   function spawnPeople() {
-    preload();
     ppl.forEach((p) => p.el.remove()); ppl = [];
     PPL.forEach((d, i) => {
       const el = document.createElement("div"); el.className = "is-p"; el.dataset.k = d.k;
