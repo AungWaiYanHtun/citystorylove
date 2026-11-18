@@ -51,7 +51,7 @@
     if (ui) return;
     t = L[lang()];
     const root = document.createElement("div"); root.id = "is-root";
-    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}world_big.webp?v=143" alt="" draggable="false"><div id="is-ents"></div></div></div>
+    root.innerHTML = `<div id="is-view"><div id="is-world"><div class="is-ground">${GTILES.map((g) => `<img src="${g.u}" alt="" draggable="false" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;height:${g.h}px">`).join("")}</div><div id="is-ents"></div></div></div>
       <div class="cz-top">
         <button class="cz-ava" id="cz-back"><img src="${A}ui_avatar.webp" alt=""></button>
         <div class="cz-lv"><img src="${A}ui_star.webp" alt=""><b id="cz-lvn"></b><div class="cz-xp"><i id="cz-xpb"></i><span id="cz-xpt"></span></div></div>
@@ -320,9 +320,10 @@
     }).catch((err) => { delete IMG[url]; throw err; });
     return im.__promise;
   };
+  const GTILES = []; for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const x0 = Math.max(0, c * 800 - 2), y0 = Math.max(0, r * 800 - 2), x1 = Math.min(3200, (c + 1) * 800 + 2), y1 = Math.min(3200, (r + 1) * 800 + 2); GTILES.push({ u: `${A}ground/g${r}${c}.webp?v=144`, x: x0, y: y0, w: x1 - x0, h: y1 - y0 }); } // v144: ground split into 16 tiles (big single image left blank patches on phones)
   const MISSING = new Set();
   function criticalImageUrls() {
-    const urls = [`${A}world_big.webp?v=143`];
+    const urls = GTILES.map((g) => g.u); TREES.forEach((t) => urls.push(`${A}trees/t${t[0]}.webp?v=143`));
     ["ui_avatar.webp", "ui_star.webp", "ui_coin.webp", "ui_wood.webp", "ui_gem.webp", "ui_gear.webp", "ui_tasks.webp", "ui_trophy.webp", "ui_mail.webp", "ui_build.webp", "ui_map.webp"].forEach((f) => urls.push(A + f));
     Object.keys(LIKES).forEach((k) => {
       if (k === "boy" || k === "girl") urls.push(src(k, "sit", 0));
@@ -341,7 +342,7 @@
       onProgress?.(done, urls.length);
     }
     // Only the island background is essential; a missing sprite falls back instead of blocking the game.
-    if ([...MISSING].some((u) => u.includes("world_big"))) throw new Error("Island background could not be loaded");
+    if ([...MISSING].some((u) => u.includes("/ground/"))) throw new Error("Island background could not be loaded");
     if (MISSING.size) console.warn("[Island] Missing images (upload these to GitHub):", [...MISSING]);
     return urls.length;
   }
@@ -360,15 +361,9 @@
         if (status) status.textContent = pct + "%";
       });
       if (!ui || ui.loadToken !== token) return;
-      const ground = ui.root.querySelector(".is-ground");
-      if (ground) {
-        if (!ground.complete || !ground.naturalWidth) {
-          await new Promise((resolve, reject) => {
-            ground.addEventListener("load", resolve, { once: true });
-            ground.addEventListener("error", () => reject(new Error("Island background failed to load")), { once: true });
-          });
-        }
-        if (ground.decode) await ground.decode();
+      for (const g of ui.root.querySelectorAll(".is-ground img")) {
+        if (!g.complete || !g.naturalWidth) await new Promise((res) => { g.addEventListener("load", res, { once: true }); g.addEventListener("error", res, { once: true }); });
+        try { if (g.decode) await g.decode(); } catch {}
       }
       if (!ui || ui.loadToken !== token) return;
       spawnPeople();
