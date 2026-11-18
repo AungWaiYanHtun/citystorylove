@@ -180,3 +180,13 @@ img.is-spr{width:100%;height:100%;object-fit:contain;object-position:50% 100%;us
 .is-loading-retry{border:2px solid #fff3c4;border-radius:12px;padding:10px 26px;background:linear-gradient(#ffdc76,#e4a52b);color:#392500;font-weight:900;font-size:15px}
 .is-loading-done{opacity:0;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.is-ld-bg,.is-loading-logo{animation:none}}
+
+/* v137 bigger sea world: ground image spans island coords -512..2048 */
+.is-ground{left:-512px!important;top:-512px!important;width:2560px!important;height:2560px!important;-webkit-mask-image:none!important;mask-image:none!important}
+#is-view{background:#0d7fbf}
+.is-plot{position:absolute;left:0;top:0;z-index:690;display:flex;flex-direction:column;align-items:center;gap:3px;margin:-24px 0 0 -40px;width:80px;cursor:pointer}
+.is-plot b{display:grid;place-items:center;width:40px;height:40px;border:3px solid #fff;border-radius:50%;background:linear-gradient(#8ff07a,#33a83a);color:#fff;font-size:24px;font-weight:900;box-shadow:0 3px 0 #1d6a22,0 0 0 6px rgba(255,255,255,.25);animation:isplot 1.8s ease-in-out infinite}
+.is-plot small{padding:3px 8px;border-radius:8px;background:rgba(12,45,55,.88);color:#fff;font-size:11px;font-weight:900;white-space:nowrap}
+@keyframes isplot{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+.is-plot-in{display:flex;flex-direction:column;align-items:center;gap:3px;transform:scale(var(--ps,1));transform-origin:50% 20px}
