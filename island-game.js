@@ -48,7 +48,7 @@
     if (ui) return;
     t = L[lang()];
     const root = document.createElement("div"); root.id = "is-root";
-    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}cozy_island_beach.webp?v=135" alt="" draggable="false"><div id="is-ents"></div></div></div>
+    root.innerHTML = `<div id="is-view"><div id="is-world"><img class="is-ground" src="${A}cozy_island_beach.webp?v=136" alt="" draggable="false"><div id="is-ents"></div></div></div>
       <div class="cz-top">
         <button class="cz-ava" id="cz-back"><img src="${A}ui_avatar.webp" alt=""></button>
         <div class="cz-lv"><img src="${A}ui_star.webp" alt=""><b id="cz-lvn"></b><div class="cz-xp"><i id="cz-xpb"></i><span id="cz-xpt"></span></div></div>
@@ -73,14 +73,14 @@
         <div class="is-map-upgrade-note">🔒 Dock upgrades are coming soon.</div>
       </div>`;
     root.insertAdjacentHTML("beforeend", `<div class="is-loading" id="is-loading" role="status" aria-live="polite">
-      <div class="is-loading-panel">
-        <img class="is-loading-logo" src="${A}logo_island.webp?v=135" alt="Island Life">
-        <strong>${lang() === "my" ? "ကျွန်းလေး ပြင်ဆင်နေပါတယ်" : "Preparing your island"}</strong>
-        <span class="is-loading-sub">${lang() === "my" ? "လူပုံများနှင့် Animation များ ဖတ်နေသည်" : "Loading characters and animations"}</span>
+      <div class="is-ld-bg" style="background-image:url('${A}loading_bg.webp?v=136')"></div>
+      <img class="is-loading-logo" src="${A}logo_island.webp?v=136" alt="Island Life">
+      <div class="is-ld-bottom">
+        <div class="is-ld-row"><span class="is-ld-word">Loading<i>.</i><i>.</i><i>.</i></span><span class="is-loading-status" id="is-loading-status">0%</span></div>
         <div class="is-loading-track"><i id="is-loading-bar"></i></div>
-        <span class="is-loading-status" id="is-loading-status">0%</span>
+        <span class="is-ld-tip">${["Tip: Tap the dock to go fishing 🎣", "Tip: Wait for the float to sink, then PULL!", "Tip: 58 sea creatures are waiting to be caught", "Tip: Legendary fish bite only for a moment ✨"][Math.floor(Math.random() * 4)]}</span>
         <span class="is-loading-error" id="is-loading-error" hidden></span>
-        <button class="is-loading-retry" id="is-loading-retry" hidden>${lang() === "my" ? "ထပ်ကြိုးစားမယ်" : "Try again"}</button>
+        <button class="is-loading-retry" id="is-loading-retry" hidden>Try again</button>
       </div>
     </div>`);
     document.body.appendChild(root); document.body.classList.add("is-open");
@@ -287,7 +287,7 @@
     return false;
   }
   const IMG = {}; // decoded image cache: animation starts only after every required frame is ready
-  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=135`; }
+  function src(k, d, f) { return `${A}characters/${k}/${d}_${f}.webp?v=136`; }
   const loadImage = (url) => {
     if (IMG[url]?.complete && IMG[url].naturalWidth > 0) return Promise.resolve(IMG[url]);
     if (IMG[url]?.__promise) return IMG[url].__promise;
@@ -306,7 +306,7 @@
   };
   const MISSING = new Set();
   function criticalImageUrls() {
-    const urls = [`${A}cozy_island_beach.webp?v=135`];
+    const urls = [`${A}cozy_island_beach.webp?v=136`];
     ["ui_avatar.webp", "ui_star.webp", "ui_coin.webp", "ui_wood.webp", "ui_gem.webp", "ui_gear.webp", "ui_tasks.webp", "ui_trophy.webp", "ui_mail.webp", "ui_build.webp", "ui_map.webp"].forEach((f) => urls.push(A + f));
     Object.keys(LIKES).forEach((k) => {
       if (k === "boy" || k === "girl") urls.push(src(k, "sit", 0));
@@ -530,7 +530,7 @@
     if (ui) { ui.moveFisher = false; $("is-map-hint").hidden = true; }
   }
   // ---- Fishing (v134): the fisher sits on his stool; the player casts, waits for the float to sink, and pulls. ----
-  const fishSrc = (pose, side) => `${A}characters/fisher/fish_${pose}_${side}.webp?v=135`;
+  const fishSrc = (pose, side) => `${A}characters/fisher/fish_${pose}_${side}.webp?v=136`;
   function fishPose(p, pose) {
     const side = p.spot === "shrimpDock" ? "r" : "l", key = "fish_" + pose + side;
     if (p.dir === key) return;
@@ -666,7 +666,7 @@
   // ---- hub card ----
   function cardHTML() {
     t = L[lang()];
-    return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp?v=135')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
+    return `<button type="button" id="hub-island" class="is-card"><div class="is-card-img" style="background-image:url('${A}cozy_island_beach.webp?v=136')"><span class="is-card-tag">NEW</span></div><div class="is-card-body"><b>🏝️ ${t.title}</b><small>${t.sub}</small><span class="is-card-play">${t.play}</span></div></button>`;
   }
   window.CSLIsland = { open, close, cardHTML, assignWorkerJob, fish: (k) => fishAt(k || "dock"), _state: () => S };
 })();
