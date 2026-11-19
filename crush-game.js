@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=12";
+  const A = "crush-assets/", V = "?v=13";
   const tg = window.Telegram?.WebApp;
   const SAVE = "csl_crush_v1";
   const GIRLS = [
