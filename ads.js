@@ -58,7 +58,7 @@
     el.addEventListener("click", (e) => e.stopPropagation());
     document.body.appendChild(el);
   }
-  const PEND = "csl_ad_pending";
+  const PEND = "csl_ad_pending_" + (window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "x");
   async function credit(game, tg, API) {
     // Up to 4 tries: the player already watched, so a short network drop must not lose the bonus.
     for (let k = 0; k < 4; k++) {

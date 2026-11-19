@@ -5,11 +5,12 @@
   const API = () => window.VIDEOSPACE_CONFIG?.VIP_API_URL || "";
   const PACKS = [10, 50, 100, 250, 500, 1000];
   let stars = 0;
-  try { stars = Number(localStorage.getItem("csl_stars") || 0) || 0; } catch {}
+  const SKEY = "csl_stars_" + (window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "x");
+  try { stars = Number(localStorage.getItem(SKEY) || 0) || 0; } catch {}
 
   function set(n) {
     stars = Math.max(0, Number(n) || 0);
-    try { localStorage.setItem("csl_stars", String(stars)); } catch {}
+    try { localStorage.setItem(SKEY, String(stars)); } catch {}
     const v = document.querySelector("#star-pill .sp-n"); if (v) v.textContent = stars;
     document.dispatchEvent(new CustomEvent("csl-stars", { detail: stars }));
   }

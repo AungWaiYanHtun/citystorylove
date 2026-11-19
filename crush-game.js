@@ -2,7 +2,9 @@
 (function () {
   const A = "crush-assets/", V = "?v=14";
   const tg = window.Telegram?.WebApp;
-  const SAVE = "csl_crush_v1";
+  const UID = (() => { try { return String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || ""); } catch { return ""; } })();
+  const SAVE = UID ? "csl_crush_v1_" + UID : "csl_crush_v1";
+  try { if (UID && !localStorage.getItem(SAVE) && localStorage.getItem("csl_crush_v1")) { localStorage.setItem(SAVE, localStorage.getItem("csl_crush_v1")); localStorage.removeItem("csl_crush_v1"); } } catch {}
   const GIRLS = [
     { k: "mina", name: "Mina", job: "Barista", home: "cafe", need: null },
     { k: "rina", name: "Rina", job: "Rock guitarist", home: "lounge", need: "Mina Lv.2" },
