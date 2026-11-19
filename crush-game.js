@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=13";
+  const A = "crush-assets/", V = "?v=14";
   const tg = window.Telegram?.WebApp;
   const SAVE = "csl_crush_v1";
   const GIRLS = [
@@ -463,7 +463,7 @@
   }
 
   function cardHTML() {
-    return `<button type="button" id="hub-crush" class="cc-card"><div class="cc-card-img" style="background-image:url('${img("title_key")}')"><img src="${img("logo")}" alt=""><span class="cc-card-tag">NEW</span></div><div class="cc-card-body"><b>💘 Crush City</b><small>Date, chat and fall in love in the city of neon.</small><span class="cc-card-play">Play</span></div></button>`;
+    return `<button type="button" id="hub-crush" class="cc-card"><div class="cc-card-img" style="background-image:url('${img("title_key")}')"><span class="cc-card-tag">NEW</span></div><div class="cc-card-body"><b>💘 Crush City</b><small>Date, chat and fall in love in the city of neon.</small><span class="cc-card-play">Play</span></div></button>`;
   }
   story = window.CRUSH_STORY;
   window.CSLCrush = { open, close, cardHTML, _state: () => S };
