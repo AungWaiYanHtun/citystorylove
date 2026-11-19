@@ -121,3 +121,34 @@ body.cc-open{overflow:hidden}
 .cc-card-body b{font-size:18px}
 .cc-card-body small{color:#cbbfe0}
 .cc-card-play{align-self:flex-start;margin-top:6px;padding:7px 22px;border-radius:12px;background:linear-gradient(#ff6fb5,#e0177a);font-weight:700}
+/* ===== portrait layout (phone held upright) ===== */
+.cc-stage.port .cc-girl{height:1000px;bottom:120px}
+.cc-stage.port .cc-hud{left:12px;right:12px;top:12px;gap:8px;justify-content:flex-end}
+.cc-stage.port .cc-pill{font-size:19px;height:40px}
+.cc-stage.port .cc-pill b{min-width:50px}
+.cc-stage.port .cc-girls{top:66px;left:14px}
+.cc-stage.port .cc-hello{top:128px;white-space:normal;max-width:600px;text-align:center}
+.cc-stage.port .cc-logo{top:70px;width:560px}
+.cc-stage.port .cc-say{width:650px;bottom:200px}
+.cc-stage.port .cc-say p{font-size:29px}
+.cc-stage.port .cc-say.side{left:50%;width:650px}
+.cc-stage.port .cc-choices{left:30px;right:30px;width:auto;bottom:40px}
+.cc-stage.port .cc-choices button{font-size:26px;padding:16px 18px}
+.cc-stage.port .cc-left{left:16px;bottom:150px}
+.cc-stage.port .cc-right{left:16px;right:16px;bottom:24px;justify-content:space-between}
+.cc-stage.port .cc-big-btn{width:335px;height:100px;font-size:38px}
+.cc-stage.port .cc-cg{background:#000}
+.cc-stage.port .cc-cg img{object-fit:contain}
+.cc-stage.port .cc-cg p{left:24px;right:24px;bottom:60px;max-width:none}
+.cc-stage.port .cc-box{width:640px;max-height:1000px}
+.cc-stage.port .cc-box.wide{width:680px}
+.cc-stage.port .cc-body{max-height:820px}
+.cc-stage.port .cc-gal{grid-template-columns:repeat(2,1fr)}
+.cc-stage.port .cc-prog{flex-direction:column;text-align:center}
+.cc-stage.port .cc-prog>div{width:100%}
+.cc-stage.port .cc-gl{flex-wrap:wrap}
+.cc-stage.port .cc-gc{width:280px;height:340px}
+.cc-stage.port .cc-gc img{height:250px}
+.cc-stage.port .cc-track{left:50px;right:50px;bottom:300px}
+.cc-stage.port .cc-shot{bottom:120px;width:180px;height:120px}
+.cc-stage.port .cc-hearts{top:80px}
