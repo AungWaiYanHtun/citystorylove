@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=11";
+  const A = "crush-assets/", V = "?v=12";
   const tg = window.Telegram?.WebApp;
   const SAVE = "csl_crush_v1";
   const GIRLS = [
@@ -11,7 +11,7 @@
   ];
   const BG = { lounge: "bg_lounge", cafe: "bg_cafe", studio: "bg_studio", park: "bg_park" };
   const EMAX = 25, EREGEN = 6 * 60 * 1000, TALK_E = 1, DATE_E = 5, GAME_COST = 300, LV_AFF = 100;
-  const S0 = { name: "", adult: false, opt: { speed: 1, sound: true, music: true, vib: true }, energy: EMAX, eT: Date.now(), coins: 500, gems: 20, intro: false, cur: "mina", g: { mina: { aff: 0, lv: 1, date: 0, cg: [] } } };
+  const S0 = { name: "", adult: false, opt: { speed: 1, sound: true, music: true, vib: true }, energy: EMAX, eT: Date.now(), coins: 100, gems: 3, intro: false, cur: "mina", g: { mina: { aff: 0, lv: 1, date: 0, cg: [] } } };
   let S, ui, story;
 
   const load = () => { try { S = Object.assign(JSON.parse(JSON.stringify(S0)), JSON.parse(localStorage.getItem(SAVE) || "{}")); } catch { S = JSON.parse(JSON.stringify(S0)); } S.opt = Object.assign({ speed: 1, sound: true, music: true, vib: true }, S.opt || {}); };
@@ -280,8 +280,8 @@
   function levelUp(k) {
     const g = G(k), unlock = GIRLS.find((x) => x.need === `${GIRLS.find((y) => y.k === k).name} Lv.${g.lv}`);
     const pics = (story.gallery[k] || []).filter((p) => p.lv === g.lv);
-    S.coins += 200 * g.lv; S.gems += 5; save(); haptic("heavy"); sfx("lv"); setTimeout(() => voice("love", k), 500);
-    popup(`Level ${g.lv}!`, `<div class="cc-big">💖</div><p>${GIRLS.find((y) => y.k === k).name} likes you more.</p><p class="cc-rw">+${200 * g.lv} <span class="cc-coin"></span> &nbsp; +5 💎</p>${pics.length ? `<p>📸 New photo in Gallery!</p>` : ""}${unlock ? `<p>🔓 ${unlock.name} unlocked (story coming soon)</p>` : ""}`, [["Yay!", "green"]]).then(() => hud());
+    S.coins += 50 * g.lv; S.gems += 1; save(); haptic("heavy"); sfx("lv"); setTimeout(() => voice("love", k), 500);
+    popup(`Level ${g.lv}!`, `<div class="cc-big">💖</div><p>${GIRLS.find((y) => y.k === k).name} likes you more.</p><p class="cc-rw">+${50 * g.lv} <span class="cc-coin"></span> &nbsp; +1 💎</p>${pics.length ? `<p>📸 New photo in Gallery!</p>` : ""}${unlock ? `<p>🔓 ${unlock.name} unlocked (story coming soon)</p>` : ""}`, [["Yay!", "green"]]).then(() => hud());
     pics.forEach((p) => { if (!g.cg.includes(p.id)) g.cg.push(p.id); }); save();
   }
 
@@ -351,13 +351,13 @@
     });
   }
   async function adOffer(kind) {
-    const what = { e: ["Need energy?", "⚡", "+10 energy"], c: ["Need coins?", "<span class='cc-coin big'></span>", "+500 coins"], g: ["Need gems?", "💎", "+5 gems"] }[kind];
+    const what = { e: ["Need energy?", "⚡", "+10 energy"], c: ["Need coins?", "<span class='cc-coin big'></span>", "+300 coins"], g: ["Need gems?", "💎", "+3 gems"] }[kind];
     const r = await popup(what[0], `<div class="cc-big">${what[1]}</div><p>Watch a short ad to get <b>${what[2]}</b>.</p>`, [["▶ Watch ad", "green"]]);
     if (r !== 0) return false;
     let ok = false;
     try { ok = window.CSLAds ? await window.CSLAds.reward("island", "en") : false; } catch {}
     if (!ok && !window.CSLAds) ok = true; // local test without ads
-    if (ok) { if (kind === "e") S.energy += 10; if (kind === "c") S.coins += 500; if (kind === "g") S.gems += 5; save(); hud(); }
+    if (ok) { if (kind === "e") S.energy += 10; if (kind === "c") S.coins += 300; if (kind === "g") S.gems += 3; save(); hud(); }
     return ok;
   }
   async function spend(kind, n) {
@@ -394,7 +394,7 @@
     if (!(await spend("e", TALK_E))) return;
     const pool = story.talk[k] || []; const t = pool[(Math.random() * pool.length) | 0];
     const o = await choose(t[0][0], t[0][1], t[1].map((x) => [x[0], x[1]]));
-    const coins = 20 + o[1] * 5; S.coins += coins; save(); hearts(o[1]);
+    const coins = o[1]; S.coins += coins; save(); hearts(o[1]);
     await bubble(t[0][0], o[1] >= 5 ? "Hehe, you always know what to say." : o[1] >= 3 ? "Mm, fair enough!" : "…Okay then.", true);
     addAff(k, o[1] * 2); home(k);
   }
@@ -434,7 +434,7 @@
         const f = el(`<div class="cc-flash"></div>`); ui.layer.appendChild(f); setTimeout(() => f.remove(), 350);
         if (shot < 5) { newZone(); return; }
         run = false; await wait(500);
-        const coins = win * 80, aff = win * 6; S.coins += coins; save();
+        const coins = win * 15, aff = win * 6; S.coins += coins; save();
         await popup(win >= 4 ? "Perfect shoot!" : win >= 2 ? "Nice photos!" : "Try again!", `<div class="cc-big">${"❤️".repeat(win) || "💔"}</div><p class="cc-rw">+${coins} <span class="cc-coin"></span> &nbsp; +${aff} 💞</p>`, [["Great", "green"]]);
         addAff(k, aff); res();
       };
