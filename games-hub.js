@@ -56,8 +56,9 @@
     const t = T(), sec = $("games-section"); if (!sec) return;
     $("games-tab-btn").textContent = t.tab;
     document.querySelectorAll(".hub-back").forEach((b) => (b.textContent = t.back));
-    sec.innerHTML = window.CSLIsland ? window.CSLIsland.cardHTML() : `<div class="hub-empty" style="text-align:center;padding:60px 20px;border:1px dashed rgba(240,185,58,.4);border-radius:22px;margin:10px 4px;color:#cfc8b8"><div style="font-size:46px">🎮</div><b style="display:block;font-size:20px;color:#f0b93a;margin:10px 0 6px">${t.soon}</b><small>${t.soon2}</small></div>`;
+    sec.innerHTML = window.CSLCrush ? window.CSLCrush.cardHTML() : window.CSLIsland ? window.CSLIsland.cardHTML() : `<div class="hub-empty" style="text-align:center;padding:60px 20px;border:1px dashed rgba(240,185,58,.4);border-radius:22px;margin:10px 4px;color:#cfc8b8"><div style="font-size:46px">🎮</div><b style="display:block;font-size:20px;color:#f0b93a;margin:10px 0 6px">${t.soon}</b><small>${t.soon2}</small></div>`;
     $("hub-island")?.addEventListener("click", () => window.CSLIsland?.open());
+    $("hub-crush")?.addEventListener("click", () => window.CSLCrush?.open());
     carousel();
     $("hub-gacha")?.addEventListener("click", () => window.CSLGacha?.open());
     $("hub-moon")?.addEventListener("click", () => window.CSLMoon?.open());

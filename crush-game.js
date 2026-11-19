@@ -1,4 +1,4 @@
-/* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
+/* Crush City — anime dating sim (landscape). Original characters & script. v1 */
 (function () {
   const A = "crush-assets/", V = "?v=1";
   const tg = window.Telegram?.WebApp;
@@ -31,12 +31,9 @@
   // ---------- stage (fixed 1280x720, scaled; rotated when the phone is held upright) ----------
   function fitStage() {
     if (!ui) return; const w = innerWidth, h = innerHeight, port = h > w;
-    // portrait phones get their own upright 720-wide layout (no rotating)
-    const SW = port ? 720 : 1280, SH = port ? Math.max(1100, Math.min(1560, Math.round(720 * h / w))) : 720;
-    const sc = Math.min(w / SW, h / SH), st = ui.stage.style;
-    ui.stage.classList.toggle("port", port);
-    st.width = SW + "px"; st.height = SH + "px";
-    st.transform = `translate(-50%,-50%) scale(${sc})`;
+    const sw = port ? h : w, sh = port ? w : h, sc = Math.min(sw / 1280, sh / 720);
+    const st = ui.stage.style;
+    st.transform = port ? `translate(-50%,-50%) rotate(90deg) scale(${sc})` : `translate(-50%,-50%) scale(${sc})`;
   }
 
   function hud() {
@@ -49,7 +46,7 @@
   function open() {
     load();
     if (ui) return;
-    try { tg?.expand?.(); tg?.disableVerticalSwipes?.();  } catch {}
+    try { tg?.expand?.(); tg?.disableVerticalSwipes?.(); tg?.requestFullscreen?.(); tg?.lockOrientation?.(); } catch {}
     ui = { root: el(`<div id="cc-root"><div class="cc-stage">
       <div class="cc-bg"></div><div class="cc-girl"></div>
       <div class="cc-hud hidden"><span class="cc-pill"><i class="cc-plus" data-buy="e">+</i><b class="cc-e"></b><em>⚡</em></span><span class="cc-pill"><i class="cc-plus" data-buy="c">+</i><b class="cc-c"></b><em class="cc-coin"></em></span><span class="cc-pill"><i class="cc-plus" data-buy="g">+</i><b class="cc-g"></b><em>💎</em></span><button class="cc-gear" aria-label="Exit">✕</button></div>
@@ -67,7 +64,7 @@
   function close() {
     if (!ui) return; clearInterval(ui.timer); removeEventListener("resize", fitStage);
     ui.root.remove(); ui = null; document.body.classList.remove("cc-open");
-    try {  } catch {}
+    try { tg?.exitFullscreen?.(); tg?.unlockOrientation?.(); } catch {}
   }
 
   function setBg(k) { ui.bg.style.backgroundImage = `url('${img(BG[k] || k)}')`; }
@@ -103,7 +100,6 @@
     return new Promise((res) => {
       ui.ui.innerHTML = `<div class="cc-say side">${name ? `<b>${name}</b>` : ""}<p>${line}</p></div><div class="cc-choices">${opts.map((o, i) => `<button data-i="${i}">${o[0]}</button>`).join("")}</div>`;
       ui.ui.onclick = null;
-      if (ui.stage.classList.contains("port")) { const c = ui.ui.querySelector(".cc-choices"), sy = ui.ui.querySelector(".cc-say.side"); sy.style.bottom = (40 + c.offsetHeight + 70) + "px"; }
       ui.ui.querySelectorAll(".cc-choices button").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); haptic(); res(opts[+b.dataset.i]); }));
     });
   }

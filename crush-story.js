@@ -1,0 +1,116 @@
+/* Crush City — story data (original script). Steps:
+   {bg:"lounge"} {show:"mina"} {hide:1} {n:"narration"} {s:["Mina","line"]}
+   {c:[["choice text", affection, "her reply"], ...]}  {cg:"mina1", cap:"caption"} */
+(function () {
+  const M = "Mina";
+  const STORY = {
+    prologue: [
+      { bg: "lounge" },
+      { n: "New city. New job. One suitcase and zero friends." },
+      { n: "Your coworkers dared you to spend your first Friday night at the Neon Heart, the coziest lounge in Crush City." },
+      { n: "You sit down at the bar… and someone drops onto the stool next to you." },
+      { show: "mina" },
+      { s: [M, "Phew! Sorry, is this seat taken? Ten hours of latte art and my feet are crying."] },
+      { c: [["It's all yours. You look like you earned it.", 12, "Thank you! Finally, a person with manners in this city."],
+            ["Only if you tell me your name.", 10, "Smooth! It's Mina. And you're… new here, right? I'd remember that face."],
+            ["Latte art? Can you draw me a cat?", 14, "Ha! Come to my café and I'll draw you a whole family of cats."]] },
+      { s: [M, "I work at Petal & Bean, two streets away. Best cinnamon rolls in Crush City. Not that I'm biased."] },
+      { s: [M, "So what brings you to the Neon Heart? Looking for fun, or looking for someone?"] },
+      { c: [["Honestly? A friend would be nice.", 14, "A friend, huh? I think I can manage that. Lucky you."],
+            ["Maybe both.", 10, "Bold! I like bold. Careful though, I'm a lot of fun."],
+            ["I just wanted a quiet drink.", 6, "Oops, then I'm the opposite of quiet. Sorry not sorry!"]] },
+      { n: "You talk until the bartender starts stacking chairs. Mina laughs at everything, loudly, and doesn't care who hears." },
+      { s: [M, "Okay, new friend. Come visit me at the café tomorrow. First coffee's on me."] },
+      { s: [M, "And if you're nice… maybe I'll let you take me somewhere fun."] },
+      { n: "She writes her number on a napkin, with a tiny heart instead of a dot." },
+    ],
+    // Dates move the main story forward, one chapter per date.
+    mina: [
+      { title: "Date 1 · Cherry Walk", bg: "park", steps: [
+        { show: "mina" },
+        { s: [M, "You came! I was half sure you'd chicken out."] },
+        { s: [M, "This is my favorite spot. When the café gets crazy, I run here on my break and just… breathe."] },
+        { c: [["I can see why. It's beautiful.", 10, "Right? Especially at sunset. The river turns into orange juice."],
+              ["It's nice, but you're the best view here.", 14, "Oh, stop it! …Okay, don't stop. Say that again later."],
+              ["Do you always run away from work?", 4, "Hey! I'm not running, I'm… strategically recharging."]] },
+        { n: "You walk along the river while petals drift onto her hair. She doesn't notice, and you don't tell her." },
+        { s: [M, "Can I tell you something silly? I want to open my own café one day. Small, with a cat, and music on vinyl."] },
+        { c: [["That's not silly. You'd be amazing at it.", 14, "You mean it? …Nobody ever says that. Thank you."],
+              ["What would you call it?", 12, "Mina's Corner! No wait, that's boring. Help me think of a name, okay?"],
+              ["Sounds expensive.", 2, "Ugh, I know. Thanks for the reality check, I guess."]] },
+        { s: [M, "Same time next week? I'll bring cinnamon rolls. Fresh ones."] },
+      ]},
+      { title: "Date 2 · Photo Day", bg: "studio", steps: [
+        { show: "mina" },
+        { s: [M, "Surprise! My friend runs this studio and said we can borrow it for an hour."] },
+        { s: [M, "I need photos for the café's Instagram. And you… are my photographer!"] },
+        { c: [["I've never used a real camera.", 8, "Perfect. Then you can't judge my bad angles."],
+              ["Only if you smile for real, not a fake smile.", 14, "Hmph. You noticed my fake smile? …Okay, deal."],
+              ["What do I get in return?", 10, "Free coffee for a month. And maybe a hug if the photos are good."]] },
+        { n: "Click. Click. She poses like a pro, then ruins every third picture by laughing." },
+        { s: [M, "Let me see! …Wait. You made me look really pretty."] },
+        { s: [M, "Is that the camera, or is that how you see me?"] },
+        { c: [["That's just how you look.", 15, "…You're dangerous, you know that?"],
+              ["Good lighting does wonders.", 4, "Wow. Okay. I'm putting you on dish duty."],
+              ["Maybe a little bit of both.", 10, "Diplomatic! I'll take it."]] },
+      ]},
+      { title: "Date 3 · Rainy Night", bg: "cafe", steps: [
+        { n: "It's past closing. The café is dark except for a string of fairy lights. Rain taps on the windows." },
+        { show: "mina" },
+        { s: [M, "Sorry for calling so late. My boss yelled at me today and I didn't want to be alone."] },
+        { c: [["I'm here. Tell me what happened.", 15, "You're sweet. …He said my dream café is a joke. In front of everyone."],
+              ["Want me to go yell at him?", 8, "Ha! Tempting. But no. I just need company."],
+              ["Bosses are like that. Don't worry.", 3, "…Yeah. I guess."]] },
+        { s: [M, "Hey. I made you something. Don't laugh."] },
+        { cg: "mina1", cap: "A heart-shaped latte. 'For my favorite customer,' she whispers." },
+        { s: [M, "It's the first one I ever made for someone who isn't a customer. Well… you're not just a customer."] },
+        { c: [["Then what am I?", 12, "Mmm. I'll tell you when I'm brave enough."],
+              ["This is the best coffee I've ever had.", 14, "You haven't even tasted it yet! …But thank you."],
+              ["Can I keep the cup?", 10, "You're so weird. Yes, keep it."]] },
+      ]},
+      { title: "Date 4 · The Rival Café", bg: "lounge", steps: [
+        { show: "mina" },
+        { s: [M, "Big news! A coffee contest at the Neon Heart next month. Winner gets money to start their own place!"] },
+        { s: [M, "But… Rina's band is playing that night, and Rina's sister is entering too. She's really good."] },
+        { c: [["You'll beat everyone. I'll help you practice.", 15, "You'd do that? Then you're my official taste tester!"],
+              ["Is she better than you?", 6, "…Maybe. Thanks for the confidence boost. Not."],
+              ["Who's Rina?", 8, "The rock girl with red hair tips. You'll meet her soon. She's scary but nice."]] },
+        { n: "For the next week you drink more coffee than any human should. Mina writes notes on every cup." },
+        { s: [M, "Okay, last one. Be honest. Is it good enough to win?"] },
+        { c: [["It's perfect. It tastes like you.", 15, "That's the cheesiest thing… I love it."],
+              ["A little more cinnamon.", 12, "You're right! See, I knew I kept you around for a reason."],
+              ["It's fine.", 3, "Fine? FINE? We're starting over."]] },
+      ]},
+      { title: "Date 5 · Sunset Promise", bg: "park", steps: [
+        { show: "mina" },
+        { s: [M, "We won. We actually WON. I still can't believe it!"] },
+        { s: [M, "I keep saying 'we' because… it was both of us. I'd have quit without you."] },
+        { cg: "mina2", cap: "Under the cherry trees, she leans her head on her hand and just looks at you." },
+        { s: [M, "Hey. Remember when I said I'd tell you what you are, when I was brave enough?"] },
+        { c: [["I remember.", 15, "…You're the person I want to open the café with. And the person I want to close it with, every night."],
+              ["You don't have to say it.", 10, "I want to. I've been practicing all week, okay?"],
+              ["I was hoping you'd forget.", 2, "Rude! …You're joking. Right?"]] },
+        { s: [M, "So. Mina's Corner needs a co-owner. Interested?"] },
+        { c: [["Yes. Always yes.", 20, "Then it's a promise. No take-backs!"],
+              ["Only if I get free cinnamon rolls forever.", 14, "Deal. Forever is a long time, though."],
+              ["Let me think about it.", 4, "…Okay. I'll wait. But not forever!"]] },
+        { n: "Mina · Season 1 complete. Rina, Lily and Sora's stories are coming next." },
+      ]},
+    ],
+    // Short Talk conversations (cost energy, give affection + coins). Random each time.
+    talk: { mina: [
+      [[M, "I tried to make a matcha latte with a dragon on top. It looked like a sad lizard."], [["I'd still drink a sad lizard.", 6], ["Practice makes perfect!", 4], ["Maybe stick to cats.", 2]]],
+      [[M, "If you could have any superpower, what would it be?"], [["Making you laugh on command.", 6], ["Flying, obviously.", 3], ["Infinite coffee.", 4]]],
+      [[M, "A customer called me 'cutie' today. I put extra foam in his drink as revenge."], [["Was he wrong though?", 6], ["Brutal. I respect it.", 4], ["Extra foam isn't revenge.", 2]]],
+      [[M, "Do you like dogs or cats more? Choose wisely."], [["Cats. Like your future café cat.", 6], ["Dogs. Sorry!", 2], ["Whatever you like.", 3]]],
+      [[M, "I'm so tired… say something nice to me."], [["You're the brightest person I know.", 6], ["You'll feel better after sleep.", 3], ["Something nice.", 2]]],
+      [[M, "What's your favorite thing on our menu?"], [["Anything you make.", 5], ["The cinnamon rolls, no contest.", 6], ["The free water.", 1]]],
+    ]},
+  };
+  // Gallery photos: unlocked by level (from the photo mini game / dates).
+  STORY.gallery = { mina: [
+    { id: "mina1", lv: 2, cap: "Rainy night latte" },
+    { id: "mina2", lv: 3, cap: "Cherry blossom bench" },
+  ]};
+  window.CRUSH_STORY = STORY;
+})();
