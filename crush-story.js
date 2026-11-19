@@ -12,7 +12,7 @@
       { show: "mina" },
       { s: [M, "Phew! Sorry, is this seat taken? Ten hours of latte art and my feet are crying."] },
       { c: [["It's all yours. You look like you earned it.", 12, "Thank you! Finally, a person with manners in this city."],
-            ["Only if you tell me your name.", 10, "Smooth! It's Mina. And you're… new here, right? I'd remember that face."],
+            ["Only if you tell me your name.", 10, "Smooth! It's Mina. And you're {P}? Cute name. New here, right? I'd remember that face."],
             ["Latte art? Can you draw me a cat?", 14, "Ha! Come to my café and I'll draw you a whole family of cats."]] },
       { s: [M, "I work at Petal & Bean, two streets away. Best cinnamon rolls in Crush City. Not that I'm biased."] },
       { s: [M, "So what brings you to the Neon Heart? Looking for fun, or looking for someone?"] },
@@ -20,7 +20,7 @@
             ["Maybe both.", 10, "Bold! I like bold. Careful though, I'm a lot of fun."],
             ["I just wanted a quiet drink.", 6, "Oops, then I'm the opposite of quiet. Sorry not sorry!"]] },
       { n: "You talk until the bartender starts stacking chairs. Mina laughs at everything, loudly, and doesn't care who hears." },
-      { s: [M, "Okay, new friend. Come visit me at the café tomorrow. First coffee's on me."] },
+      { s: [M, "Okay, {P}. Come visit me at the café tomorrow. First coffee's on me."] },
       { s: [M, "And if you're nice… maybe I'll let you take me somewhere fun."] },
       { n: "She writes her number on a napkin, with a tiny heart instead of a dot." },
     ],
@@ -28,7 +28,7 @@
     mina: [
       { title: "Date 1 · Cherry Walk", bg: "park", steps: [
         { show: "mina" },
-        { s: [M, "You came! I was half sure you'd chicken out."] },
+        { s: [M, "{P}! You came! I was half sure you'd chicken out."] },
         { s: [M, "This is my favorite spot. When the café gets crazy, I run here on my break and just… breathe."] },
         { c: [["I can see why. It's beautiful.", 10, "Right? Especially at sunset. The river turns into orange juice."],
               ["It's nice, but you're the best view here.", 14, "Oh, stop it! …Okay, don't stop. Say that again later."],

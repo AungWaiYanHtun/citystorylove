@@ -152,3 +152,23 @@ body.cc-open{overflow:hidden}
 .cc-stage.port .cc-track{left:50px;right:50px;bottom:300px}
 .cc-stage.port .cc-shot{bottom:120px;width:180px;height:120px}
 .cc-stage.port .cc-hearts{top:80px}
+/* ===== step 1: title, loading, age gate, name, settings ===== */
+.cc-tgear,.cc-texit{position:absolute;top:16px;width:52px;height:52px;border-radius:14px;border:3px solid #fff;background:rgba(20,30,60,.85);color:#fff;font-size:26px;cursor:pointer;z-index:3;display:grid;place-items:center;padding:0}
+.cc-tgear{right:80px}.cc-texit{right:16px}
+.cc-load{position:absolute;left:0;right:0;bottom:0;height:150px}
+.cc-load .cc-bar{bottom:72px}
+.cc-pct{position:absolute;left:0;right:0;bottom:104px;text-align:center;font-size:24px;text-shadow:0 2px 0 #000}
+.cc-tip{position:absolute;left:40px;right:40px;bottom:22px;text-align:center;font-size:21px;color:#ffe36b;text-shadow:0 2px 0 #000,0 0 8px #000;font-family:"DM Sans",system-ui,sans-serif;font-weight:700}
+.cc-ver{position:absolute;right:14px;bottom:8px;font-size:15px;opacity:.6}
+.cc-in{width:100%;box-sizing:border-box;margin:10px 0 4px;padding:14px 18px;border-radius:14px;border:3px solid #a9d6ff;background:#fff;color:#123a6b;font-family:inherit;font-size:30px;text-align:center;outline:none}
+.cc-in:focus{border-color:#ffe36b;box-shadow:0 0 0 3px rgba(255,227,107,.5)}
+.cc-err{color:#ffb3c8;font-size:19px}
+.cc-set{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:12px 0;text-align:left;font-size:23px}
+.cc-seg{display:flex;border-radius:12px;overflow:hidden;border:3px solid #fff;flex-shrink:0}
+.cc-seg button{font-family:inherit;font-size:18px;color:#cfe0ff;background:#122c78;border:0;padding:9px 12px;cursor:pointer}
+.cc-seg button+button{border-left:2px solid rgba(255,255,255,.35)}
+.cc-seg button.on{background:linear-gradient(#7be05a,#2fa52b);color:#fff}
+.cc-btn.cc-sm{min-width:0;font-size:20px;padding:8px 14px}
+.cc-stage.port .cc-set{font-size:24px}
+.cc-stage.port .cc-load .cc-bar{left:50px;right:50px}
+.cc-stage.port .cc-tip{bottom:30px}
