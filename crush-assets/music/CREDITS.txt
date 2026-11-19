@@ -1,0 +1,4 @@
+Crush City audio (all CC0 / public domain, credit appreciated not required)
+- music/main.mp3: "Ice Cream Date" by Djaro (DjaroGames) - opengameart.org/content/ice-cream-date
+- music/date.mp3: "Happy Clappy Loop" by OwlishMedia - opengameart.org/content/happy-clappy-loop
+- <Girl>/voice/*.mp3: "Free Voice Clips Pack - Bright Female" by cicifyre - opengameart.org/content/voice-clip-packs-for-visual-novels-and-rpgs
