@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=9";
+  const A = "crush-assets/", V = "?v=11";
   const tg = window.Telegram?.WebApp;
   const SAVE = "csl_crush_v1";
   const GIRLS = [
@@ -25,7 +25,18 @@
     if (n.startsWith("bg_")) return `${A}bg/${n.slice(3)}.webp${V}`;
     return `${A}ui/${n}.webp${V}`;
   };
-  const VOICE = { mina: ["ah", "laugh", "hello", "thanks", "okay", "love"] }; // files in <Girl>/voice/
+  const VOICE = { mina: ["ah", "laugh", "hello", "thanks", "okay", "love", "what", "hey", "gasp", "giggle"] };
+  const FACES = { mina: ["pout", "blush", "surprise", "laugh", "blink"] }; // <Girl>/face/*.webp, drawn over the face
+  const POSES = { mina: ["head", "cheek", "hand", "shoulder", "body"] }; // <Girl>/pose/<zone>.webp, full-body reaction poses (598px wide canvas, 40px wider each side)
+  const FACE_BOX = { mina: [37.645, 6.364, 27.992, 13.818] }; // left, top, width, height in % of the sprite
+  // touch reactions: zone -> face, motion, voice, lines
+  const TOUCH = {
+    head: { face: "pout", anim: "shake", v: "what", t: ["Hey! Not my hair!", "Mou~ you'll mess up my twin tails!", "I'm not a puppy, stop patting me!", "Hmph! My bows took forever!"] },
+    cheek: { face: "blush", anim: "bounce", v: "giggle", t: ["W-what are you doing…?", "My cheeks are getting warm…", "Ehehe… that tickles.", "D-don't stare so close!"] },
+    hand: { face: "laugh", anim: "hop", v: "laugh", t: ["High five!", "Hehe, hi again!", "Holding my hand? …Okay, just a little.", "Yay! You noticed me waving!"] },
+    shoulder: { face: "surprise", anim: "jump", v: "gasp", t: ["Eh?! You scared me!", "Oh! What is it?", "Huh? Did you call me?"] },
+    body: { face: "pout", anim: "back", v: "hey", t: ["Hey! Hands to yourself!", "Too close! Personal space, please!", "Ah-ah! Behave!"] },
+  }; // files in <Girl>/voice/
   const MUSIC = { main: "main", date: "date" };
   const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; };
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -125,7 +136,72 @@
   }
 
   function setBg(k) { ui.bg.style.backgroundImage = `url('${img(BG[k] || k)}')`; }
-  function showGirl(k) { ui.girl.innerHTML = k ? `<img src="${img("g_" + k)}" alt="">` : ""; ui.girl.className = "cc-girl" + (k ? " on" : ""); }
+  function showGirl(k) {
+    clearTimeout(ui.faceT); clearTimeout(ui.blinkT); clearTimeout(ui.poseT); ui.gk = k; ui.hit = null; ui.busyFace = false;
+    const fb = FACE_BOX[k];
+    ui.girl.innerHTML = k ? `<div class="cc-gw"><div class="cc-gb"><img class="cc-gbase" src="${img("g_" + k)}" alt="">${fb ? `<img class="cc-face" alt="" style="left:${fb[0]}%;top:${fb[1]}%;width:${fb[2]}%;height:${fb[3]}%">` : ""}${POSES[k] ? `<img class="cc-pose" alt="">` : ""}</div></div>` : "";
+    ui.girl.className = "cc-girl" + (k ? " on" : "");
+    if (k && FACES[k]) { FACES[k].forEach((f) => { const i = new Image(); i.src = faceSrc(k, f); }); blinkLoop(); }
+    if (k && POSES[k]) POSES[k].forEach((z) => { const i = new Image(); i.src = poseSrc(k, z); });
+  }
+  const poseSrc = (k, z) => `${A}${cap(k)}/pose/${z}.webp${V}`;
+  // swap the whole body into a reaction pose, then ease back to idle
+  function setPose(z, ms) {
+    const gb = ui.girl.querySelector(".cc-gb"), pe = ui.girl.querySelector(".cc-pose");
+    if (!gb || !pe || !POSES[ui.gk] || !POSES[ui.gk].includes(z)) return false;
+    clearTimeout(ui.poseT);
+    const show = () => { gb.classList.add("posing"); ui.busyFace = true; };
+    const src = poseSrc(ui.gk, z);
+    if (pe.getAttribute("src") !== src) { pe.onload = show; pe.src = src; if (pe.complete) show(); } else show();
+    ui.poseT = setTimeout(() => { gb.classList.remove("posing"); ui.busyFace = false; }, ms);
+    return true;
+  }
+  const faceSrc = (k, f) => `${A}${cap(k)}/face/${f}.webp${V}`;
+  function setFace(f, ms) {
+    const el = ui && ui.girl.querySelector(".cc-face"); if (!el) return;
+    clearTimeout(ui.faceT);
+    if (f && FACES[ui.gk].includes(f)) { el.src = faceSrc(ui.gk, f); el.classList.add("on"); } else el.classList.remove("on");
+    ui.busyFace = !!f && f !== "blink";
+    if (f && ms) ui.faceT = setTimeout(() => setFace(null), ms);
+  }
+  function blinkLoop() {
+    clearTimeout(ui.blinkT);
+    ui.blinkT = setTimeout(() => { if (!ui || !ui.gk) return; if (!ui.busyFace) setFace("blink", 140); blinkLoop(); }, 2600 + Math.random() * 2600);
+  }
+  function anim(name) {
+    const w = ui.girl.querySelector(".cc-gw"); if (!w) return;
+    w.classList.remove("a-shake", "a-bounce", "a-hop", "a-jump", "a-back"); void w.offsetWidth; w.classList.add("a-" + name);
+  }
+  // which part of the girl was touched (sprite-relative %), null = missed her
+  function touchZone(e) {
+    const im = ui.girl.querySelector(".cc-gbase"); if (!im) return null;
+    const r = im.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return null;
+    try { // ignore taps on transparent pixels
+      if (!ui.hit) { const c = document.createElement("canvas"); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext("2d").drawImage(im, 0, 0); ui.hit = c.getContext("2d"); ui.hitK = ui.gk; }
+      const px = (x * im.naturalWidth) | 0, py = (y * im.naturalHeight) | 0, R = 18; // finger-sized tolerance
+      const d = ui.hit.getImageData(Math.max(0, px - R), Math.max(0, py - R), R * 2, R * 2).data; let hit = false;
+      for (let i = 3; i < d.length; i += 16) if (d[i] > 60) { hit = true; break; }
+      if (!hit) return null;
+    } catch {}
+    const fb = FACE_BOX[ui.gk] || [37, 6, 28, 14];
+    const fx = x * 100, fy = y * 100;
+    if (fx > 70 && fy > 9 && fy < 31) return "hand";
+    if ((fx < 24 || fx > 76) && fy < 58) return "head"; // twin tails
+    if (fy < fb[1] + fb[3] && fx > fb[0] + 3 && fx < fb[0] + fb[2] - 3 && fy > fb[1] + fb[3] * 0.38) return "cheek";
+    if (fy < fb[1] + fb[3] * 1.05) return "head";
+    if (fy < 33) return "shoulder";
+    return "body";
+  }
+  function onTouchGirl(e) {
+    if (e.target !== ui.ui || !ui.gk || !ui.ui.querySelector(".cc-hello")) return;
+    const z = touchZone(e); if (!z) return;
+    const now = performance.now(); if (now - (ui.lastTouch || 0) < 650) return; ui.lastTouch = now;
+    const r = TOUCH[z];
+    ui.touchN = (ui.touchZ === z ? (ui.touchN || 0) + 1 : 0); ui.touchZ = z;
+    if (!setPose(z, 2300)) setFace(r.face, 1900); anim(r.anim); voice(r.v, ui.gk); haptic(z === "body" || z === "head" ? "medium" : "light"); sfx(z === "body" || z === "head" ? "tap" : "heart");
+    const h = ui.ui.querySelector(".cc-hello"); if (h) { h.textContent = r.t[ui.touchN % r.t.length]; h.classList.remove("pop"); void h.offsetWidth; h.classList.add("pop"); }
+  }
   function hudOn(on) { ui.root.querySelector(".cc-hud").classList.toggle("hidden", !on); if (on) hud(); }
 
   // ---------- title ----------
@@ -303,7 +379,8 @@
       <div class="cc-hello">${lines[(Math.random() * lines.length) | 0]}</div>
       <div class="cc-left"><button class="cc-sq gal"><span>🖼️</span>Gallery</button><div class="cc-row"><button class="cc-sq prog"><span>💞</span>Progress<i class="cc-lv">Lv.${g.lv}</i></button><button class="cc-sq dress"><span>👗</span>Dress</button></div></div>
       <div class="cc-right"><button class="cc-big-btn talk">💬 TALK <small>⚡${TALK_E}</small></button><button class="cc-big-btn date">❤️ DATE <small>⚡${DATE_E}</small></button></div>`;
-    ui.ui.onclick = null;
+    ui.ui.onclick = null; ui.hit = null;
+    ui.ui.onpointerdown = onTouchGirl;
     const q = (s) => ui.ui.querySelector(s);
     q(".talk").onclick = () => talk(k);
     q(".date").onclick = () => date(k);

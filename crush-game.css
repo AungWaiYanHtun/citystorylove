@@ -172,3 +172,29 @@ body.cc-open{overflow:hidden}
 .cc-stage.port .cc-set{font-size:24px}
 .cc-stage.port .cc-load .cc-bar{left:50px;right:50px}
 .cc-stage.port .cc-tip{bottom:30px}
+
+/* living girl: breathing, blinking, touch reactions */
+.cc-gw{position:relative;display:inline-block;height:100%;transform-origin:50% 100%}
+.cc-gb{position:relative;height:100%;transform-origin:50% 100%;animation:ccbreath 3.8s ease-in-out infinite}
+.cc-gb .cc-gbase{height:100%;display:block}
+.cc-face{position:absolute;opacity:0;pointer-events:none}
+.cc-face.on{opacity:1}
+@keyframes ccbreath{0%,100%{transform:scale(1,1)}50%{transform:scale(1.004,1.012)}}
+.cc-gw.a-shake{animation:ccshake .55s ease-in-out}
+@keyframes ccshake{0%,100%{transform:rotate(0)}20%{transform:rotate(-2.2deg)}45%{transform:rotate(2deg)}70%{transform:rotate(-1.2deg)}}
+.cc-gw.a-bounce{animation:ccbounce .6s ease-out}
+@keyframes ccbounce{0%,100%{transform:scale(1)}30%{transform:scale(1.02,.975)}60%{transform:scale(.99,1.015)}}
+.cc-gw.a-hop{animation:cchop .55s cubic-bezier(.3,.7,.4,1)}
+@keyframes cchop{0%,100%{transform:translateY(0)}35%{transform:translateY(-34px)}70%{transform:translateY(0) scale(1.02,.98)}}
+.cc-gw.a-jump{animation:ccjump .45s ease-out}
+@keyframes ccjump{0%,100%{transform:translateY(0)}25%{transform:translateY(-20px) rotate(-1deg)}}
+.cc-gw.a-back{animation:ccback .8s ease-in-out}
+@keyframes ccback{0%,100%{transform:translate(0,0) scale(1)}30%,60%{transform:translate(26px,8px) scale(.96)}}
+.cc-hello.pop{animation:cchpop .35s ease-out}
+@keyframes cchpop{0%{transform:translateX(-50%) scale(.85)}60%{transform:translateX(-50%) scale(1.06)}100%{transform:translateX(-50%) scale(1)}}
+
+.cc-gb .cc-gbase,.cc-gb .cc-face{transition:opacity .16s ease}
+.cc-pose{position:absolute;top:0;left:-7.722%;width:115.444%;height:100%!important;opacity:0;pointer-events:none;transition:opacity .16s ease;transform-origin:50% 100%}
+.cc-gb.posing .cc-gbase,.cc-gb.posing .cc-face{opacity:0}
+.cc-gb.posing .cc-pose{opacity:1;animation:ccpose .35s ease-out}
+@keyframes ccpose{0%{transform:scale(.985,1.015)}60%{transform:scale(1.01,.99)}100%{transform:none}}
