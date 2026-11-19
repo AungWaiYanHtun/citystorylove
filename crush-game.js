@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=1";
+  const A = "crush-assets/", V = "?v=4";
   const tg = window.Telegram?.WebApp;
   const SAVE = "csl_crush_v1";
   const GIRLS = [
@@ -76,7 +76,7 @@
 
   // ---------- title ----------
   function title() {
-    hudOn(false); showGirl(null); setBg("title_key");
+    hudOn(false); showGirl(null); setBg(ui.stage.classList.contains("port") ? "title_key_port" : "title_key");
     ui.ui.innerHTML = `<div class="cc-title"><img class="cc-logo" src="${img("logo")}" alt="Crush City"><div class="cc-bar"><i></i></div><div class="cc-tap hidden">Tap to start</div></div>`;
     const bar = ui.ui.querySelector(".cc-bar i"), tap = ui.ui.querySelector(".cc-tap");
     const pre = ["bg_lounge", "bg_cafe", "bg_park", "bg_studio", "g_mina", "cg_mina1", "cg_mina2"].map((n) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = img(n); }));
