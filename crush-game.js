@@ -166,6 +166,7 @@
     ui.busyFace = !!f && f !== "blink";
     if (f && ms) ui.faceT = setTimeout(() => setFace(null), ms);
   }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // story expression: face overlay held for the line + a small motion
   const MOOD_ANIM = { surprise: "jump", laugh: "hop", pout: "shake", blush: "bounce" };
   function mood(f) {
@@ -402,10 +403,16 @@
 
   async function talk(k) {
     if (!(await spend("e", TALK_E))) return;
-    const pool = story.talk[k] || []; const t = pool[(Math.random() * pool.length) | 0];
-    const o = await choose(t[0][0], t[0][1], t[1].map((x) => [x[0], x[1]]));
-    const coins = o[1]; S.coins += coins; save(); hearts(o[1]);
-    await bubble(t[0][0], o[1] >= 5 ? "Hehe, you always know what to say." : o[1] >= 3 ? "Mm, fair enough!" : "…Okay then.", true);
+    const pool = story.talk[k] || []; if (!pool.length) return;
+    const g = G(k); g.seen = (g.seen || []).filter((i) => i < pool.length);
+    if (g.seen.length >= pool.length) g.seen = [];
+    const left = pool.map((_, i) => i).filter((i) => !g.seen.includes(i));
+    const n = left[(Math.random() * left.length) | 0]; g.seen.push(n); save();
+    const [line, face, opts] = pool[n], name = cap(k);
+    hudOn(false); mood(face); await sleep(250);
+    const o = await choose(name, line, opts);
+    S.coins += o[1]; save(); hearts(o[1]);
+    mood(o[3]); await bubble(name, o[2], true); mood(null);
     addAff(k, o[1] * 2); home(k);
   }
 
