@@ -139,7 +139,7 @@
 
   function setBg(k) { ui.bg.style.backgroundImage = `url('${img(BG[k] || k)}')`; }
   function showGirl(k) {
-    clearTimeout(ui.faceT); clearTimeout(ui.blinkT); clearTimeout(ui.poseT); ui.gk = k; ui.hit = null; ui.busyFace = false;
+    clearTimeout(ui.faceT); clearTimeout(ui.blinkT); clearTimeout(ui.poseT); ui.gk = k; ui.hit = null; ui.busyFace = false; ui.mood = null;
     const fb = FACE_BOX[k];
     ui.girl.innerHTML = k ? `<div class="cc-gw"><div class="cc-gb"><img class="cc-gbase" src="${img("g_" + k)}" alt="">${fb ? `<img class="cc-face" alt="" style="left:${fb[0]}%;top:${fb[1]}%;width:${fb[2]}%;height:${fb[3]}%">` : ""}${POSES[k] ? `<img class="cc-pose" alt="">` : ""}</div></div>` : "";
     ui.girl.className = "cc-girl" + (k ? " on" : "");
@@ -165,6 +165,13 @@
     if (f && FACES[ui.gk].includes(f)) { el.src = faceSrc(ui.gk, f); el.classList.add("on"); } else el.classList.remove("on");
     ui.busyFace = !!f && f !== "blink";
     if (f && ms) ui.faceT = setTimeout(() => setFace(null), ms);
+  }
+  // story expression: face overlay held for the line + a small motion
+  const MOOD_ANIM = { surprise: "jump", laugh: "hop", pout: "shake", blush: "bounce" };
+  function mood(f) {
+    if (!ui || !ui.gk) return;
+    if (!f) { if (ui.mood) { ui.mood = null; setFace(null); } return; }
+    if (f === ui.mood) return; ui.mood = f; setFace(f, 0); if (MOOD_ANIM[f]) anim(MOOD_ANIM[f]);
   }
   function blinkLoop() {
     clearTimeout(ui.blinkT);
@@ -264,8 +271,9 @@
       if (st.show) showGirl(st.show);
       if (st.hide) showGirl(null);
       if (st.n) { await bubble("", st.n, true); last = { name: "", text: st.n }; }
-      if (st.s) { await bubble(st.s[0], st.s[1], true); last = { name: st.s[0], text: st.s[1] }; }
-      if (st.c) { const o = await choose(last.name, last.text, st.c); addAff(girl, o[1], true); hearts(o[1]); if (o[2]) await bubble(last.name || "", o[2], true); }
+      if (st.s) { mood(st.s[2]); await bubble(st.s[0], st.s[1], true); last = { name: st.s[0], text: st.s[1] }; }
+      if (st.c) { const o = await choose(last.name, last.text, st.c); addAff(girl, o[1], true); hearts(o[1]); if (o[2]) { mood(o[3]); await bubble(last.name || "", o[2], true); } }
+      if (st.n || st.c) mood(null);
       if (st.cg) { const g = G(girl); if (!g.cg.includes(st.cg)) g.cg.push(st.cg); save(); await cgView(st.cg, st.cap); }
     }
     ui.ui.onclick = null;
