@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=14";
+  const A = "crush-assets/", V = "?v=15";
   const tg = window.Telegram?.WebApp;
   const UID = (() => { try { return String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || ""); } catch { return ""; } })();
   const SAVE = UID ? "csl_crush_v1_" + UID : "csl_crush_v1";
@@ -39,6 +39,21 @@
     shoulder: { face: "surprise", anim: "jump", v: "gasp", t: ["Eh?! You scared me!", "Oh! What is it?", "Huh? Did you call me?"] },
     body: { face: "pout", anim: "back", v: "hey", t: ["Hey! Hands to yourself!", "Too close! Personal space, please!", "Ah-ah! Behave!"] },
   }; // files in <Girl>/voice/
+  // ---------- outfits + level rewards (FREE row / GOLD row bought with ⭐) ----------
+  const OUTFITS = { mina: [
+    { id: "default", name: "Barista" },
+    { id: "purple_dress", name: "Party Dress" }, { id: "star_bikini", name: "Star Bikini" }, { id: "green_romper", name: "Green Romper" },
+    { id: "leather_jacket", name: "Biker Jacket" }, { id: "white_dress", name: "White Dress" }, { id: "denim_overalls", name: "Denim Overalls" },
+    { id: "vip_retro_aerobics", name: "Retro Aerobics", vip: 1 }, { id: "vip_coral_lace", name: "Coral Lace", vip: 1 }, { id: "vip_yellow_biker", name: "Yellow Biker", vip: 1 },
+    { id: "vip_idol_ruffle", name: "Idol Ruffle", vip: 1 }, { id: "vip_navy_sport", name: "Navy Sport", vip: 1 }, { id: "vip_autumn_chic", name: "Autumn Chic", vip: 1 },
+    { id: "vip_heart_denim", name: "Heart Denim", vip: 1 }, { id: "vip_rock_star", name: "Rock Star", vip: 1 }, { id: "vip_hero_suit", name: "Hero Suit", vip: 1 },
+  ] };
+  // one reward per level: o = outfit, c = coins, g = gems, p = photo
+  const TRACK = { mina: { price: 100, item: "crush_mina_gold",
+    free: [{ o: "purple_dress" }, { c: 500 }, { p: "mina3" }, { o: "star_bikini" }, { o: "green_romper" }, { c: 1000 }, { p: "mina4" }, { o: "leather_jacket" }, { o: "white_dress" }, { o: "denim_overalls" }],
+    gold: [{ o: "vip_retro_aerobics" }, { o: "vip_coral_lace" }, { p: "mina5", g: 10 }, { o: "vip_yellow_biker" }, { o: "vip_idol_ruffle" }, { o: "vip_navy_sport" }, { o: "vip_autumn_chic" }, { o: "vip_heart_denim" }, { o: "vip_rock_star" }, { o: "vip_hero_suit" }] } };
+  const outSrc = (k, id) => `${A}${cap(k)}/outfits/${id}.webp${V}`;
+  const W = (k) => { const g = G(k); g.own = g.own || ["default"]; g.wear = g.wear || "default"; g.cl = g.cl || { f: [], g: [] }; return g; };
   const MUSIC = { main: "main", date: "date" };
   const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; };
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -138,13 +153,15 @@
   }
 
   function setBg(k) { ui.bg.style.backgroundImage = `url('${img(BG[k] || k)}')`; }
-  function showGirl(k) {
+  function showGirl(k, dressed) {
     clearTimeout(ui.faceT); clearTimeout(ui.blinkT); clearTimeout(ui.poseT); ui.gk = k; ui.hit = null; ui.busyFace = false; ui.mood = null;
-    const fb = FACE_BOX[k];
-    ui.girl.innerHTML = k ? `<div class="cc-gw"><div class="cc-gb"><img class="cc-gbase" src="${img("g_" + k)}" alt="">${fb ? `<img class="cc-face" alt="" style="left:${fb[0]}%;top:${fb[1]}%;width:${fb[2]}%;height:${fb[3]}%">` : ""}${POSES[k] ? `<img class="cc-pose" alt="">` : ""}</div></div>` : "";
+    // a worn outfit is its own full drawing (own hair + pose), so the default face/pose overlays are skipped
+    const wear = k && dressed && OUTFITS[k] ? W(k).wear : "default", plain = wear !== "default";
+    const fb = plain ? null : FACE_BOX[k];
+    ui.girl.innerHTML = k ? `<div class="cc-gw"><div class="cc-gb"><img class="cc-gbase" src="${plain ? outSrc(k, wear) : img("g_" + k)}" alt="">${fb ? `<img class="cc-face" alt="" style="left:${fb[0]}%;top:${fb[1]}%;width:${fb[2]}%;height:${fb[3]}%">` : ""}${POSES[k] && !plain ? `<img class="cc-pose" alt="">` : ""}</div></div>` : "";
     ui.girl.className = "cc-girl" + (k ? " on" : "");
-    if (k && FACES[k]) { FACES[k].forEach((f) => { const i = new Image(); i.src = faceSrc(k, f); }); blinkLoop(); }
-    if (k && POSES[k]) POSES[k].forEach((z) => { const i = new Image(); i.src = poseSrc(k, z); });
+    if (k && FACES[k] && !plain) { FACES[k].forEach((f) => { const i = new Image(); i.src = faceSrc(k, f); }); blinkLoop(); }
+    if (k && POSES[k] && !plain) POSES[k].forEach((z) => { const i = new Image(); i.src = poseSrc(k, z); });
   }
   const poseSrc = (k, z) => `${A}${cap(k)}/pose/${z}.webp${V}`;
   // swap the whole body into a reaction pose, then ease back to idle
@@ -290,9 +307,9 @@
   }
   function levelUp(k) {
     const g = G(k), unlock = GIRLS.find((x) => x.need === `${GIRLS.find((y) => y.k === k).name} Lv.${g.lv}`);
-    const pics = (story.gallery[k] || []).filter((p) => p.lv === g.lv);
+    const pics = (story.gallery[k] || []).filter((p) => p.lv === g.lv && !p.track);
     S.coins += 50 * g.lv; S.gems += 1; save(); haptic("heavy"); sfx("lv"); setTimeout(() => voice("love", k), 500);
-    popup(`Level ${g.lv}!`, `<div class="cc-big">💖</div><p>${GIRLS.find((y) => y.k === k).name} likes you more.</p><p class="cc-rw">+${50 * g.lv} <span class="cc-coin"></span> &nbsp; +1 💎</p>${pics.length ? `<p>📸 New photo in Gallery!</p>` : ""}${unlock ? `<p>🔓 ${unlock.name} unlocked (story coming soon)</p>` : ""}`, [["Yay!", "green"]]).then(() => hud());
+    popup(`Level ${g.lv}!`, `<div class="cc-big">💖</div><p>${GIRLS.find((y) => y.k === k).name} likes you more.</p><p class="cc-rw">+${50 * g.lv} <span class="cc-coin"></span> &nbsp; +1 💎</p>${pics.length ? `<p>📸 New photo in Gallery!</p>` : ""}${TRACK[k] && g.lv <= TRACK[k].free.length ? `<p>🎁 New level reward! Open Progress.</p>` : ""}${unlock ? `<p>🔓 ${unlock.name} unlocked (story coming soon)</p>` : ""}`, [["Yay!", "green"]]).then(() => { hud(); if (ui.ui.querySelector(".cc-hello")) home(k); });
     pics.forEach((p) => { if (!g.cg.includes(p.id)) g.cg.push(p.id); }); save();
   }
 
@@ -383,12 +400,12 @@
   function home(k) {
     S.cur = k; AU.girl = k; save(); music("main"); if (ui.lastHome !== k) setTimeout(() => voice("hello", k), 350); ui.lastHome = k;
     const gi = GIRLS.find((x) => x.k === k), g = G(k);
-    setBg(gi.home); showGirl(k); hudOn(true);
+    setBg(gi.home); showGirl(k, true); hudOn(true);
     const lines = ["Hi! Good to see you.", "You came back! I missed you a little.", "Coffee? Or… me? Kidding!", "Where are we going today?"];
     ui.ui.innerHTML = `
       <button class="cc-girls">👭 Girls</button>
       <div class="cc-hello">${lines[(Math.random() * lines.length) | 0]}</div>
-      <div class="cc-left"><button class="cc-sq gal"><span>🖼️</span>Gallery</button><div class="cc-row"><button class="cc-sq prog"><span>💞</span>Progress<i class="cc-lv">Lv.${g.lv}</i></button><button class="cc-sq dress"><span>👗</span>Dress</button></div></div>
+      <div class="cc-left"><button class="cc-sq gal"><span>🖼️</span>Gallery</button><div class="cc-row"><button class="cc-sq prog"><span>💞</span>Progress<i class="cc-lv">Lv.${g.lv}</i>${rwReady(k) ? `<i class="cc-dot">!</i>` : ""}</button><button class="cc-sq dress"><span>👗</span>Dress</button></div></div>
       <div class="cc-right"><button class="cc-big-btn talk">💬 TALK <small>⚡${TALK_E}</small></button><button class="cc-big-btn date">❤️ DATE <small>⚡${DATE_E}</small></button></div>`;
     ui.ui.onclick = null; ui.hit = null;
     ui.ui.onpointerdown = onTouchGirl;
@@ -396,8 +413,8 @@
     q(".talk").onclick = () => talk(k);
     q(".date").onclick = () => date(k);
     q(".gal").onclick = () => gallery(k);
-    q(".prog").onclick = () => progress(k);
-    q(".dress").onclick = () => popup("Wardrobe", `<div class="cc-big">👗</div><p>New outfits for ${gi.name} are being drawn.</p><p>Coming soon!</p>`, [["OK", "blue"]]);
+    q(".prog").onclick = () => (TRACK[k] ? rewards(k) : progress(k));
+    q(".dress").onclick = () => wardrobe(k);
     q(".cc-girls").onclick = girls;
   }
 
@@ -458,10 +475,121 @@
     });
   }
 
+  // ---------- level rewards ----------
+  function rwReady(k) {
+    const t = TRACK[k]; if (!t) return false; const g = W(k), gold = hasGold(k);
+    for (let i = 0; i < t.free.length && i < g.lv; i++) { if (!g.cl.f.includes(i + 1)) return true; if (gold && !g.cl.g.includes(i + 1)) return true; }
+    return false;
+  }
+  function hasGold(k) {
+    const g = W(k), t = TRACK[k]; if (g.gold) return true;
+    try { if (t && window.CSLStars?.has?.(t.item)) { g.gold = true; save(); return true; } } catch {}
+    return false;
+  }
+  function rwIcon(k, r) {
+    if (r.o) return `<img class="rw-o" src="${outSrc(k, r.o)}" alt="">`;
+    if (r.p) return `<span class="rw-p" style="background-image:url('${img("cg_" + r.p)}')">📸</span>${r.g ? `<em class="rw-x">+${r.g}💎</em>` : ""}`;
+    if (r.c) return `<span class="rw-c"><span class="cc-coin big"></span><em>${r.c}</em></span>`;
+    if (r.g) return `<span class="rw-c">💎<em>${r.g}</em></span>`;
+    return "";
+  }
+  function rwName(k, r) {
+    if (r.o) return (OUTFITS[k].find((x) => x.id === r.o) || {}).name || "Outfit";
+    if (r.p) return "Photo"; if (r.c) return `${r.c} coins`; return `${r.g} gems`;
+  }
+  async function giveReward(k, r) {
+    const g = W(k);
+    if (r.c) S.coins += r.c;
+    if (r.g) S.gems += r.g;
+    if (r.o && !g.own.includes(r.o)) g.own.push(r.o);
+    if (r.p && !g.cg.includes(r.p)) g.cg.push(r.p);
+    save(); hud(); haptic("heavy"); sfx("lv");
+    if (r.p) { const ph = (story.gallery[k] || []).find((x) => x.id === r.p); await cgView(r.p, ph ? ph.cap : ""); if (r.g) await popup("Bonus!", `<div class="cc-big">💎</div><p class="cc-rw">+${r.g} 💎</p>`, [["Yay!", "green"]]); return; }
+    if (r.o) {
+      const a = await popup("New outfit!", `<img class="rw-new" src="${outSrc(k, r.o)}" alt=""><p><b>${esc(rwName(k, r))}</b></p>`, [["Later", "blue"], ["👗 Wear", "green"]]);
+      if (a === 1) { g.wear = r.o; save(); voice("love", k); }
+      return;
+    }
+    await popup("Reward!", `<div class="cc-big">${r.c ? `<span class="cc-coin big"></span>` : "💎"}</div><p class="cc-rw">+${r.c || r.g} ${r.c ? `<span class="cc-coin"></span>` : "💎"}</p>`, [["Yay!", "green"]]);
+  }
+  async function buyGold(k) {
+    const t = TRACK[k], have = window.CSLStars ? window.CSLStars.get() : 0;
+    const r = await popup("Unlock GOLD", `<div class="cc-big">👑</div><p>Get all ${t.gold.length} GOLD rewards for ${GIRLS.find((x) => x.k === k).name}:</p><p>${t.gold.filter((x) => x.o).length} VIP outfits, a VIP photo and gems.</p><p>One-time price: <b>${t.price} ⭐</b></p><p><small>You have ${have} ⭐</small></p>`, [["Cancel", "blue"], [`Unlock ${t.price} ⭐`, "green"]]);
+    if (r !== 1) return false;
+    if (!window.CSLStars) { await popup("Not available", `<p>Stars are not ready. Please reopen the game.</p>`, [["OK", "blue"]]); return false; }
+    if (have < t.price) {
+      const m = await popup("Not enough ⭐", `<div class="cc-big">⭐</div><p>You need ${t.price - have} more ⭐.</p>`, [["Later", "blue"], ["Get ⭐", "green"]]);
+      if (m === 1) window.CSLStars.open(); return false;
+    }
+    const res = await window.CSLStars.spend(t.price, t.item);
+    if (!res.ok) { await popup("Oops", `<p>${esc(res.error || "Purchase failed.")}</p>`, [["OK", "blue"]]); return false; }
+    W(k).gold = true; save(); haptic("heavy"); sfx("lv"); voice("love", k);
+    await popup("GOLD unlocked!", `<div class="cc-big">👑</div><p>Claim your GOLD rewards on every level you reach.</p>`, [["Yay!", "green"]]);
+    return true;
+  }
+  function rewards(k) {
+    const t = TRACK[k]; if (!t) return;
+    const g = W(k), name = GIRLS.find((x) => x.k === k).name;
+    const p = el(`<div class="cc-modal rw-modal"><div class="rw-box"><div class="cc-ribbon">${name} · Progress</div><button class="cc-close">✕</button>
+      <div class="rw-top"><span class="rw-lv">💞 Lv.${g.lv}</span><div class="cc-meter"><i style="width:${g.aff}%"></i><span>${g.aff}/${LV_AFF}</span></div></div>
+      <div class="rw-main"><div class="rw-side"><div class="rw-lab free"><b>FREE</b><small>Friend gifts</small></div><div class="rw-lab gold"><b>GOLD</b><small>VIP gifts</small><button class="rw-buy"></button></div></div>
+      <div class="rw-scroll"><div class="rw-cols"></div></div></div></div></div>`);
+    ui.layer.appendChild(p);
+    const draw = () => {
+      const gold = hasGold(k), cols = p.querySelector(".rw-cols"), buy = p.querySelector(".rw-buy");
+      buy.textContent = gold ? "✔ Unlocked" : `🔓 ${t.price} ⭐`; buy.disabled = gold; buy.classList.toggle("own", gold);
+      cols.innerHTML = t.free.map((f, i) => {
+        const L = i + 1, reach = g.lv >= L, fc = g.cl.f.includes(L), gc = g.cl.g.includes(L), gr = t.gold[i];
+        const st = (claimed, ok) => claimed ? "done" : ok ? "ready" : "lock";
+        return `<div class="rw-col ${reach ? "reach" : ""}">
+          <button class="rw-c1 free ${st(fc, reach)}" data-row="f" data-l="${L}">${rwIcon(k, f)}<i class="rw-badge"></i><span class="rw-nm">${esc(rwName(k, f))}</span></button>
+          <div class="rw-heart"><span>${L}</span></div>
+          <button class="rw-c1 gold ${st(gc, reach && gold)} ${gold ? "" : "vip"}" data-row="g" data-l="${L}">${rwIcon(k, gr)}<i class="rw-badge"></i><span class="rw-nm">${esc(rwName(k, gr))}</span></button></div>`;
+      }).join("");
+      cols.querySelectorAll(".rw-c1").forEach((b) => (b.onclick = async () => {
+        const row = b.dataset.row, L = +b.dataset.l, r = (row === "f" ? t.free : t.gold)[L - 1];
+        if (b.classList.contains("done")) { sfx("tap"); return; }
+        if (row === "g" && !hasGold(k)) { if (await buyGold(k)) draw(); return; }
+        if (g.lv < L) { sfx("no"); await popup(`Level ${L}`, `<div class="cc-big">🔒</div><p>Reach Lv.${L} with ${name} to claim this.</p><p><small>Talk and date to fill hearts.</small></p>`, [["OK", "blue"]]); return; }
+        (row === "f" ? g.cl.f : g.cl.g).push(L); save();
+        await giveReward(k, r); draw();
+      }));
+      const first = cols.querySelector(".ready") || cols.querySelectorAll(".rw-col")[Math.max(0, g.lv - 1)];
+      if (first) first.closest(".rw-col").scrollIntoView({ inline: "center", block: "nearest" });
+    };
+    p.querySelector(".rw-buy").onclick = async () => { if (await buyGold(k)) draw(); };
+    p.querySelector(".cc-close").onclick = () => { p.remove(); home(k); };
+    draw();
+  }
+
+  // ---------- wardrobe ----------
+  function wardrobe(k) {
+    const list = OUTFITS[k]; if (!list) return;
+    const g = W(k), t = TRACK[k];
+    const where = (id) => { for (const row of ["free", "gold"]) { const i = t[row].findIndex((r) => r.o === id); if (i >= 0) return [row, i + 1]; } return null; };
+    const p = el(`<div class="cc-modal"><div class="cc-box wide wd-box"><div class="cc-ribbon">Wardrobe</div><button class="cc-close">✕</button><div class="cc-body"><div class="wd-grid"></div></div></div></div>`);
+    ui.layer.appendChild(p);
+    const draw = () => {
+      p.querySelector(".wd-grid").innerHTML = list.map((o) => {
+        const own = g.own.includes(o.id), on = g.wear === o.id, w = where(o.id);
+        const lab = on ? "Selected" : own ? "Wear" : w ? `🔒 ${w[0] === "gold" ? "GOLD " : ""}Lv.${w[1]}` : "🔒";
+        return `<button class="wd-c ${on ? "on" : ""} ${own ? "" : "lock"} ${o.vip ? "vip" : ""}" data-id="${o.id}">${o.vip ? `<i class="wd-vip">VIP</i>` : ""}<img src="${o.id === "default" ? img("g_" + k) : outSrc(k, o.id)}" alt=""><b>${esc(o.name)}</b><span>${lab}</span></button>`;
+      }).join("");
+      p.querySelectorAll(".wd-c").forEach((b) => (b.onclick = async () => {
+        const id = b.dataset.id;
+        if (!g.own.includes(id)) { sfx("no"); const r = await popup("Locked", `<div class="cc-big">🔒</div><p>Level up ${GIRLS.find((x) => x.k === k).name} to unlock this outfit.</p>`, [["OK", "blue"], ["💞 Progress", "green"]]); if (r === 1) { p.remove(); rewards(k); } return; }
+        if (g.wear === id) return;
+        g.wear = id; save(); sfx("ok"); haptic(); showGirl(k, true); anim("hop"); draw();
+      }));
+    };
+    p.querySelector(".cc-close").onclick = () => { p.remove(); home(k); };
+    draw();
+  }
+
   // ---------- gallery / progress / girls ----------
   async function gallery(k) {
     const g = G(k), list = story.gallery[k] || [];
-    const body = `<div class="cc-gal">${list.map((p) => g.cg.includes(p.id) ? `<button class="cc-ph" data-id="${p.id}" style="background-image:url('${img("cg_" + p.id)}')"><span>${p.cap}</span></button>` : `<div class="cc-ph lock"><b>🔒</b><span>Lv.${p.lv}</span></div>`).join("")}</div>`;
+    const body = `<div class="cc-gal">${list.map((p) => g.cg.includes(p.id) ? `<button class="cc-ph" data-id="${p.id}" style="background-image:url('${img("cg_" + p.id)}')"><span>${p.cap}</span></button>` : `<div class="cc-ph lock"><b>🔒</b><span>${p.track === "gold" ? "GOLD " : ""}Lv.${p.lv}</span></div>`).join("")}</div>`;
     const p = el(`<div class="cc-modal"><div class="cc-box wide"><div class="cc-ribbon">Gallery</div><button class="cc-close">✕</button><div class="cc-body">${body}</div></div></div>`);
     ui.layer.appendChild(p); p.querySelector(".cc-close").onclick = () => p.remove();
     p.querySelectorAll(".cc-ph[data-id]").forEach((b) => (b.onclick = () => cgView(b.dataset.id, list.find((x) => x.id === b.dataset.id).cap)));

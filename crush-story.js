@@ -128,6 +128,9 @@
   STORY.gallery = { mina: [
     { id: "mina1", lv: 2, cap: "Rainy night latte" },
     { id: "mina2", lv: 3, cap: "Cherry blossom bench" },
+    { id: "mina3", lv: 3, track: "free", cap: "Picnic in the park. 'I made the heart one just for you!'" },
+    { id: "mina4", lv: 7, track: "free", cap: "Sunset beach. 'Catch!' She splashes you and laughs." },
+    { id: "mina5", lv: 3, track: "gold", cap: "VIP: Live on stage, and she winks right at you." },
   ]};
   window.CRUSH_STORY = STORY;
 })();

@@ -4,7 +4,7 @@
   const tg = window.Telegram?.WebApp;
   const API = () => window.VIDEOSPACE_CONFIG?.VIP_API_URL || "";
   const PACKS = [10, 50, 100, 250, 500, 1000];
-  let stars = 0;
+  let stars = 0, items = [];
   const SKEY = "csl_stars_" + (window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "x");
   try { stars = Number(localStorage.getItem(SKEY) || 0) || 0; } catch {}
 
@@ -18,7 +18,7 @@
     if (!tg?.initData || !API()) return;
     try {
       const r = await fetch(API() + "/api/stars", { cache: "no-store", headers: { "X-Telegram-Init-Data": tg.initData } });
-      if (r.ok) { const d = await r.json(); set(d.stars); }
+      if (r.ok) { const d = await r.json(); if (Array.isArray(d.items)) items = d.items; set(d.stars); }
     } catch {}
   }
   function toast(t) {
@@ -82,6 +82,19 @@
     p.onclick = openSheet; bar.appendChild(p);
     load();
   }
-  window.CSLStars = { get: () => stars, refresh: load, open: openSheet };
+  // spend ⭐ on a one-time item (server checks price + balance). Returns {ok, error}.
+  async function spend(n, item) {
+    if (!tg?.initData || !API()) { // local test outside Telegram
+      if (stars < n) return { ok: false, error: "Not enough stars." };
+      set(stars - n); items.push(item); return { ok: true };
+    }
+    try {
+      const r = await fetch(API() + "/api/stars/spend", { method: "POST", headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg.initData }, body: JSON.stringify({ item }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) return { ok: false, error: d.error || "Purchase failed.", need: d.need };
+      if (!items.includes(item)) items.push(item); set(d.stars); return { ok: true };
+    } catch { return { ok: false, error: "Network error. Try again." }; }
+  }
+  window.CSLStars = { get: () => stars, refresh: load, open: openSheet, spend, items: () => items.slice(), has: (i) => items.includes(i) };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
 })();
