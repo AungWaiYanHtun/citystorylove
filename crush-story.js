@@ -131,6 +131,13 @@
     { id: "mina3", lv: 3, track: "free", cap: "Picnic in the park. 'I made the heart one just for you!'" },
     { id: "mina4", lv: 7, track: "free", cap: "Sunset beach. 'Catch!' She splashes you and laughs." },
     { id: "mina5", lv: 3, track: "gold", cap: "VIP: Live on stage, and she winks right at you." },
+    { id: "mina6", lv: 4, cap: "Gym day! 'Ten more reps, {P}. I'm watching you!'" },
+    { id: "mina7", lv: 5, cap: "Her new scooter. 'Hop on! I'll drive you to work.'" },
+    { id: "mina8", lv: 6, cap: "The alley cats know her name. 'They like you too, {P}.'" },
+    { id: "mina9", lv: 7, cap: "Top down, city lights. 'Seatbelt on. Let's go somewhere fun!'" },
+    { id: "mina10", lv: 8, cap: "Coast road at sunset. 'Ride with me till the sea turns gold.'" },
+    { id: "mina11", lv: 9, cap: "Rainy night, hot cocoa. 'I bought two. One is yours.'" },
+    { id: "mina12", lv: 10, cap: "After closing time. 'Last latte of the day is always for you.'" },
   ]};
   window.CRUSH_STORY = STORY;
 })();

@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=15";
+  const A = "crush-assets/", V = "?v=17";
   const tg = window.Telegram?.WebApp;
   const UID = (() => { try { return String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || ""); } catch { return ""; } })();
   const SAVE = UID ? "csl_crush_v1_" + UID : "csl_crush_v1";
@@ -589,10 +589,25 @@
   // ---------- gallery / progress / girls ----------
   async function gallery(k) {
     const g = G(k), list = story.gallery[k] || [];
-    const body = `<div class="cc-gal">${list.map((p) => g.cg.includes(p.id) ? `<button class="cc-ph" data-id="${p.id}" style="background-image:url('${img("cg_" + p.id)}')"><span>${p.cap}</span></button>` : `<div class="cc-ph lock"><b>🔒</b><span>${p.track === "gold" ? "GOLD " : ""}Lv.${p.lv}</span></div>`).join("")}</div>`;
-    const p = el(`<div class="cc-modal"><div class="cc-box wide"><div class="cc-ribbon">Gallery</div><button class="cc-close">✕</button><div class="cc-body">${body}</div></div></div>`);
+    list.forEach((p) => { if (!p.track && p.lv <= g.lv && !g.cg.includes(p.id)) g.cg.push(p.id); }); save(); // catch up older saves
+    const body = `<div class="cc-gal">${list.map((p) => g.cg.includes(p.id) ? `<button class="cc-ph" data-id="${p.id}" style="background-image:url('${img("cg_" + p.id)}')"></button>` : `<div class="cc-ph lock"><b>🔒</b><span>${p.track === "gold" ? "GOLD " : ""}Lv.${p.lv}</span></div>`).join("")}</div>`;
+    const p = el(`<div class="cc-modal"><div class="cc-box wide"><div class="cc-ribbon">Gallery · ${g.cg.filter((id) => list.some((x) => x.id === id)).length}/${list.length}</div><button class="cc-close">✕</button><div class="cc-body">${body}</div></div></div>`);
     ui.layer.appendChild(p); p.querySelector(".cc-close").onclick = () => p.remove();
-    p.querySelectorAll(".cc-ph[data-id]").forEach((b) => (b.onclick = () => cgView(b.dataset.id, list.find((x) => x.id === b.dataset.id).cap)));
+    const open = list.filter((x) => g.cg.includes(x.id));
+    p.querySelectorAll(".cc-ph[data-id]").forEach((b) => (b.onclick = () => { sfx("tap"); photoView(open, open.findIndex((x) => x.id === b.dataset.id)); }));
+  }
+  // full-screen photo viewer: caption bubble, ◀ ▶ arrows, ✕ close, swipe
+  function photoView(list, i) {
+    const v = el(`<div class="cc-pv"><img alt=""><button class="pv-x">✕</button><button class="pv-a l">❮</button><button class="pv-a r">❯</button><p></p></div>`);
+    ui.layer.appendChild(v);
+    const im = v.querySelector("img"), cp = v.querySelector("p");
+    const show = () => { const x = list[i]; im.src = img("cg_" + x.id); cp.textContent = nm(x.cap || ""); v.querySelector(".l").style.visibility = i > 0 ? "" : "hidden"; v.querySelector(".r").style.visibility = i < list.length - 1 ? "" : "hidden"; };
+    const go = (d) => { const n = i + d; if (n < 0 || n >= list.length) return; i = n; sfx("tap"); show(); };
+    v.querySelector(".l").onclick = (e) => { e.stopPropagation(); go(-1); };
+    v.querySelector(".r").onclick = (e) => { e.stopPropagation(); go(1); };
+    v.querySelector(".pv-x").onclick = (e) => { e.stopPropagation(); v.remove(); };
+    let sx = null; v.onpointerdown = (e) => { sx = e.clientX; }; v.onpointerup = (e) => { if (sx == null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); };
+    requestAnimationFrame(() => v.classList.add("on")); show();
   }
   function progress(k) {
     const g = G(k), gi = GIRLS.find((x) => x.k === k), list = story[k] || [];
