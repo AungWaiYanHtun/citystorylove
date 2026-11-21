@@ -2,3 +2,5 @@ Crush City audio (all CC0 / public domain, credit appreciated not required)
 - music/main.mp3: "Ice Cream Date" by Djaro (DjaroGames) - opengameart.org/content/ice-cream-date
 - music/date.mp3: "Happy Clappy Loop" by OwlishMedia - opengameart.org/content/happy-clappy-loop
 - <Girl>/voice/*.mp3: "Free Voice Clips Pack - Bright Female" by cicifyre - opengameart.org/content/voice-clip-packs-for-visual-novels-and-rpgs
+- music/talk.mp3, d_cafe.mp3, d_park.mp3, d_lounge.mp3, d_studio.mp3, d_street.mp3, d_shop.mp3, d_rain.mp3, d_market.mp3: "Big music pack for visual novel" by TERNOX (CC0) - ternox.itch.io/vn-music
+  (talk = vntrack19, cafe = vntrack03, park = vntrack06, lounge = vntrack18, studio = vntrack20, street = vntrack12, shop = vntrack04, rain = vntrack17, market = vntrack13)
