@@ -1,6 +1,6 @@
 /* Crush City — anime dating sim (portrait + landscape). Original characters & script. v1 */
 (function () {
-  const A = "crush-assets/", V = "?v=17";
+  const A = "crush-assets/", V = "?v=19";
   const tg = window.Telegram?.WebApp;
   const UID = (() => { try { return String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || ""); } catch { return ""; } })();
   const SAVE = UID ? "csl_crush_v1_" + UID : "csl_crush_v1";
@@ -11,7 +11,7 @@
     { k: "lily", name: "Lily", job: "Art student", home: "park", need: "Mina Lv.3" },
     { k: "sora", name: "Sora", job: "Fitness coach", home: "studio", need: "Mina Lv.4" },
   ];
-  const BG = { lounge: "bg_lounge", cafe: "bg_cafe", studio: "bg_studio", park: "bg_park" };
+  const BG = { lounge: "bg_lounge", cafe: "bg_cafe", studio: "bg_studio", park: "bg_park", street: "bg_street", shop: "bg_shop", rain: "bg_rain", market: "bg_market" };
   const EMAX = 25, EREGEN = 6 * 60 * 1000, TALK_E = 1, DATE_E = 5, GAME_COST = 300, LV_AFF = 100;
   const S0 = { name: "", adult: false, opt: { speed: 1, sound: true, music: true, vib: true }, energy: EMAX, eT: Date.now(), coins: 100, gems: 3, intro: false, cur: "mina", g: { mina: { aff: 0, lv: 1, date: 0, cg: [] } } };
   let S, ui, story;
@@ -54,21 +54,22 @@
     gold: [{ o: "vip_retro_aerobics" }, { o: "vip_coral_lace" }, { p: "mina5", g: 10 }, { o: "vip_yellow_biker" }, { o: "vip_idol_ruffle" }, { o: "vip_navy_sport" }, { o: "vip_autumn_chic" }, { o: "vip_heart_denim" }, { o: "vip_rock_star" }, { o: "vip_hero_suit" }] } };
   const outSrc = (k, id) => `${A}${cap(k)}/outfits/${id}.webp${V}`;
   const W = (k) => { const g = G(k); g.own = g.own || ["default"]; g.wear = g.wear || "default"; g.cl = g.cl || { f: [], g: [] }; return g; };
-  const MUSIC = { main: "main", date: "date" };
+  const MUSIC = { main: "main", date: "date", talk: "talk", d_cafe: "d_cafe", d_park: "d_park", d_lounge: "d_lounge", d_studio: "d_studio", d_street: "d_street", d_shop: "d_shop", d_rain: "d_rain", d_market: "d_market" };
   const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; };
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const haptic = (t) => { if (S && S.opt.vib === false) return; try { tg?.HapticFeedback?.impactOccurred?.(t || "light"); } catch {} };
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const nm = (t) => String(t || "").replace(/\{P\}/g, S.name || "You");
+  const FLAG_DEF = { cat: "the kitten", cafe: "Mina's Corner" };
+  const nm = (t) => String(t || "").replace(/\{P\}/g, S.name || "You").replace(/\{(cat|cafe)\}/g, (_, k) => (S.f && S.f[k]) || FLAG_DEF[k]);
   // ---------- music + voices ----------
   const AU = { bgm: null, track: "", want: "", unlocked: false, voice: null, girl: "mina" };
   function music(track) {
     AU.want = track || AU.want;
     if (!S || !S.opt.music || !AU.unlocked || !ui) { if (AU.bgm) AU.bgm.pause(); return; }
     if (AU.track !== AU.want || !AU.bgm) {
-      if (AU.bgm) { const old = AU.bgm; fade(old, 0, 400, () => old.pause()); }
+      if (AU.bgm) { const old = AU.bgm; fade(old, 0, 900, () => old.pause()); }
       const a = new Audio(`${A}music/${MUSIC[AU.want]}.mp3${V}`); a.loop = true; a.volume = 0; AU.bgm = a; AU.track = AU.want;
-      a.play().then(() => fade(a, 0.45, 800)).catch(() => {});
+      a.play().then(() => fade(a, 0.45, 1000)).catch(() => {});
     } else if (AU.bgm.paused) { AU.bgm.play().then(() => fade(AU.bgm, 0.45, 600)).catch(() => {}); }
   }
   function fade(a, to, ms, done) {
@@ -285,12 +286,12 @@
   async function play(steps, girl) {
     AU.girl = girl || AU.girl; hudOn(false); let last = { name: "", text: "" };
     for (const st of steps) {
-      if (st.bg) setBg(st.bg);
+      if (st.bg) { setBg(st.bg); if (String(AU.want).startsWith("d_") && MUSIC["d_" + st.bg]) music("d_" + st.bg); }
       if (st.show) showGirl(st.show);
       if (st.hide) showGirl(null);
       if (st.n) { await bubble("", st.n, true); last = { name: "", text: st.n }; }
       if (st.s) { mood(st.s[2]); await bubble(st.s[0], st.s[1], true); last = { name: st.s[0], text: st.s[1] }; }
-      if (st.c) { const o = await choose(last.name, last.text, st.c); addAff(girl, o[1], true); hearts(o[1]); if (o[2]) { mood(o[3]); await bubble(last.name || "", o[2], true); } }
+      if (st.c) { const o = await choose(last.name, last.text, st.c); if (o[4]) { S.f = Object.assign(S.f || {}, o[4]); save(); } addAff(girl, o[1], true); hearts(o[1]); if (o[2]) { mood(o[3]); await bubble(last.name || "", o[2], true); } }
       if (st.n || st.c) mood(null);
       if (st.cg) { const g = G(girl); if (!g.cg.includes(st.cg)) g.cg.push(st.cg); save(); await cgView(st.cg, st.cap); }
     }
@@ -353,6 +354,7 @@
       <div class="cc-set"><span>🔊 Sound & voice</span>${seg("sound", ["Off", "On"])}</div>
       <div class="cc-set"><span>📳 Vibration</span>${seg("vib", ["Off", "On"])}</div>
       <div class="cc-set"><span>🙂 Your name</span><button class="cc-btn blue cc-sm cc-nm">${esc(S.name || "—")} ✏️</button></div>
+      <p class="cc-cred">Music: Djaro, OwlishMedia, TERNOX (CC0) · Voice: cicifyre (CC0)</p>
       <div class="cc-btns"><button class="cc-btn yellow cc-reset">↺ Restart</button><button class="cc-btn green cc-exit">🚪 Exit game</button></div>`);
     p.querySelectorAll(".cc-seg").forEach((g) => g.querySelectorAll("button").forEach((b) => (b.onclick = () => {
       const k = g.dataset.k, v = +b.dataset.v; S.opt[k] = k === "speed" ? v : v === 1; save();
@@ -426,6 +428,7 @@
     const left = pool.map((_, i) => i).filter((i) => !g.seen.includes(i));
     const n = left[(Math.random() * left.length) | 0]; g.seen.push(n); save();
     const [line, face, opts] = pool[n], name = cap(k);
+    music("talk");
     hudOn(false); mood(face); await sleep(250);
     const o = await choose(name, line, opts);
     S.coins += o[1]; save(); hearts(o[1]);
@@ -439,7 +442,7 @@
     const ch = list[g.date];
     const r = await popup("Go on a date?", `<p class="cc-ch">${ch.title}</p><p>Costs ⚡${DATE_E}</p>`, [["Let's go!", "green"]]);
     if (r !== 0 || !(await spend("e", DATE_E))) return;
-    music("date");
+    music(MUSIC["d_" + ch.bg] ? "d_" + ch.bg : "date");
     await play([{ bg: ch.bg }, ...ch.steps], k);
     g.date++; save(); voice("thanks", k);
     if (ui.pendingLv) { const p = ui.pendingLv; ui.pendingLv = null; levelUp(p); }
@@ -589,8 +592,8 @@
   // ---------- gallery / progress / girls ----------
   async function gallery(k) {
     const g = G(k), list = story.gallery[k] || [];
-    list.forEach((p) => { if (!p.track && p.lv <= g.lv && !g.cg.includes(p.id)) g.cg.push(p.id); }); save(); // catch up older saves
-    const body = `<div class="cc-gal">${list.map((p) => g.cg.includes(p.id) ? `<button class="cc-ph" data-id="${p.id}" style="background-image:url('${img("cg_" + p.id)}')"></button>` : `<div class="cc-ph lock"><b>🔒</b><span>${p.track === "gold" ? "GOLD " : ""}Lv.${p.lv}</span></div>`).join("")}</div>`;
+    list.forEach((p) => { if (!p.track && (p.date ? g.date >= p.date : p.lv <= g.lv) && !g.cg.includes(p.id)) g.cg.push(p.id); }); save(); // catch up older saves
+    const body = `<div class="cc-gal">${list.map((p) => g.cg.includes(p.id) ? `<button class="cc-ph" data-id="${p.id}" style="background-image:url('${img("cg_" + p.id)}')"></button>` : `<div class="cc-ph lock"><b>🔒</b><span>${p.date ? "Date " + p.date : (p.track === "gold" ? "GOLD " : "") + "Lv." + p.lv}</span></div>`).join("")}</div>`;
     const p = el(`<div class="cc-modal"><div class="cc-box wide"><div class="cc-ribbon">Gallery · ${g.cg.filter((id) => list.some((x) => x.id === id)).length}/${list.length}</div><button class="cc-close">✕</button><div class="cc-body">${body}</div></div></div>`);
     ui.layer.appendChild(p); p.querySelector(".cc-close").onclick = () => p.remove();
     const open = list.filter((x) => g.cg.includes(x.id));

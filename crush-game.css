@@ -275,3 +275,4 @@ body.cc-open{overflow:hidden}
 .cc-stage.port .cc-pv p{left:20px;right:20px;bottom:auto;top:calc(50% + 230px);max-width:none;font-size:26px}
 .cc-stage.port .pv-x{top:80px}
 .cc-stage.port .cc-gal{grid-template-columns:repeat(2,1fr)}
+.cc-cred{margin:10px 0 0;text-align:center;font-size:15px;opacity:.75}
